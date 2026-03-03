@@ -16,6 +16,7 @@ export function useTask(id: number) {
   return useQuery({
     queryKey: ['tasks', id],
     queryFn: () => api.tasks.get(id),
+    enabled: Number.isFinite(id),
     refetchInterval: 2000,
   })
 }

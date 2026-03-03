@@ -1,23 +1,16 @@
 // タスク詳細ページ — 概要タブ
 // デザイン design.pen PC=9d5bz, SP=lNPXJ に準拠
+// Task Information カードはAPIの実データ表示、Personas / Progress はモック維持
 
 import { Check, User } from 'lucide-react'
+import type { Task } from '@cognac/shared'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { formatDateTime } from '@/lib/format'
+import { STATUS_CONFIG, STATUS_PHASE_MAP } from '@/lib/status-config'
 
-// --- モックデータ ---
-
-const MOCK_TASK = {
-  id: 7,
-  title: 'Implement user authentication with JWT',
-  status: 'discussing' as const,
-  phase: 'Phase 2-B: Multi-Persona Discussion',
-  branch: 'task/7-implement-jwt-auth',
-  created: '2026-03-03 14:32',
-  description:
-    'JWT認証を実装する。ログイン・ログアウト・トークンリフレッシュのAPIエンドポイントを作成し、ミドルウェアでの認証チェックも含む。Zustandでの認証状態管理とProtectedRouteコンポーネントも実装する。',
-}
+// --- モックデータ（Personas / Progress は今後API接続予定） ---
 
 const MOCK_PERSONAS = [
   {
@@ -149,7 +142,7 @@ function ProgressStepItem({
 
 // --- PC版 ---
 
-export function PCOverviewTab() {
+export function PCOverviewTab({ task }: { task: Task }) {
   return (
     <div className="flex flex-col gap-6">
       {/* Task Information カード */}
@@ -159,33 +152,35 @@ export function PCOverviewTab() {
         </h2>
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
-            <span className="w-[120px] shrink-0 text-[13px] font-medium text-muted-foreground">
+            <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
               Status
             </span>
-            <Badge variant="discussing">Discussing</Badge>
+            <Badge variant={task.status}>
+              {STATUS_CONFIG[task.status].label}
+            </Badge>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-[120px] shrink-0 text-[13px] font-medium text-muted-foreground">
+            <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
               Current Phase
             </span>
             <span className="text-[13px] text-foreground">
-              {MOCK_TASK.phase}
+              {task.paused_phase ?? STATUS_PHASE_MAP[task.status]}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-[120px] shrink-0 text-[13px] font-medium text-muted-foreground">
+            <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
               Branch
             </span>
             <span className="text-[13px] text-[#2563eb]">
-              {MOCK_TASK.branch}
+              {task.branch_name ?? '-'}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-[120px] shrink-0 text-[13px] font-medium text-muted-foreground">
+            <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
               Created
             </span>
             <span className="text-[13px] text-foreground">
-              {MOCK_TASK.created}
+              {formatDateTime(task.created_at)}
             </span>
           </div>
           <div className="flex flex-col gap-2">
@@ -193,7 +188,7 @@ export function PCOverviewTab() {
               Description
             </span>
             <p className="text-[13px] leading-[1.6] text-foreground">
-              {MOCK_TASK.description}
+              {task.description ?? 'No description'}
             </p>
           </div>
         </div>
@@ -247,7 +242,7 @@ export function PCOverviewTab() {
 
 // --- SP版 ---
 
-export function SPOverviewTab() {
+export function SPOverviewTab({ task }: { task: Task }) {
   return (
     <div className="flex flex-col gap-4">
       {/* Task Information */}
@@ -260,26 +255,32 @@ export function SPOverviewTab() {
             <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
               Status
             </span>
-            <Badge variant="discussing">Discussing</Badge>
+            <Badge variant={task.status}>
+              {STATUS_CONFIG[task.status].label}
+            </Badge>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
               Phase
             </span>
-            <span className="text-xs text-foreground">2-B: Discussion</span>
+            <span className="text-xs text-foreground">
+              {task.paused_phase ?? STATUS_PHASE_MAP[task.status]}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
               Branch
             </span>
-            <span className="text-xs text-[#2563eb]">task/7-jwt-auth</span>
+            <span className="text-xs text-[#2563eb]">
+              {task.branch_name ?? '-'}
+            </span>
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs font-medium text-muted-foreground">
               Description
             </span>
             <p className="text-xs leading-[1.5] text-foreground">
-              JWT認証を実装。ログイン・ログアウト・token refreshのAPIを作成。
+              {task.description ?? 'No description'}
             </p>
           </div>
         </div>

@@ -3,12 +3,17 @@
 // PC: サイドバー + メインコンテンツ / SP: SPDetailHeader + ボディ
 
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
+import { AlertCircle, Loader2 } from 'lucide-react'
+import type { Task } from '@cognac/shared'
 import { Sidebar } from '@/components/sidebar'
 import { SPDetailHeader } from '@/components/sp-detail-header'
 import { DetailTabs, type Tab } from '@/components/detail-tabs'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { useTask } from '@/hooks/use-tasks'
+import { formatRelativeTime } from '@/lib/format'
+import { STATUS_CONFIG, STATUS_PHASE_MAP } from '@/lib/status-config'
 import { PCOverviewTab, SPOverviewTab } from '@/pages/task-detail/overview-tab'
 import {
   PCDiscussionTab,
@@ -18,21 +23,12 @@ import { PCPlanTab, SPPlanTab } from '@/pages/task-detail/plan-tab'
 import { PCLogsTab, SPLogsTab } from '@/pages/task-detail/logs-tab'
 import { PCCITab, SPCITab } from '@/pages/task-detail/ci-tab'
 
-// --- モックデータ ---
-
-const MOCK_TASK = {
-  id: 7,
-  title: 'Implement user authentication with JWT',
-  status: 'discussing' as const,
-  phase: 'Phase 2-B: Multi-Persona Discussion',
-}
-
 // --- PC版タブボディ ---
 
-function PCTabBody({ activeTab }: { activeTab: Tab }) {
+function PCTabBody({ activeTab, task }: { activeTab: Tab; task: Task }) {
   switch (activeTab) {
     case 'Overview':
-      return <PCOverviewTab />
+      return <PCOverviewTab task={task} />
     case 'Discussion':
       return <PCDiscussionTab />
     case 'Plan':
@@ -46,10 +42,10 @@ function PCTabBody({ activeTab }: { activeTab: Tab }) {
 
 // --- SP版タブボディ ---
 
-function SPTabBody({ activeTab }: { activeTab: Tab }) {
+function SPTabBody({ activeTab, task }: { activeTab: Tab; task: Task }) {
   switch (activeTab) {
     case 'Overview':
-      return <SPOverviewTab />
+      return <SPOverviewTab task={task} />
     case 'Discussion':
       return <SPDiscussionTab />
     case 'Plan':
@@ -68,7 +64,17 @@ const NAV_MAP: Record<string, string> = {
   Settings: '/settings',
 }
 
-function PCTaskDetail({ activeTab, onTabChange, onNavigate }: { activeTab: Tab; onTabChange: (tab: Tab) => void; onNavigate: (path: string) => void }) {
+function PCTaskDetail({
+  task,
+  activeTab,
+  onTabChange,
+  onNavigate,
+}: {
+  task: Task
+  activeTab: Tab
+  onTabChange: (tab: Tab) => void
+  onNavigate: (path: string) => void
+}) {
   return (
     <div className="flex h-screen bg-background">
       <Sidebar
@@ -85,30 +91,35 @@ function PCTaskDetail({ activeTab, onTabChange, onNavigate }: { activeTab: Tab; 
         <div className="flex flex-col gap-4">
           {/* パンくずリスト */}
           <div className="flex items-center gap-1.5 text-[13px]">
-            <span className="text-[#2563eb]">Tasks</span>
+            <button
+              type="button"
+              className="text-[#2563eb] hover:underline"
+              onClick={() => onNavigate('/')}
+            >
+              Tasks
+            </button>
             <span className="text-muted-foreground">/</span>
-            <span className="text-muted-foreground">
-              Task #{MOCK_TASK.id}
-            </span>
+            <span className="text-muted-foreground">Task #{task.id}</span>
           </div>
 
           {/* タイトル行 */}
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
               <h1 className="text-[22px] font-semibold leading-[1.3] text-foreground">
-                {MOCK_TASK.title}
+                {task.title}
               </h1>
               <div className="flex items-center gap-3">
-                <Badge variant="discussing">Discussing</Badge>
+                <Badge variant={task.status}>
+                  {STATUS_CONFIG[task.status].label}
+                </Badge>
                 <span className="text-[13px] text-muted-foreground">
-                  {MOCK_TASK.phase}
+                  {STATUS_PHASE_MAP[task.status]}
                 </span>
                 <span className="text-[13px] text-muted-foreground">
-                  Created 15 min ago
+                  Created {formatRelativeTime(task.created_at)}
                 </span>
               </div>
             </div>
-            <Button variant="destructive">Cancel</Button>
           </div>
         </div>
 
@@ -120,7 +131,7 @@ function PCTaskDetail({ activeTab, onTabChange, onNavigate }: { activeTab: Tab; 
         />
 
         {/* タブボディ */}
-        <PCTabBody activeTab={activeTab} />
+        <PCTabBody activeTab={activeTab} task={task} />
       </main>
     </div>
   )
@@ -128,14 +139,24 @@ function PCTaskDetail({ activeTab, onTabChange, onNavigate }: { activeTab: Tab; 
 
 // --- SP版 ---
 
-function SPTaskDetail({ activeTab, onTabChange }: { activeTab: Tab; onTabChange: (tab: Tab) => void }) {
+function SPTaskDetail({
+  task,
+  activeTab,
+  onTabChange,
+  onNavigate,
+}: {
+  task: Task
+  activeTab: Tab
+  onTabChange: (tab: Tab) => void
+  onNavigate: (path: string) => void
+}) {
   return (
     <div className="flex h-screen flex-col bg-background">
       {/* ヘッダー + タブ */}
       <SPDetailHeader
-        title="Implement JWT auth"
-        subtitle={`Task #${MOCK_TASK.id} · Discussing`}
-        onBack={() => {}}
+        title={task.title}
+        subtitle={`Task #${task.id} · ${STATUS_CONFIG[task.status].label}`}
+        onBack={() => onNavigate('/')}
       >
         <DetailTabs
           activeTab={activeTab}
@@ -146,7 +167,7 @@ function SPTaskDetail({ activeTab, onTabChange }: { activeTab: Tab; onTabChange:
 
       {/* ボディ */}
       <main className="flex flex-1 flex-col overflow-y-auto p-4">
-        <SPTabBody activeTab={activeTab} />
+        <SPTabBody activeTab={activeTab} task={task} />
       </main>
     </div>
   )
@@ -155,18 +176,53 @@ function SPTaskDetail({ activeTab, onTabChange }: { activeTab: Tab; onTabChange:
 // --- エクスポート ---
 
 export function TaskPage() {
+  const { id } = useParams<{ id: string }>()
+  const taskId = Number(id)
+  const { data: task, isLoading, error } = useTask(taskId)
   const [activeTab, setActiveTab] = useState<Tab>('Overview')
   const navigate = useNavigate()
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (error || !task) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-3 bg-background">
+        <AlertCircle className="h-8 w-8 text-destructive" />
+        <p className="text-sm text-muted-foreground">
+          タスクの取得に失敗しました
+        </p>
+        <Button variant="outline" size="sm" onClick={() => navigate('/')}>
+          ダッシュボードに戻る
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <>
       {/* PC版: md以上で表示 */}
       <div className="hidden md:block">
-        <PCTaskDetail activeTab={activeTab} onTabChange={setActiveTab} onNavigate={navigate} />
+        <PCTaskDetail
+          task={task}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onNavigate={navigate}
+        />
       </div>
       {/* SP版: md未満で表示 */}
       <div className="md:hidden">
-        <SPTaskDetail activeTab={activeTab} onTabChange={setActiveTab} />
+        <SPTaskDetail
+          task={task}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onNavigate={navigate}
+        />
       </div>
     </>
   )

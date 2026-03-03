@@ -9,12 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useDeleteTask } from '@/hooks/use-tasks'
 import { useNavigate } from 'react-router-dom'
 import { Trash2 } from 'lucide-react'
-
-function formatDateTime(dateStr: string | null): string {
-  if (!dateStr) return '-'
-  const d = new Date(dateStr)
-  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`
-}
+import { formatDateTime } from '@/lib/format'
 
 // 削除可能なステータス
 const DELETABLE_STATUSES = ['pending', 'stopped', 'completed'] as const

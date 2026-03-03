@@ -15,6 +15,18 @@ import {
   PauseCircle,
 } from 'lucide-react'
 
+// ステータス → フェーズ表示名のマッピング
+export const STATUS_PHASE_MAP: Record<TaskStatus, string> = {
+  pending: 'Queued',
+  discussing: 'Phase 2-B: Multi-Persona Discussion',
+  planned: 'Phase 2-C: Plan Confirmed',
+  executing: 'Phase 3: Code Execution',
+  testing: 'Phase 4: CI Testing',
+  completed: 'Completed',
+  paused: 'Paused',
+  stopped: 'Stopped',
+}
+
 export const STATUS_CONFIG: Record<
   TaskStatus,
   {

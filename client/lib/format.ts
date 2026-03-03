@@ -1,6 +1,17 @@
 // フォーマット用ユーティリティ
 
 /**
+ * ISO日時文字列を YYYY/M/D H:MM 形式に変換する
+ * null の場合は '-' を返す
+ */
+export function formatDateTime(dateStr: string | null): string {
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return '-'
+  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+/**
  * ISO日時文字列を相対時間テキストに変換する
  * 例: "5分前", "3時間前", "1日前"
  */
