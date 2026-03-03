@@ -2,27 +2,28 @@
 // サーバー起動 + タスクランナー開始
 // 設定ファイルをjitiで読み込んで、DB初期化 → EventBus → TaskRunner → Honoアプリの順で起動
 
-import { resolve } from 'node:path'
+import { resolve, dirname } from 'node:path'
 import { existsSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { createJiti } from 'jiti'
 import { serve } from '@hono/node-server'
-import { defineConfig, type SolitaryCodingConfig } from '@solitary-coding/shared'
-import { createApp, EventBus, openDb, TaskRunner } from '@solitary-coding/server'
+import { defineConfig, type CognacConfig } from '@cognac/shared'
+import { createApp, EventBus, openDb, TaskRunner } from '@cognac/server'
 
 /**
  * 設定ファイルを読み込む
  * jitiでTypeScriptの設定ファイルを動的に読み込んで、defineConfigでデフォルト値をマージする
  */
-async function loadConfig(cwd: string): Promise<SolitaryCodingConfig> {
-  const configPath = resolve(cwd, 'solitary-coding.config.ts')
+async function loadConfig(cwd: string): Promise<CognacConfig> {
+  const configPath = resolve(cwd, 'cognac.config.ts')
 
   if (!existsSync(configPath)) {
-    console.warn('⚠ solitary-coding.config.ts が見つからないよ。デフォルト設定で起動するね')
+    console.warn('⚠ cognac.config.ts が見つからないよ。デフォルト設定で起動するね')
     return defineConfig({})
   }
 
   const jiti = createJiti(cwd)
-  const mod = (await jiti.import(configPath)) as { default?: Partial<SolitaryCodingConfig> }
+  const mod = (await jiti.import(configPath)) as { default?: Partial<CognacConfig> }
   const userConfig = mod.default ?? {}
   return defineConfig(userConfig)
 }
@@ -35,7 +36,7 @@ export async function runStart(): Promise<void> {
   console.log(`🔧 ポート ${config.port} で起動するよ`)
 
   // DB初期化
-  const dbPath = resolve(cwd, '.solitary-coding', 'db.sqlite')
+  const dbPath = resolve(cwd, '.cognac', 'db.sqlite')
   const db = openDb(dbPath)
   console.log('✔ DB接続OK')
 
@@ -45,8 +46,12 @@ export async function runStart(): Promise<void> {
   // TaskRunner作成
   const runner = new TaskRunner(db, eventBus, config)
 
+  // ビルド済みクライアントのパスを解決（CLIバイナリと同階層の public/）
+  const __dirname = dirname(fileURLToPath(import.meta.url))
+  const publicDir = resolve(__dirname, 'public')
+
   // Honoアプリ作成
-  const app = createApp({ db, eventBus, runner })
+  const app = createApp({ db, eventBus, runner, publicDir })
 
   // サーバー起動
   const server = serve(
@@ -55,7 +60,7 @@ export async function runStart(): Promise<void> {
       port: config.port,
     },
     (info) => {
-      console.log(`🚀 Solitary Coding 起動！ http://localhost:${info.port}`)
+      console.log(`🚀 Cognac 起動！ http://localhost:${info.port}`)
     },
   )
 

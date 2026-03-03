@@ -27,7 +27,7 @@ export interface ClaudeConfig {
 }
 
 // 全体設定
-export interface SolitaryCodingConfig {
+export interface CognacConfig {
   port: number
   git: GitConfig
   ci: CiConfig
@@ -36,7 +36,7 @@ export interface SolitaryCodingConfig {
 }
 
 // デフォルト設定値
-const defaultConfig: SolitaryCodingConfig = {
+const defaultConfig: CognacConfig = {
   port: 4000,
   git: {
     defaultBranch: 'main',
@@ -58,7 +58,7 @@ const defaultConfig: SolitaryCodingConfig = {
 }
 
 // 設定ファイルのヘルパー関数
-export function defineConfig(config: Partial<SolitaryCodingConfig>): SolitaryCodingConfig {
+export function defineConfig(config: Partial<CognacConfig>): CognacConfig {
   return {
     ...defaultConfig,
     ...config,

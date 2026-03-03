@@ -1,5 +1,5 @@
 {
-  "name": "@solitary-coding/server",
+  "name": "@cognac/server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,13 +11,13 @@
   },
   "scripts": {
     "build": "tsup",
-    "dev": "tsx watch index.ts",
+    "dev": "tsx watch dev.ts",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'no lint configured yet'",
     "test": "echo 'no tests yet'"
   },
   "dependencies": {
-    "@solitary-coding/shared": "workspace:*",
+    "@cognac/shared": "workspace:*",
     "better-sqlite3": "^11.8.1",
     "hono": "^4.7.4",
     "@hono/node-server": "^1.13.8",

@@ -2,7 +2,7 @@
 // Claude Codeの呼び出し履歴を記録するやつ
 
 import type Database from 'better-sqlite3'
-import type { ExecutionLog } from '@solitary-coding/shared'
+import type { ExecutionLog } from '@cognac/shared'
 
 /**
  * 実行ログを作成する

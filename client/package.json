@@ -1,5 +1,5 @@
 {
-  "name": "@solitary-coding/client",
+  "name": "@cognac/client",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,10 +9,14 @@
     "typecheck": "tsc --noEmit",
     "lint": "echo 'no lint configured yet'",
     "test": "echo 'no tests yet'",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@solitary-coding/shared": "workspace:*",
+    "@cognac/shared": "workspace:*",
+    "@fontsource-variable/noto-sans": "^5.2.10",
+    "@fontsource-variable/noto-sans-jp": "^5.2.10",
     "@tanstack/react-query": "^5.67.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -23,10 +27,17 @@
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
+    "@storybook/addon-essentials": "8",
+    "@storybook/addon-interactions": "8",
+    "@storybook/blocks": "8",
+    "@storybook/react": "8",
+    "@storybook/react-vite": "8",
+    "@storybook/test": "8",
     "@tailwindcss/vite": "^4.0.0",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
+    "storybook": "8",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.3",
     "vite": "^6.2.0"

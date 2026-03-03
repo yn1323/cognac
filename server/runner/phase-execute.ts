@@ -1,4 +1,4 @@
-import type { Task, SolitaryCodingConfig, TaskEvent } from '@solitary-coding/shared'
+import type { Task, CognacConfig, TaskEvent } from '@cognac/shared'
 import { callClaude } from './claude-caller.js'
 import { StreamParser } from './stream-parser.js'
 
@@ -21,7 +21,7 @@ function buildExecutionPrompt(task: Task): string {
 // Phase 3を実行する
 export async function executePhase3(
   task: Task,
-  config: SolitaryCodingConfig,
+  config: CognacConfig,
   onEvent?: (event: TaskEvent) => void,
 ): Promise<{ sessionId: string; tokenInput: number; tokenOutput: number; durationMs: number }> {
   const prompt = buildExecutionPrompt(task)

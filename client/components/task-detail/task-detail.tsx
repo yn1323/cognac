@@ -1,7 +1,7 @@
 // タスク詳細表示
 // 概要情報 + 実行ログ
 
-import type { Task, TaskEvent } from '@solitary-coding/shared'
+import type { Task, TaskEvent } from '@cognac/shared'
 import { StatusBadge } from '@/components/status-badge'
 import { LogView } from '@/components/log-view'
 import { Button } from '@/components/ui/button'

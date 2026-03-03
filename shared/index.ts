@@ -12,7 +12,7 @@ export type {
   CiCache,
 } from './types/events.js'
 export type {
-  SolitaryCodingConfig,
+  CognacConfig,
   GitConfig,
   CiConfig,
   DiscussionConfig,

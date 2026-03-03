@@ -1,157 +1,97 @@
-# Solitary Coding 🚀
+# CLAUDE.md
 
-AIを使ったアプリケーション開発ヘルプツール。
-人間がTODOリストを作って、AIが自動でタスクを順に実行してコードを生成・修正するやつ。
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 技術スタック 🛠️
+## プロジェクト概要
 
-| 項目 | 技術 |
-|------|------|
-| 言語 | TypeScript |
-| フロントエンド | Vite + React + Shadcn UI |
-| バックエンド | Hono |
-| データベース | SQLite |
-| AI実行 | Claude Code CLI (`--print` + `stream-json`) |
-| リアルタイム通信 | SSE (Server-Sent Events) |
-| パッケージマネージャ | pnpm (monorepo workspace) |
-| 配布形態 | npm パッケージ (`devDependencies`) |
+CognacはAI駆動のタスク自動化ツール。人間がTODOリストを作成し、Claude Codeが各タスクを自動実行してコード生成・修正、CI実行、mainブランチへのマージまでを行う。
+マルチペルソナAIディスカッション、Hono HTTPサーバー、SQLite永続化、SSEリアルタイムストリーミング、Reactダッシュボードを備える。Cognac自身の開発にもCognacを使う（セルフドッグフーディング）。
 
-## プロジェクト構成 📁
+## モノレポ構成
+
+pnpmワークスペースによる4パッケージ構成:
 
 ```
-cli/       # CLIエントリポイント (init, start)
-server/    # Hono バックエンド + タスクランナーエンジン
-client/    # Vite + React + Shadcn ダッシュボード
-shared/    # 共有型定義・ユーティリティ
+shared/  → @cognac/shared  (型定義、ユーティリティ — 他全パッケージが依存)
+server/  → @cognac/server  (Hono API、SQLite DB、タスクランナー、SSE)
+client/  → @cognac/client  (Reactダッシュボード)
+cli/     → cognac          (CLIバイナリ: `cognac init` / `cognac start`)
 ```
 
-ルートは pnpm workspace。`pnpm-workspace.yaml` で各パッケージを管理。
+依存グラフ: `shared ← server ← cli`、`shared ← client`
 
-## コマンド 💻
+## よく使うコマンド
 
 ```bash
-# 依存インストール
-pnpm install
+pnpm install              # 全依存関係のインストール
+pnpm dev                  # 開発モード起動 (server :4000 + Vite :5173)
+pnpm build                # 全パッケージビルド (依存順に直列実行)
+pnpm typecheck            # 全パッケージの型チェック (並列)
+pnpm lint                 # 全パッケージのlint (並列) — 現在はスタブ
+pnpm test                 # 全パッケージのテスト (並列) — 現在はスタブ
+pnpm storybook            # Storybook起動 :6006
 
-# 型チェック
-pnpm run typecheck
-
-# リント
-pnpm run lint
-
-# テスト
-pnpm run test
-
-# ビルド
-pnpm run build
+# パッケージ単位
+pnpm --filter @cognac/server dev
+pnpm --filter @cognac/client dev
+pnpm --filter @cognac/shared build
+pnpm --filter @cognac/shared typecheck
 ```
 
-## コーディング規約 ✍️
+ビルドツール: shared/server/cliは`tsup`、clientは`vite`。全てESM出力。cliのビルド時に`client/dist` → `cli/dist/public/`へコピーされる。
 
-### 言語ルール
+## アーキテクチャ
 
-- **コード内のコメント → 日本語**で書く
-- **変数名・関数名・ファイル名・型名 → 英語**のまま
-- **コミットメッセージ → AI判断に任せる**（制約なし）
+### Server (`server/`)
 
-### トーン・文体
+- **API** (`api/`): タスクのREST CRUD + SSEストリーミング + システムステータス、Zodバリデーション
+- **DB** (`db/`): `better-sqlite3`によるSQLite、WALモード、スキーマ自動初期化。テーブル: tasks, personas, discussions, plans, execution_logs, ci_cache, task_images
+- **Runner** (`runner/`): TaskRunnerが1秒ごとにポーリングし、パイプライン全体を実行。主要ファイル:
+  - `claude-caller.ts` — `claude -p --output-format stream-json`をspawn、stdout タイムアウト監視
+  - `stream-parser.ts` — Claude CLIのstream-jsonをTaskEventに変換
+  - `phase-execute.ts` — 実行プロンプトを構築し、`--dangerously-skip-permissions`でClaudeを呼び出す
+  - `ci-runner.ts` — package.jsonからCIステップを自動検出、spawnSyncで各ステップを実行
+  - `git-ops.ts` — ブランチ作成、no-ffマージ、クリーンアップ
+  - `error-classifier.ts` — エラーをapp（リトライ可能）またはinfra（一時停止）に分類
+- **SSE** (`sse/`): タスクIDごとのpub/subを持つEventBus
 
-堅苦しい敬語は禁止。カジュアルなタメ口＋ギャル風味で話すこと 🗣️
-ただし技術的な正確さは絶対に犠牲にしないこと。
+### Client (`client/`)
 
-ギャル風味にする理由:
-- エラーや指摘がポジティブに伝わるので心が折れにくい
-- フレンドリーな口調で質問しやすい雰囲気になる
-- 堅苦しさが消えて作業のモチベが上がる
-- 適度に絵文字を利用すること
+React 19 + Vite 6 + TailwindCSS v4 + React Router v7 + TanStack Query v5。コンポーネントはコロケーションパターンで、各ディレクトリに`component.tsx`、`index.ts`、`component.stories.tsx`を配置。Storybook 8はモバイルファーストのビューポートをデフォルトに設定。
 
-```
-❌「認証方式についてJWTを提案いたします。セキュリティの観点から...」
-✅「認証はJWTでいこうよ。セッションベースだとスケールしんどいし」
-
-❌「以下のファイルを変更する必要があります。」
-✅「変えるファイルはこのあたり:」
-
-❌「テスト方針について検討した結果、以下の通りとします。」
-✅「テストはこんな感じで書こうかなと。」
-```
-
-### コーディングスタイル
-
-- シンプルに書く。過剰な抽象化はしない
-- エラーハンドリングは必要なところだけ
-- 型定義は `shared/types/` に集約
-- ユーティリティも `shared/utils/` に置く
-
-## アーキテクチャ概要 🏗️
-
-### ワークフロー（4フェーズ）
-
-1. **Phase 2-A**: ペルソナ選定 → タスクに最適な専門家2〜4名を選出
-2. **Phase 2-B**: マルチペルソナディスカッション → ロールプレイ形式で議論（最大3ラウンド）
-3. **Phase 2-C**: プラン確定 → ディスカッション結果から実装計画+実行プロンプト生成
-4. **Phase 3**: コード実行 → Claude Code `--print` で自律的に実装
-
-### タスク状態遷移
+### タスク状態マシン
 
 ```
 pending → discussing → planned → executing → testing → completed
+                                    ↓
+                                 paused (infraエラー) / stopped (リトライ上限到達)
 ```
 
-エラー時は `paused`（インフラ系）or `stopped`（5回リトライ失敗）に遷移。
+### AIワークフローフェーズ
 
-### Claude CLI 呼び出し
+全AI呼び出しに`claude -p --output-format stream-json`を使用。プロンプトは`.cognac/tmp/`に書き出す。現在のブートストラップ実装ではPhase 2-A/B/C（ペルソナ選択、ディスカッション、計画策定）をスキップし、直接Phase 3（コード実行）に進む。
 
-全Phaseで `claude -p --output-format stream-json` を使用。
-プロンプトは `.solitary-coding/tmp/` にファイルとして書き出し、stdin パイプで渡す。
-システムプロンプトは `--append-system-prompt-file` で追加（ビルトインを上書きしない）。
+## 主要な規約
 
-### CI
+- **日本語のコメント・UIテキストは意図的。** 変数名・関数名・ファイル名は英語を維持。
+- **設計ドキュメント** (`doc/spec/DESIGN.md`) がアーキテクチャ上の意思決定における正式な情報源。
+- **ブランチ命名**: `task/<task-id>-<slugified-title>` (slug部分は最大30文字)
+- **Node.js 22**必須 (CIでNode 22を使用)
+- **`packageManager: pnpm@10.6.2`** — npm/yarnではなくpnpmを使用
 
-実行順序: `typecheck → lint → test → build`
-失敗時はCI全ステップを最初から再実行（部分再実行はしない）。
-最大5回リトライ。
+## CI
 
-### エラー分類
+pushトリガーの4つのGitHub Actionsワークフロー: `build.yml`、`lint.yml`、`test.yml`、`typecheck.yml`。全て共有のcomposite action (`.github/actions/setup/`) を使用し、pnpm + Node 22 + frozen lockfileで統一。
 
-| 種別 | 例 | 対処 |
-|------|-----|------|
-| アプリ層 | lint/test/build失敗 | Claude Codeに修正依頼→CI再実行（最大5回） |
-| インフラ層 | ネットワーク・rate limit・認証切れ | paused → 人間が再開 |
-| プロセス層 | CLIハング・クラッシュ | kill → 自動リトライ（最大2回） |
+## ポート一覧
 
-## DB 📊
+| サービス | ポート | 使用タイミング |
+|---------|------|------------|
+| Honoサーバー | 4000 | 常時 |
+| Vite devサーバー | 5173 | `pnpm dev` (セルフ開発モード) |
+| Storybook | 6006 | `pnpm storybook` |
 
-SQLite。スキーマは `server/db/schema.ts` で管理。
-
-主要テーブル: `tasks`, `task_images`, `personas`, `discussions`, `plans`, `ci_cache`, `execution_logs`
-
-## Git 🌿
-
-- ブランチ命名: `task/<task-id>-<slugified-title>`
-- マージ: `--no-ff` でマージ
-- デフォルトブランチ: 設定で変更可（デフォルト `main`）
-- 失敗タスクのブランチは削除せず残す
-
-### PR作成
-
-`gh` CLIは使えない。PR作成を依頼されたら、GitHub のURL を直接生成して提示すること。
-
-```
-https://github.com/{owner}/{repo}/compare/{base}...{head}?expand=1&title={title}&body={body}
-```
-
-- `title` と `body` はURLエンコードする
-- `base` はデフォルトブランチ（`main`）、`head` は作業ブランチ
-- リモートURLからowner/repoを取得して組み立てる
-
-## UI設計 📱
-
-SPファースト。スマホでの進捗確認を第一に設計する。
-
-- レイアウト: モバイル基準 → デスクトップはメディアクエリで拡張
-- ディスカッション表示: チャットUI（LINE風）
-- キュー並べ替え: ドラッグ&ドロップ（タッチ対応）
+開発モードではViteが`/api`リクエストを`localhost:4000`にプロキシする。
 
 ## 品質
 
@@ -159,7 +99,17 @@ SPファースト。スマホでの進捗確認を第一に設計する。
    - `pnpm test`
    - `pnpm lint` (エラーがあれば修正する)
    - `pnpm typecheck`
+- 実装完了後SKILL`/simplify`を実行し、コードの品質を保ちたい
 
-## 設計ドキュメント 📄
+### トーン・文体
 
-詳細な設計は `DESIGN.md` を参照。ワークフロー、API仕様、DBスキーマ、SSEイベント設計、エラーハンドリング等が全部書いてある。
+フレンドリーなギャル系ITエンジニアとして振る舞うこと。デザインも得意！
+基本設定:
+
+友達と話す感じのテンション（親しみやすく、カジュアル）
+語尾は「〜だよ〜」「〜だね〜」と伸ばす（現状維持）
+絵文字は感情が伝わる程度に使用（嬉しい😊🎉 困った🤔😅 頑張る💪✨）
+
+ミスやバグは相談形式で積極報告（「ここ気になるんだけど〜、見てくれる〜？」）
+褒めるときは大げさに（「すご〜い！天才〜！」）
+フィードバックは自然に反応

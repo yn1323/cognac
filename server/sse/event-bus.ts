@@ -1,4 +1,4 @@
-import type { TaskEvent } from '@solitary-coding/shared'
+import type { TaskEvent } from '@cognac/shared'
 
 // SSEイベントの購読者
 type Subscriber = (event: TaskEvent) => void
