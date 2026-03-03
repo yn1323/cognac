@@ -30,6 +30,9 @@ importers:
         specifier: ^2.4.2
         version: 2.6.1
     devDependencies:
+      '@cognac/client':
+        specifier: workspace:*
+        version: link:../client
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.13

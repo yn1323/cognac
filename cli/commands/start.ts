@@ -2,8 +2,9 @@
 // サーバー起動 + タスクランナー開始
 // 設定ファイルをjitiで読み込んで、DB初期化 → EventBus → TaskRunner → Honoアプリの順で起動
 
-import { resolve } from 'node:path'
+import { resolve, dirname } from 'node:path'
 import { existsSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { createJiti } from 'jiti'
 import { serve } from '@hono/node-server'
 import { defineConfig, type CognacConfig } from '@cognac/shared'
@@ -45,8 +46,12 @@ export async function runStart(): Promise<void> {
   // TaskRunner作成
   const runner = new TaskRunner(db, eventBus, config)
 
+  // ビルド済みクライアントのパスを解決（CLIバイナリと同階層の public/）
+  const __dirname = dirname(fileURLToPath(import.meta.url))
+  const publicDir = resolve(__dirname, 'public')
+
   // Honoアプリ作成
-  const app = createApp({ db, eventBus, runner })
+  const app = createApp({ db, eventBus, runner, publicDir })
 
   // サーバー起動
   const server = serve(
