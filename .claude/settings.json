@@ -66,8 +66,8 @@
       "Bash(pnpm approve-builds)",
       "Bash(printf 'a\\\\ny\\\\n')",
       "Bash(pnpm -r exec echo \"ok\")",
-      "Bash(pnpm --filter @solitary-coding/shared typecheck)",
-      "Bash(pnpm --filter @solitary-coding/shared build)"
+      "Bash(pnpm --filter @cognac/shared typecheck)",
+      "Bash(pnpm --filter @cognac/shared build)"
     ],
     "deny": [],
     "additionalDirectories": [

@@ -1,6 +1,6 @@
 node_modules/
 dist/
-.solitary-coding/
+.cognac/
 *.tsbuildinfo
 
 settings.local.json

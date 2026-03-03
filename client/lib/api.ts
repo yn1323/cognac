@@ -1,7 +1,7 @@
 // APIクライアント
 // fetchのラッパー。ベースURLはvite proxyで /api にマッピングされてるから相対パスでOK
 
-import type { Task, CreateTaskInput, UpdateTaskInput } from '@solitary-coding/shared'
+import type { Task, CreateTaskInput, UpdateTaskInput } from '@cognac/shared'
 
 const BASE = '/api'
 

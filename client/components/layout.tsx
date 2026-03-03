@@ -11,7 +11,7 @@ export function Layout() {
         <div className="mx-auto max-w-2xl px-4 py-3 flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2 font-bold text-lg">
             <Zap className="h-5 w-5 text-yellow-500" />
-            Solitary Coding
+            Cognac
           </Link>
         </div>
       </header>

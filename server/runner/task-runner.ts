@@ -1,5 +1,5 @@
 import type Database from 'better-sqlite3'
-import type { SolitaryCodingConfig, TaskEvent, Task } from '@solitary-coding/shared'
+import type { CognacConfig, TaskEvent, Task } from '@cognac/shared'
 import type { EventBus } from '../sse/event-bus.js'
 import type { RunnerStatus } from '../api/system.js'
 import * as taskQueries from '../db/queries/tasks.js'
@@ -19,7 +19,7 @@ export class TaskRunner implements RunnerStatus {
   constructor(
     private db: Database.Database,
     private eventBus: EventBus,
-    private config: SolitaryCodingConfig,
+    private config: CognacConfig,
   ) {}
 
   getStatus(): 'running' | 'paused' | 'idle' {

@@ -2,7 +2,7 @@
 // SSEイベントを時系列で表示する
 
 import { useEffect, useRef } from 'react'
-import type { TaskEvent } from '@solitary-coding/shared'
+import type { TaskEvent } from '@cognac/shared'
 import { cn } from '@/lib/utils'
 
 // イベントを表示用テキストに変換する

@@ -1,8 +1,8 @@
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import type { CiStep, SolitaryCodingConfig, TaskEvent } from '@solitary-coding/shared'
-import { hashFiles } from '@solitary-coding/shared'
+import type { CiStep, CognacConfig, TaskEvent } from '@cognac/shared'
+import { hashFiles } from '@cognac/shared'
 import * as ciCacheQueries from '../db/queries/ci-cache.js'
 import type Database from 'better-sqlite3'
 
@@ -38,7 +38,7 @@ function detectFromPackageJson(cwd: string): CiStep[] {
 // CIステップを取得する（キャッシュ or 検出）
 export function getCiSteps(
   db: Database.Database,
-  config: SolitaryCodingConfig,
+  config: CognacConfig,
   cwd: string = process.cwd(),
 ): CiStep[] {
   // configで明示指定されてたらそれを使う

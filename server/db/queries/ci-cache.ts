@@ -2,7 +2,7 @@
 // CIステップの検出結果をハッシュで管理するやつ
 
 import type Database from 'better-sqlite3'
-import type { CiStep } from '@solitary-coding/shared'
+import type { CiStep } from '@cognac/shared'
 
 /**
  * キャッシュされたCIステップを取得する

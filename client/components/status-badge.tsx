@@ -1,7 +1,7 @@
 // ステータスバッジ
 // TaskStatus に応じた色付きバッジを表示する
 
-import type { TaskStatus } from '@solitary-coding/shared'
+import type { TaskStatus } from '@cognac/shared'
 import { Badge } from '@/components/ui/badge'
 
 // ステータスの日本語ラベル

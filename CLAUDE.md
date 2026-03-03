@@ -1,4 +1,4 @@
-# Solitary Coding 🚀
+# Cognac 🚀
 
 AIを使ったアプリケーション開発ヘルプツール。
 人間がTODOリストを作って、AIが自動でタスクを順に実行してコードを生成・修正するやつ。
@@ -103,7 +103,7 @@ pending → discussing → planned → executing → testing → completed
 ### Claude CLI 呼び出し
 
 全Phaseで `claude -p --output-format stream-json` を使用。
-プロンプトは `.solitary-coding/tmp/` にファイルとして書き出し、stdin パイプで渡す。
+プロンプトは `.cognac/tmp/` にファイルとして書き出し、stdin パイプで渡す。
 システムプロンプトは `--append-system-prompt-file` で追加（ビルトインを上書きしない）。
 
 ### CI

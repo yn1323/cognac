@@ -2,7 +2,7 @@
 // 基本的なやつ全部入り
 
 import type Database from 'better-sqlite3'
-import type { Task } from '@solitary-coding/shared'
+import type { Task } from '@cognac/shared'
 
 /**
  * タスクを作成する

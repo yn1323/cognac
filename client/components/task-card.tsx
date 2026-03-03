@@ -2,7 +2,7 @@
 // タスク一覧で表示するカード。タップで詳細ページへ遷移する
 
 import { Link } from 'react-router-dom'
-import type { Task } from '@solitary-coding/shared'
+import type { Task } from '@cognac/shared'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { StatusBadge } from '@/components/status-badge'
 

@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import type { CreateTaskInput } from '@solitary-coding/shared'
+import type { CreateTaskInput } from '@cognac/shared'
 
 export function useTasks() {
   return useQuery({

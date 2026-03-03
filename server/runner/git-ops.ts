@@ -2,7 +2,7 @@
 // ブランチ作成・マージ・削除とかをラップしてるやつ
 
 import { execSync } from 'node:child_process'
-import { slugify } from '@solitary-coding/shared'
+import { slugify } from '@cognac/shared'
 
 // gitコマンドを実行するヘルパー
 function git(args: string, cwd: string = process.cwd()): string {

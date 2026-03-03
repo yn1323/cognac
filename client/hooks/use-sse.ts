@@ -4,7 +4,7 @@
 // addEventListener でイベントタイプごとにリッスンする
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import type { TaskEvent } from '@solitary-coding/shared'
+import type { TaskEvent } from '@cognac/shared'
 
 // 全イベントタイプ（stream.ts が event フィールドに設定するやつ）
 const EVENT_TYPES = [

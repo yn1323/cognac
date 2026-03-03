@@ -10,7 +10,7 @@ import { spawn, type ChildProcess } from 'node:child_process'
 import { createReadStream, writeFileSync, unlinkSync, mkdirSync } from 'node:fs'
 import { createInterface } from 'node:readline'
 import path from 'node:path'
-import type { SolitaryCodingConfig } from '@solitary-coding/shared'
+import type { CognacConfig } from '@cognac/shared'
 import { StreamParser, type StreamChunk } from './stream-parser.js'
 
 // ── 共通トーンルール（全プロンプトに自動注入） ──
@@ -53,7 +53,7 @@ export class ProcessTimeoutError extends Error {
 
 // ── tmpディレクトリ ──
 
-const TMP_DIR = path.resolve('.solitary-coding', 'tmp')
+const TMP_DIR = path.resolve('.cognac', 'tmp')
 
 function ensureTmpDir(): void {
   mkdirSync(TMP_DIR, { recursive: true })
@@ -63,7 +63,7 @@ function ensureTmpDir(): void {
 
 export async function callClaude(
   options: CallClaudeOptions,
-  config: SolitaryCodingConfig,
+  config: CognacConfig,
 ): Promise<ClaudeResponse> {
   ensureTmpDir()
 

@@ -6,7 +6,7 @@
  * 不明なチャンクタイプはスキップ（warn出すだけ、throwしない）。
  */
 
-import type { TaskEvent } from '@solitary-coding/shared'
+import type { TaskEvent } from '@cognac/shared'
 
 // ── Claude CLIが吐くstream-jsonの型 ──
 

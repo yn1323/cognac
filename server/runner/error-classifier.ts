@@ -2,7 +2,7 @@
 // stderr/stdoutの内容からエラーの種別を判定する
 // task-runner.ts から呼ばれて、リトライ戦略の分岐に使う
 
-import type { ErrorType } from '@solitary-coding/shared'
+import type { ErrorType } from '@cognac/shared'
 
 // インフラ系エラーのパターン（正規表現）
 // ここにマッチしたら人間が介入しないと直せないやつ
