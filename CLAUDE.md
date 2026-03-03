@@ -127,6 +127,18 @@ SQLite。スキーマは `packages/server/src/db/schema.ts` で管理。
 - デフォルトブランチ: 設定で変更可（デフォルト `main`）
 - 失敗タスクのブランチは削除せず残す
 
+### PR作成
+
+`gh` CLIは使えない。PR作成を依頼されたら、GitHub のURL を直接生成して提示すること。
+
+```
+https://github.com/{owner}/{repo}/compare/{base}...{head}?expand=1&title={title}&body={body}
+```
+
+- `title` と `body` はURLエンコードする
+- `base` はデフォルトブランチ（`main`）、`head` は作業ブランチ
+- リモートURLからowner/repoを取得して組み立てる
+
 ## UI設計 📱
 
 SPファースト。スマホでの進捗確認を第一に設計する。
