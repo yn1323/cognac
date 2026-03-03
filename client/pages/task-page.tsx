@@ -1,47 +1,159 @@
 // タスク詳細ページ
-// URL パラメータからタスクIDを取得して詳細+ログを表示
+// タブ切り替えで Overview / Discussion / Plan / Logs / CI を表示
+// PC: サイドバー + メインコンテンツ / SP: SPDetailHeader + ボディ
 
-import { useParams, Link } from 'react-router-dom'
-import { useTask } from '@/hooks/use-tasks'
-import { useTaskSSE } from '@/hooks/use-sse'
-import { TaskDetail } from '@/components/task-detail'
+import { useState } from 'react'
+import { Sidebar } from '@/components/sidebar'
+import { SPDetailHeader } from '@/components/sp-detail-header'
+import { DetailTabs, type Tab } from '@/components/detail-tabs'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
+import { PCOverviewTab, SPOverviewTab } from '@/pages/task-detail/overview-tab'
+import {
+  PCDiscussionTab,
+  SPDiscussionTab,
+} from '@/pages/task-detail/discussion-tab'
+import { PCPlanTab, SPPlanTab } from '@/pages/task-detail/plan-tab'
+import { PCLogsTab, SPLogsTab } from '@/pages/task-detail/logs-tab'
+import { PCCITab, SPCITab } from '@/pages/task-detail/ci-tab'
+
+// --- モックデータ ---
+
+const MOCK_TASK = {
+  id: 7,
+  title: 'Implement user authentication with JWT',
+  status: 'discussing' as const,
+  phase: 'Phase 2-B: Multi-Persona Discussion',
+}
+
+// --- PC版タブボディ ---
+
+function PCTabBody({ activeTab }: { activeTab: Tab }) {
+  switch (activeTab) {
+    case 'Overview':
+      return <PCOverviewTab />
+    case 'Discussion':
+      return <PCDiscussionTab />
+    case 'Plan':
+      return <PCPlanTab />
+    case 'Logs':
+      return <PCLogsTab />
+    case 'CI':
+      return <PCCITab />
+  }
+}
+
+// --- SP版タブボディ ---
+
+function SPTabBody({ activeTab }: { activeTab: Tab }) {
+  switch (activeTab) {
+    case 'Overview':
+      return <SPOverviewTab />
+    case 'Discussion':
+      return <SPDiscussionTab />
+    case 'Plan':
+      return <SPPlanTab />
+    case 'Logs':
+      return <SPLogsTab />
+    case 'CI':
+      return <SPCITab />
+  }
+}
+
+// --- PC版 ---
+
+function PCTaskDetail({ activeTab, onTabChange }: { activeTab: Tab; onTabChange: (tab: Tab) => void }) {
+  return (
+    <div className="flex h-screen bg-background">
+      <Sidebar activeItem="Tasks" className="h-full shrink-0" />
+
+      <main className="flex flex-1 flex-col gap-6 overflow-y-auto p-8">
+        {/* ヘッダー */}
+        <div className="flex flex-col gap-4">
+          {/* パンくずリスト */}
+          <div className="flex items-center gap-1.5 text-[13px]">
+            <span className="text-[#2563eb]">Tasks</span>
+            <span className="text-muted-foreground">/</span>
+            <span className="text-muted-foreground">
+              Task #{MOCK_TASK.id}
+            </span>
+          </div>
+
+          {/* タイトル行 */}
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-1">
+              <h1 className="text-[22px] font-semibold leading-[1.3] text-foreground">
+                {MOCK_TASK.title}
+              </h1>
+              <div className="flex items-center gap-3">
+                <Badge variant="discussing">Discussing</Badge>
+                <span className="text-[13px] text-muted-foreground">
+                  {MOCK_TASK.phase}
+                </span>
+                <span className="text-[13px] text-muted-foreground">
+                  Created 15 min ago
+                </span>
+              </div>
+            </div>
+            <Button variant="destructive">Cancel</Button>
+          </div>
+        </div>
+
+        {/* タブバー */}
+        <DetailTabs
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          variant="pc"
+        />
+
+        {/* タブボディ */}
+        <PCTabBody activeTab={activeTab} />
+      </main>
+    </div>
+  )
+}
+
+// --- SP版 ---
+
+function SPTaskDetail({ activeTab, onTabChange }: { activeTab: Tab; onTabChange: (tab: Tab) => void }) {
+  return (
+    <div className="flex h-screen flex-col bg-background">
+      {/* ヘッダー + タブ */}
+      <SPDetailHeader
+        title="Implement JWT auth"
+        subtitle={`Task #${MOCK_TASK.id} · Discussing`}
+        onBack={() => {}}
+      >
+        <DetailTabs
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          variant="sp"
+        />
+      </SPDetailHeader>
+
+      {/* ボディ */}
+      <main className="flex flex-1 flex-col overflow-y-auto p-4">
+        <SPTabBody activeTab={activeTab} />
+      </main>
+    </div>
+  )
+}
+
+// --- エクスポート ---
 
 export function TaskPage() {
-  const { id } = useParams<{ id: string }>()
-  const taskId = Number(id)
-  const { data: task, isLoading, error } = useTask(taskId)
-  const { events, connected } = useTaskSSE(taskId)
-
-  if (isLoading) {
-    return <div className="text-center text-muted-foreground py-8">読み込み中...</div>
-  }
-
-  if (error || !task) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-destructive mb-4">タスクが見つからないよ</p>
-        <Link to="/">
-          <Button variant="outline">
-            <ArrowLeft className="h-4 w-4" />
-            一覧に戻る
-          </Button>
-        </Link>
-      </div>
-    )
-  }
+  const [activeTab, setActiveTab] = useState<Tab>('Overview')
 
   return (
-    <div className="space-y-4">
-      <Link to="/">
-        <Button variant="ghost" size="sm">
-          <ArrowLeft className="h-4 w-4" />
-          戻る
-        </Button>
-      </Link>
-
-      <TaskDetail task={task} events={events} connected={connected} />
-    </div>
+    <>
+      {/* PC版: md以上で表示 */}
+      <div className="hidden md:block">
+        <PCTaskDetail activeTab={activeTab} onTabChange={setActiveTab} />
+      </div>
+      {/* SP版: md未満で表示 */}
+      <div className="md:hidden">
+        <SPTaskDetail activeTab={activeTab} onTabChange={setActiveTab} />
+      </div>
+    </>
   )
 }
