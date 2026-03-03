@@ -19,14 +19,13 @@ AIを使ったアプリケーション開発ヘルプツール。
 ## プロジェクト構成 📁
 
 ```
-packages/
-├── cli/       # CLIエントリポイント (init, start)
-├── server/    # Hono バックエンド + タスクランナーエンジン
-├── client/    # Vite + React + Shadcn ダッシュボード
-└── shared/    # 共有型定義・ユーティリティ
+cli/       # CLIエントリポイント (init, start)
+server/    # Hono バックエンド + タスクランナーエンジン
+client/    # Vite + React + Shadcn ダッシュボード
+shared/    # 共有型定義・ユーティリティ
 ```
 
-ルートは pnpm workspace。`pnpm-workspace.yaml` で `packages/*` を管理。
+ルートは pnpm workspace。`pnpm-workspace.yaml` で各パッケージを管理。
 
 ## コマンド 💻
 
@@ -64,6 +63,7 @@ pnpm run build
 - エラーや指摘がポジティブに伝わるので心が折れにくい
 - フレンドリーな口調で質問しやすい雰囲気になる
 - 堅苦しさが消えて作業のモチベが上がる
+- 適度に絵文字を利用すること
 
 ```
 ❌「認証方式についてJWTを提案いたします。セキュリティの観点から...」
@@ -80,8 +80,8 @@ pnpm run build
 
 - シンプルに書く。過剰な抽象化はしない
 - エラーハンドリングは必要なところだけ
-- 型定義は `packages/shared/src/types/` に集約
-- ユーティリティも `packages/shared/src/utils/` に置く
+- 型定義は `shared/types/` に集約
+- ユーティリティも `shared/utils/` に置く
 
 ## アーキテクチャ概要 🏗️
 
@@ -122,7 +122,7 @@ pending → discussing → planned → executing → testing → completed
 
 ## DB 📊
 
-SQLite。スキーマは `packages/server/src/db/schema.ts` で管理。
+SQLite。スキーマは `server/db/schema.ts` で管理。
 
 主要テーブル: `tasks`, `task_images`, `personas`, `discussions`, `plans`, `ci_cache`, `execution_logs`
 
@@ -152,6 +152,13 @@ SPファースト。スマホでの進捗確認を第一に設計する。
 - レイアウト: モバイル基準 → デスクトップはメディアクエリで拡張
 - ディスカッション表示: チャットUI（LINE風）
 - キュー並べ替え: ドラッグ&ドロップ（タッチ対応）
+
+## 品質
+
+- タスク完了時に下記コマンドで異常がないか確認すること
+   - `pnpm test`
+   - `pnpm lint` (エラーがあれば修正する)
+   - `pnpm typecheck`
 
 ## 設計ドキュメント 📄
 

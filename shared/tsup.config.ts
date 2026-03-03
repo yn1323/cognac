@@ -1,9 +1,8 @@
 import { defineConfig } from 'tsup'
 
 export default defineConfig({
-  entry: ['src/index.ts'],
+  entry: ['index.ts'],
   format: ['esm'],
   dts: true,
   clean: true,
-  external: ['better-sqlite3'],
 })
