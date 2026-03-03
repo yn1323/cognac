@@ -581,174 +581,11 @@
       "fill": "$--background",
       "children": [
         {
-          "id": "1qtxi",
+          "id": "YG6BK",
           "type": "ref",
-          "ref": "PV1ln",
-          "height": "fill_container",
+          "ref": "vaicN",
           "name": "sidebar",
-          "descendants": {
-            "u7yK2": {
-              "fill": "$--primary",
-              "children": [
-                {
-                  "type": "icon_font",
-                  "id": "yLHPX",
-                  "x": 6,
-                  "y": 6,
-                  "width": 20,
-                  "height": 20,
-                  "iconFontName": "wine",
-                  "iconFontFamily": "lucide",
-                  "fill": "$--primary-foreground"
-                }
-              ]
-            },
-            "3WFtr": {
-              "children": [
-                {
-                  "type": "text",
-                  "id": "61ayY",
-                  "fill": "$--sidebar-foreground",
-                  "content": "Cognac",
-                  "lineHeight": 1.4,
-                  "fontFamily": "Inter",
-                  "fontSize": 14,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            "47U5w": {
-              "children": [
-                {
-                  "id": "2wEkj",
-                  "type": "ref",
-                  "ref": "24cM4",
-                  "name": "sectionMain",
-                  "descendants": {
-                    "pWGDv": {
-                      "content": "Navigation"
-                    }
-                  }
-                },
-                {
-                  "id": "AOQuz",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "navDash1",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "hSrsq",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "layout-dashboard",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Dashboard"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "gDHDI",
-                  "type": "ref",
-                  "ref": "qCCo8",
-                  "name": "navTasks1",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "RMLBI",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "list-checks",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Tasks"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "rgKXX",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "navLogs",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "jhJSl",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "terminal",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Logs"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "u7lrE",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "navSettings",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "2EwMR",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "settings",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Settings"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                }
-              ]
-            }
-          }
+          "height": "fill_container"
         },
         {
           "type": "frame",
@@ -1188,174 +1025,11 @@
       "fill": "$--background",
       "children": [
         {
-          "id": "6enzj",
+          "id": "LhZ7b",
           "type": "ref",
-          "ref": "PV1ln",
-          "height": "fill_container",
-          "name": "sidebar2",
-          "descendants": {
-            "u7yK2": {
-              "fill": "$--primary",
-              "children": [
-                {
-                  "type": "icon_font",
-                  "id": "XmnX1",
-                  "x": 6,
-                  "y": 6,
-                  "width": 20,
-                  "height": 20,
-                  "iconFontName": "wine",
-                  "iconFontFamily": "lucide",
-                  "fill": "$--primary-foreground"
-                }
-              ]
-            },
-            "3WFtr": {
-              "children": [
-                {
-                  "type": "text",
-                  "id": "LChVo",
-                  "fill": "$--sidebar-foreground",
-                  "content": "Cognac",
-                  "lineHeight": 1.4,
-                  "fontFamily": "Inter",
-                  "fontSize": 14,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            "47U5w": {
-              "children": [
-                {
-                  "id": "j8MoV",
-                  "type": "ref",
-                  "ref": "24cM4",
-                  "name": "nav2Section",
-                  "descendants": {
-                    "pWGDv": {
-                      "content": "Navigation"
-                    }
-                  }
-                },
-                {
-                  "id": "q9f8x",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "nav2Dash",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "YQk09",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "layout-dashboard",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Dashboard"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "P1hmW",
-                  "type": "ref",
-                  "ref": "qCCo8",
-                  "name": "nav2Tasks",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "C24Od",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "list-checks",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Tasks"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "Vp9yn",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "nav2Logs",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "jzGY1",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "terminal",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Logs"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "FbbX4",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "nav2Settings",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "wQ3ZA",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "settings",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Settings"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                }
-              ]
-            }
-          }
+          "ref": "vaicN",
+          "name": "sidebar",
+          "height": "fill_container"
         },
         {
           "type": "frame",
@@ -1893,174 +1567,11 @@
       "fill": "$--background",
       "children": [
         {
-          "id": "48tfi",
+          "id": "I5aQj",
           "type": "ref",
-          "ref": "PV1ln",
+          "ref": "vaicN",
           "name": "sidebar",
-          "height": "fill_container",
-          "descendants": {
-            "u7yK2": {
-              "fill": "$--primary",
-              "children": [
-                {
-                  "type": "icon_font",
-                  "id": "WlRJq",
-                  "x": 6,
-                  "y": 6,
-                  "width": 20,
-                  "height": 20,
-                  "iconFontName": "wine",
-                  "iconFontFamily": "lucide",
-                  "fill": "$--primary-foreground"
-                }
-              ]
-            },
-            "3WFtr": {
-              "children": [
-                {
-                  "type": "text",
-                  "id": "jMzsC",
-                  "fill": "$--sidebar-foreground",
-                  "content": "Cognac",
-                  "lineHeight": 1.4,
-                  "fontFamily": "Inter",
-                  "fontSize": 14,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            "47U5w": {
-              "children": [
-                {
-                  "id": "p5Yif",
-                  "type": "ref",
-                  "ref": "24cM4",
-                  "name": "nav2Section",
-                  "descendants": {
-                    "pWGDv": {
-                      "content": "Navigation"
-                    }
-                  }
-                },
-                {
-                  "id": "F7MUe",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "nav2Dash",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "2EtZo",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "layout-dashboard",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Dashboard"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "FwKpN",
-                  "type": "ref",
-                  "ref": "qCCo8",
-                  "name": "nav2Tasks",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "QNqJA",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "list-checks",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Tasks"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "NtNAv",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "nav2Logs",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "EXXFQ",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "terminal",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Logs"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "xQtAO",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "nav2Settings",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "3newZ",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "settings",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Settings"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                }
-              ]
-            }
-          }
+          "height": "fill_container"
         },
         {
           "type": "frame",
@@ -3225,174 +2736,11 @@
       "fill": "$--background",
       "children": [
         {
-          "id": "mhzkX",
+          "id": "4562U",
           "type": "ref",
-          "ref": "PV1ln",
-          "name": "sidebar2",
-          "height": "fill_container",
-          "descendants": {
-            "u7yK2": {
-              "fill": "$--primary",
-              "children": [
-                {
-                  "type": "icon_font",
-                  "id": "OKwhx",
-                  "x": 6,
-                  "y": 6,
-                  "width": 20,
-                  "height": 20,
-                  "iconFontName": "wine",
-                  "iconFontFamily": "lucide",
-                  "fill": "$--primary-foreground"
-                }
-              ]
-            },
-            "3WFtr": {
-              "children": [
-                {
-                  "type": "text",
-                  "id": "zx6pg",
-                  "fill": "$--sidebar-foreground",
-                  "content": "Cognac",
-                  "lineHeight": 1.4,
-                  "fontFamily": "Inter",
-                  "fontSize": 14,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            "47U5w": {
-              "children": [
-                {
-                  "id": "CVLrd",
-                  "type": "ref",
-                  "ref": "24cM4",
-                  "name": "nav2Section",
-                  "descendants": {
-                    "pWGDv": {
-                      "content": "Navigation"
-                    }
-                  }
-                },
-                {
-                  "id": "F2BUj",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "nav2Dash",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "dbRv0",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "layout-dashboard",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Dashboard"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "71Mjj",
-                  "type": "ref",
-                  "ref": "qCCo8",
-                  "name": "nav2Tasks",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "DZzD8",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "list-checks",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Tasks"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "oj75z",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "nav2Logs",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "njv9V",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "terminal",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Logs"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "JyApN",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "nav2Settings",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "TG1AR",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "settings",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Settings"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                }
-              ]
-            }
-          }
+          "ref": "vaicN",
+          "name": "sidebar",
+          "height": "fill_container"
         },
         {
           "type": "frame",
@@ -4351,174 +3699,11 @@
       "fill": "$--background",
       "children": [
         {
-          "id": "itQa7",
+          "id": "e1HHx",
           "type": "ref",
-          "ref": "PV1ln",
-          "name": "logsSidebar",
-          "height": "fill_container",
-          "descendants": {
-            "u7yK2": {
-              "fill": "$--primary",
-              "children": [
-                {
-                  "type": "icon_font",
-                  "id": "wLImG",
-                  "x": 6,
-                  "y": 6,
-                  "width": 20,
-                  "height": 20,
-                  "iconFontName": "wine",
-                  "iconFontFamily": "lucide",
-                  "fill": "$--primary-foreground"
-                }
-              ]
-            },
-            "3WFtr": {
-              "children": [
-                {
-                  "type": "text",
-                  "id": "TUgEq",
-                  "fill": "$--sidebar-foreground",
-                  "content": "Cognac",
-                  "lineHeight": 1.4,
-                  "fontFamily": "Inter",
-                  "fontSize": 14,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            "47U5w": {
-              "children": [
-                {
-                  "id": "JAm65",
-                  "type": "ref",
-                  "ref": "24cM4",
-                  "name": "nav2Section",
-                  "descendants": {
-                    "pWGDv": {
-                      "content": "Navigation"
-                    }
-                  }
-                },
-                {
-                  "id": "M0Djy",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "nav2Dash",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "RyPBb",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "layout-dashboard",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Dashboard"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "oPE6T",
-                  "type": "ref",
-                  "ref": "qCCo8",
-                  "name": "nav2Tasks",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "fEyCH",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "list-checks",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Tasks"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "20pqJ",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "nav2Logs",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "IzCfZ",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "terminal",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Logs"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "RZjrc",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "nav2Settings",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "npXVd",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "settings",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Settings"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                }
-              ]
-            }
-          }
+          "ref": "vaicN",
+          "name": "sidebar",
+          "height": "fill_container"
         },
         {
           "type": "frame",
@@ -5188,174 +4373,11 @@
       "fill": "$--background",
       "children": [
         {
-          "id": "sgAjQ",
+          "id": "9aVMX",
           "type": "ref",
-          "ref": "PV1ln",
-          "name": "ciSidebar",
-          "height": "fill_container",
-          "descendants": {
-            "u7yK2": {
-              "fill": "$--primary",
-              "children": [
-                {
-                  "type": "icon_font",
-                  "id": "dYOrL",
-                  "x": 6,
-                  "y": 6,
-                  "width": 20,
-                  "height": 20,
-                  "iconFontName": "wine",
-                  "iconFontFamily": "lucide",
-                  "fill": "$--primary-foreground"
-                }
-              ]
-            },
-            "3WFtr": {
-              "children": [
-                {
-                  "type": "text",
-                  "id": "aTHA8",
-                  "fill": "$--sidebar-foreground",
-                  "content": "Cognac",
-                  "lineHeight": 1.4,
-                  "fontFamily": "Inter",
-                  "fontSize": 14,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            "47U5w": {
-              "children": [
-                {
-                  "id": "F4cgF",
-                  "type": "ref",
-                  "ref": "24cM4",
-                  "name": "nav2Section",
-                  "descendants": {
-                    "pWGDv": {
-                      "content": "Navigation"
-                    }
-                  }
-                },
-                {
-                  "id": "slSVp",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "nav2Dash",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "idEFE",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "layout-dashboard",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Dashboard"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "ljJev",
-                  "type": "ref",
-                  "ref": "qCCo8",
-                  "name": "nav2Tasks",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "W2iFa",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "list-checks",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Tasks"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "CI4NR",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "nav2Logs",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "sGkpr",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "terminal",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Logs"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "r2aWE",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "nav2Settings",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "g7Udi",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "settings",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Settings"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                }
-              ]
-            }
-          }
+          "ref": "vaicN",
+          "name": "sidebar",
+          "height": "fill_container"
         },
         {
           "type": "frame",
@@ -5806,174 +4828,11 @@
           "fill": "$--background",
           "children": [
             {
-              "id": "waP1N",
+              "id": "t0Ppe",
               "type": "ref",
-              "ref": "PV1ln",
-              "height": "fill_container",
+              "ref": "vaicN",
               "name": "sidebar",
-              "descendants": {
-                "u7yK2": {
-                  "fill": "$--primary",
-                  "children": [
-                    {
-                      "type": "icon_font",
-                      "id": "2829A",
-                      "x": 6,
-                      "y": 6,
-                      "width": 20,
-                      "height": 20,
-                      "iconFontName": "bot",
-                      "iconFontFamily": "lucide",
-                      "fill": "$--primary-foreground"
-                    }
-                  ]
-                },
-                "3WFtr": {
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "KOtHM",
-                      "fill": "$--sidebar-foreground",
-                      "content": "Cognac",
-                      "lineHeight": 1.4,
-                      "fontFamily": "Inter",
-                      "fontSize": 14,
-                      "fontWeight": "600"
-                    }
-                  ]
-                },
-                "47U5w": {
-                  "children": [
-                    {
-                      "id": "suT7f",
-                      "type": "ref",
-                      "ref": "24cM4",
-                      "name": "sectionMain",
-                      "descendants": {
-                        "pWGDv": {
-                          "content": "Navigation"
-                        }
-                      }
-                    },
-                    {
-                      "id": "ugM7K",
-                      "type": "ref",
-                      "ref": "qCCo8",
-                      "name": "navDashboard",
-                      "descendants": {
-                        "nmQwi": {
-                          "children": [
-                            {
-                              "type": "icon_font",
-                              "id": "keHnx",
-                              "x": 0,
-                              "y": 0,
-                              "width": 16,
-                              "height": 16,
-                              "iconFontName": "layout-dashboard",
-                              "iconFontFamily": "lucide",
-                              "fill": "$--sidebar-foreground"
-                            }
-                          ]
-                        },
-                        "0Ru22": {
-                          "content": "Dashboard"
-                        },
-                        "eSZOD": {
-                          "enabled": false
-                        }
-                      }
-                    },
-                    {
-                      "id": "73OPp",
-                      "type": "ref",
-                      "ref": "jBcUh",
-                      "name": "navTasks",
-                      "descendants": {
-                        "nmQwi": {
-                          "children": [
-                            {
-                              "type": "icon_font",
-                              "id": "I5wyA",
-                              "x": 0,
-                              "y": 0,
-                              "width": 16,
-                              "height": 16,
-                              "iconFontName": "list-checks",
-                              "iconFontFamily": "lucide",
-                              "fill": "$--sidebar-foreground"
-                            }
-                          ]
-                        },
-                        "0Ru22": {
-                          "content": "Tasks"
-                        },
-                        "eSZOD": {
-                          "enabled": false
-                        }
-                      }
-                    },
-                    {
-                      "id": "guaB7",
-                      "type": "ref",
-                      "ref": "jBcUh",
-                      "name": "navLogs",
-                      "descendants": {
-                        "nmQwi": {
-                          "children": [
-                            {
-                              "type": "icon_font",
-                              "id": "PQlCF",
-                              "x": 0,
-                              "y": 0,
-                              "width": 16,
-                              "height": 16,
-                              "iconFontName": "terminal",
-                              "iconFontFamily": "lucide",
-                              "fill": "$--sidebar-foreground"
-                            }
-                          ]
-                        },
-                        "0Ru22": {
-                          "content": "Logs"
-                        },
-                        "eSZOD": {
-                          "enabled": false
-                        }
-                      }
-                    },
-                    {
-                      "id": "nxsTP",
-                      "type": "ref",
-                      "ref": "jBcUh",
-                      "name": "navSettings",
-                      "descendants": {
-                        "nmQwi": {
-                          "children": [
-                            {
-                              "type": "icon_font",
-                              "id": "vOHw9",
-                              "x": 0,
-                              "y": 0,
-                              "width": 16,
-                              "height": 16,
-                              "iconFontName": "settings",
-                              "iconFontFamily": "lucide",
-                              "fill": "$--sidebar-foreground"
-                            }
-                          ]
-                        },
-                        "0Ru22": {
-                          "content": "Settings"
-                        },
-                        "eSZOD": {
-                          "enabled": false
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
+              "height": "fill_container"
             },
             {
               "type": "frame",
@@ -7473,172 +6332,14 @@
       "fill": "$--background",
       "children": [
         {
-          "id": "vJ5W6",
+          "id": "O8ZiP",
           "type": "ref",
-          "ref": "PV1ln",
-          "name": "setSidebar",
+          "ref": "vaicN",
+          "name": "sidebar",
           "height": "fill_container",
           "descendants": {
-            "u7yK2": {
-              "fill": "$--primary",
-              "children": [
-                {
-                  "type": "icon_font",
-                  "id": "F6IrC",
-                  "x": 6,
-                  "y": 6,
-                  "width": 20,
-                  "height": 20,
-                  "iconFontName": "wine",
-                  "iconFontFamily": "lucide",
-                  "fill": "$--primary-foreground"
-                }
-              ]
-            },
-            "3WFtr": {
-              "children": [
-                {
-                  "type": "text",
-                  "id": "4EPg6",
-                  "fill": "$--sidebar-foreground",
-                  "content": "Cognac",
-                  "lineHeight": 1.4,
-                  "fontFamily": "Inter",
-                  "fontSize": 14,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            "47U5w": {
-              "children": [
-                {
-                  "id": "ULtcI",
-                  "type": "ref",
-                  "ref": "24cM4",
-                  "name": "sectionMain",
-                  "descendants": {
-                    "pWGDv": {
-                      "content": "Navigation"
-                    }
-                  }
-                },
-                {
-                  "id": "HlTFX",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "setDash",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "0fUAE",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "layout-dashboard",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Dashboard"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "ZPgQ5",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "navTasks",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "IEKVX",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "list-checks",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Tasks"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "7dTo2",
-                  "type": "ref",
-                  "ref": "jBcUh",
-                  "name": "navLogs",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "o5WGZ",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "terminal",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Logs"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                },
-                {
-                  "id": "8h8c0",
-                  "type": "ref",
-                  "ref": "qCCo8",
-                  "name": "setNav",
-                  "descendants": {
-                    "nmQwi": {
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "Tutmp",
-                          "x": 0,
-                          "y": 0,
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "settings",
-                          "iconFontFamily": "lucide",
-                          "fill": "$--sidebar-foreground"
-                        }
-                      ]
-                    },
-                    "0Ru22": {
-                      "content": "Settings"
-                    },
-                    "eSZOD": {
-                      "enabled": false
-                    }
-                  }
-                }
-              ]
+            "S0PJj": {
+              "fill": []
             }
           }
         },
@@ -16575,6 +15276,75 @@
               ]
             }
           ]
+        },
+        {
+          "id": "vaicN",
+          "type": "ref",
+          "reusable": true,
+          "ref": "PV1ln",
+          "name": "Sidebar/Cognac",
+          "x": 1600,
+          "y": 40,
+          "height": 656,
+          "descendants": {
+            "u7yK2": {
+              "fill": "$--primary"
+            },
+            "nIojH": {
+              "fill": "$--primary-foreground",
+              "height": 20,
+              "width": 20,
+              "x": 6,
+              "y": 6
+            },
+            "xFmFv": {
+              "content": "Cognac",
+              "fontWeight": "600"
+            },
+            "f9xLx": {
+              "enabled": false
+            },
+            "47U5w": {
+              "children": [
+                {
+                  "id": "S0PJj",
+                  "type": "ref",
+                  "ref": "qCCo8",
+                  "name": "navTasks",
+                  "width": "fill_container",
+                  "descendants": {
+                    "r6B2W": {
+                      "iconFontName": "list-checks"
+                    },
+                    "0Ru22": {
+                      "content": "Tasks"
+                    },
+                    "eSZOD": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "6eYn3",
+                  "type": "ref",
+                  "ref": "jBcUh",
+                  "name": "navSettings",
+                  "width": "fill_container",
+                  "descendants": {
+                    "r6B2W": {
+                      "iconFontName": "settings"
+                    },
+                    "0Ru22": {
+                      "content": "Settings"
+                    },
+                    "eSZOD": {
+                      "enabled": false
+                    }
+                  }
+                }
+              ]
+            }
+          }
         }
       ]
     }

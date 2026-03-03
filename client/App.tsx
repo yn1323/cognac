@@ -12,9 +12,9 @@ export function App() {
       <Routes>
         {/* ダッシュボードは独自レイアウト（サイドバー / SP BottomNav） */}
         <Route index element={<DashboardPage />} />
-        <Route element={<Layout />}>
-          <Route path="/tasks/:id" element={<TaskPage />} />
-        </Route>
+        {/* タスク詳細も独自レイアウト（サイドバー / SPDetailHeader） */}
+        <Route path="/tasks/:id" element={<TaskPage />} />
+        <Route element={<Layout />}>{/* 将来の共通レイアウトページ */}</Route>
       </Routes>
     </BrowserRouter>
   )

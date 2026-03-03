@@ -19,9 +19,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Dashboard' },
   { icon: ListChecks, label: 'Tasks', active: true },
-  { icon: Terminal, label: 'Logs' },
   { icon: Settings, label: 'Settings' },
 ]
 

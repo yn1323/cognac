@@ -307,12 +307,10 @@ function SPDashboard() {
 
       {/* ボトムナビ */}
       <SPBottomNav>
-        <SPNavItem icon={LayoutDashboard} label="Dashboard" />
         <SPNavItem icon={ListChecks} label="Tasks" active />
         <button type="button" className="flex flex-col items-center gap-1">
           <PlusCircle className="h-7 w-7 text-primary" />
         </button>
-        <SPNavItem icon={Terminal} label="Logs" />
         <SPNavItem icon={Settings} label="Settings" />
       </SPBottomNav>
     </div>
