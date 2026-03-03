@@ -19,14 +19,13 @@ AIを使ったアプリケーション開発ヘルプツール。
 ## プロジェクト構成 📁
 
 ```
-packages/
-├── cli/       # CLIエントリポイント (init, start)
-├── server/    # Hono バックエンド + タスクランナーエンジン
-├── client/    # Vite + React + Shadcn ダッシュボード
-└── shared/    # 共有型定義・ユーティリティ
+cli/       # CLIエントリポイント (init, start)
+server/    # Hono バックエンド + タスクランナーエンジン
+client/    # Vite + React + Shadcn ダッシュボード
+shared/    # 共有型定義・ユーティリティ
 ```
 
-ルートは pnpm workspace。`pnpm-workspace.yaml` で `packages/*` を管理。
+ルートは pnpm workspace。`pnpm-workspace.yaml` で各パッケージを管理。
 
 ## コマンド 💻
 
@@ -80,8 +79,8 @@ pnpm run build
 
 - シンプルに書く。過剰な抽象化はしない
 - エラーハンドリングは必要なところだけ
-- 型定義は `packages/shared/src/types/` に集約
-- ユーティリティも `packages/shared/src/utils/` に置く
+- 型定義は `shared/types/` に集約
+- ユーティリティも `shared/utils/` に置く
 
 ## アーキテクチャ概要 🏗️
 
@@ -122,7 +121,7 @@ pending → discussing → planned → executing → testing → completed
 
 ## DB 📊
 
-SQLite。スキーマは `packages/server/src/db/schema.ts` で管理。
+SQLite。スキーマは `server/db/schema.ts` で管理。
 
 主要テーブル: `tasks`, `task_images`, `personas`, `discussions`, `plans`, `ci_cache`, `execution_logs`
 

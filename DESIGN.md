@@ -1180,71 +1180,68 @@ git branch -d task/<task-id>-<slugified-title>
 ```
 solitary-coding/
 ├── cli/                   # CLIエントリポイント (init, start)
-│   ├── src/
-│   │   ├── commands/
-│   │   │   ├── init.ts       # 設定ファイル・ディレクトリ生成
-│   │   │   └── start.ts      # サーバー起動 + タスクランナー開始
-│   │   └── index.ts          # CLIパーサー
+│   ├── commands/
+│   │   ├── init.ts            # 設定ファイル・ディレクトリ生成
+│   │   └── start.ts           # サーバー起動 + タスクランナー開始
+│   ├── index.ts               # CLIパーサー
 │   └── package.json
 │
 ├── server/                # Honoバックエンド + タスクランナー
-│   ├── src/
-│   │   ├── api/              # REST API ルートハンドラ
-│   │   │   ├── tasks.ts
-│   │   │   ├── discussions.ts
-│   │   │   ├── logs.ts
-│   │   │   └── system.ts
-│   │   ├── runner/           # タスクランナーエンジン
-│   │   │   ├── task-runner.ts      # メインオーケストレーター
-│   │   │   ├── claude-caller.ts    # callClaude共通ヘルパー
-│   │   │   ├── phase-persona.ts    # Phase 2-A
-│   │   │   ├── phase-discussion.ts # Phase 2-B
-│   │   │   ├── phase-plan.ts       # Phase 2-C
-│   │   │   ├── phase-execute.ts    # Phase 3
-│   │   │   ├── ci-runner.ts        # CI実行・キャッシュ
-│   │   │   ├── git-ops.ts          # Git操作
-│   │   │   ├── error-classifier.ts # エラー分類
-│   │   │   └── stream-parser.ts    # stream-json → SSEイベント変換
-│   │   ├── db/               # SQLiteスキーマ・クエリ
-│   │   │   ├── schema.ts
-│   │   │   ├── migrations/
-│   │   │   └── queries/
-│   │   ├── sse/              # SSEイベント管理
-│   │   │   └── event-bus.ts
-│   │   └── index.ts          # Honoサーバー初期化
+│   ├── api/                   # REST API ルートハンドラ
+│   │   ├── tasks.ts
+│   │   ├── discussions.ts
+│   │   ├── logs.ts
+│   │   └── system.ts
+│   ├── runner/                # タスクランナーエンジン
+│   │   ├── task-runner.ts         # メインオーケストレーター
+│   │   ├── claude-caller.ts       # callClaude共通ヘルパー
+│   │   ├── phase-persona.ts       # Phase 2-A
+│   │   ├── phase-discussion.ts    # Phase 2-B
+│   │   ├── phase-plan.ts          # Phase 2-C
+│   │   ├── phase-execute.ts       # Phase 3
+│   │   ├── ci-runner.ts           # CI実行・キャッシュ
+│   │   ├── git-ops.ts             # Git操作
+│   │   ├── error-classifier.ts    # エラー分類
+│   │   └── stream-parser.ts       # stream-json → SSEイベント変換
+│   ├── db/                    # SQLiteスキーマ・クエリ
+│   │   ├── schema.ts
+│   │   ├── migrations/
+│   │   └── queries/
+│   ├── sse/                   # SSEイベント管理
+│   │   └── event-bus.ts
+│   ├── index.ts               # Honoサーバー初期化
 │   └── package.json
 │
 ├── client/                # Vite + React + Shadcn ダッシュボード
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── task-list/          # タスク一覧
-│   │   │   ├── task-detail/        # タスク詳細
-│   │   │   ├── discussion-view/    # ディスカッション表示
-│   │   │   ├── plan-view/          # 計画書表示
-│   │   │   ├── log-view/           # 実行ログ表示
-│   │   │   ├── ci-view/            # CI結果表示
-│   │   │   └── code-snippet/       # コードスニペット表示
-│   │   ├── hooks/
-│   │   │   ├── use-sse.ts          # SSE接続フック
-│   │   │   └── use-tasks.ts        # タスクCRUDフック
-│   │   ├── pages/
-│   │   │   ├── index.tsx           # タスク一覧
-│   │   │   └── task/[id].tsx       # タスク詳細
-│   │   └── App.tsx
+│   ├── components/
+│   │   ├── task-list/             # タスク一覧
+│   │   ├── task-detail/           # タスク詳細
+│   │   ├── discussion-view/       # ディスカッション表示
+│   │   ├── plan-view/             # 計画書表示
+│   │   ├── log-view/              # 実行ログ表示
+│   │   ├── ci-view/               # CI結果表示
+│   │   └── code-snippet/          # コードスニペット表示
+│   ├── hooks/
+│   │   ├── use-sse.ts             # SSE接続フック
+│   │   └── use-tasks.ts           # タスクCRUDフック
+│   ├── pages/
+│   │   ├── index.tsx              # タスク一覧
+│   │   └── task/[id].tsx          # タスク詳細
+│   ├── App.tsx
 │   └── package.json
 │
 ├── shared/                # 共有型定義・ユーティリティ
-│   ├── src/
-│   │   ├── types/
-│   │   │   ├── task.ts
-│   │   │   ├── persona.ts
-│   │   │   ├── discussion.ts
-│   │   │   ├── plan.ts
-│   │   │   ├── events.ts           # SSEイベント型定義
-│   │   │   └── config.ts
-│   │   └── utils/
-│   │       ├── slugify.ts
-│   │       └── hash.ts
+│   ├── types/
+│   │   ├── task.ts
+│   │   ├── persona.ts
+│   │   ├── discussion.ts
+│   │   ├── plan.ts
+│   │   ├── events.ts              # SSEイベント型定義
+│   │   └── config.ts
+│   ├── utils/
+│   │   ├── slugify.ts
+│   │   └── hash.ts
+│   ├── index.ts               # バレルエクスポート
 │   └── package.json
 │
 ├── package.json           # ルート (pnpm workspace)

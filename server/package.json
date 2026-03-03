@@ -11,7 +11,7 @@
   },
   "scripts": {
     "build": "tsup",
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch index.ts",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'no lint configured yet'",
     "test": "echo 'no tests yet'"

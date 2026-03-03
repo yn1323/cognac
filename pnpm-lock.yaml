@@ -12,7 +12,7 @@ importers:
         specifier: ^5.7.3
         version: 5.9.3
 
-  packages/cli:
+  cli:
     dependencies:
       '@hono/node-server':
         specifier: ^1.13.8
@@ -40,7 +40,7 @@ importers:
         specifier: ^5.7.3
         version: 5.9.3
 
-  packages/client:
+  client:
     dependencies:
       '@solitary-coding/shared':
         specifier: workspace:*
@@ -92,7 +92,7 @@ importers:
         specifier: ^6.2.0
         version: 6.4.1(@types/node@25.3.3)(jiti@2.6.1)(lightningcss@1.31.1)(tsx@4.21.0)
 
-  packages/server:
+  server:
     dependencies:
       '@hono/node-server':
         specifier: ^1.13.8
@@ -123,7 +123,7 @@ importers:
         specifier: ^5.7.3
         version: 5.9.3
 
-  packages/shared:
+  shared:
     devDependencies:
       '@types/node':
         specifier: ^22.13.10
