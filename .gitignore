@@ -4,3 +4,4 @@ dist/
 *.tsbuildinfo
 
 settings.local.json
+storybook-static/
