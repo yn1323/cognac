@@ -19,13 +19,50 @@ AIを用いたアプリケーション開発ヘルプツール。
 | パッケージマネージャ | pnpm |
 | 配布形態 | npm パッケージ (対象リポジトリに `devDependencies` としてインストール) |
 
-## 配布・利用方法
+## 起動モード
+
+Cognacには2つの起動モードがある。
+
+### 1. パッケージモード（外部プロジェクトでの利用）
+
+外部プロジェクトにnpmパッケージとしてインストールして使うモード。
+対象プロジェクトのコードをAIで修正する用途。
 
 ```bash
 pnpm add -D cognac
 pnpx cognac init   # 設定ファイル・ディレクトリ生成
 pnpx cognac start  # ダッシュボード起動 + タスクランナー開始
 ```
+
+- Honoサーバーがポート4000で起動
+- ビルド済みのReactダッシュボード（静的ファイル）をHonoが配信
+- API + ダッシュボードが `http://localhost:4000` で一括提供される
+
+### 2. セルフ開発モード（cognac自身の開発）
+
+cognac自身のフロントエンド＋バックエンドを同時起動して、cognac自体をcognacとAIで修正するモード。
+
+```bash
+pnpm install       # 依存インストール
+pnpm dev           # サーバー + クライアントを並列起動
+```
+
+- サーバー（Hono）がポート4000で起動
+- クライアント（Vite dev server）がポート5173で起動
+- Viteのproxy設定で `/api` リクエストを `localhost:4000` に転送
+- HMR有効でフロントの変更がリアルタイムに反映
+- ダッシュボードへは `http://localhost:5173` でアクセス
+
+### モード比較
+
+| | パッケージモード | セルフ開発モード |
+|--|--|--|
+| 用途 | 外部プロジェクトのコード修正 | cognac自身の開発 |
+| 起動コマンド | `pnpx cognac start` | `pnpm dev` |
+| サーバー | Hono (port 4000) | Hono (port 4000) |
+| クライアント | ビルド済み静的ファイルをHonoが配信 | Vite dev server (port 5173) |
+| アクセスURL | `http://localhost:4000` | `http://localhost:5173` |
+| ホットリロード | なし | あり（Vite HMR） |
 
 ### 生成されるファイル
 
