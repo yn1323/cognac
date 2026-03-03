@@ -4764,37 +4764,6 @@
                       "fontWeight": "normal"
                     }
                   ]
-                },
-                {
-                  "type": "frame",
-                  "id": "SUdP9",
-                  "name": "logsLink",
-                  "width": "fill_container",
-                  "gap": 6,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon_font",
-                      "id": "yNxbP",
-                      "name": "linkIcon",
-                      "width": 14,
-                      "height": 14,
-                      "iconFontName": "external-link",
-                      "iconFontFamily": "lucide",
-                      "fill": "$--primary"
-                    },
-                    {
-                      "type": "text",
-                      "id": "8UpGi",
-                      "name": "linkText",
-                      "fill": "$--muted-foreground",
-                      "content": "実行ログの詳細は Logs タブで確認できます",
-                      "lineHeight": 1.4,
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "normal"
-                    }
-                  ]
                 }
               ]
             }
