@@ -27,7 +27,7 @@ export const STATUS_CONFIG: Record<
   }
 > = {
   executing: {
-    label: '実行中',
+    label: 'Executing',
     color: 'text-status-executing',
     dotColor: 'bg-status-executing',
     bgColor: 'bg-status-executing-bg',
@@ -35,7 +35,7 @@ export const STATUS_CONFIG: Record<
     icon: Loader,
   },
   discussing: {
-    label: '議論中',
+    label: 'Discussing',
     color: 'text-status-discussing',
     dotColor: 'bg-status-discussing',
     bgColor: 'bg-status-discussing-bg',
@@ -43,7 +43,7 @@ export const STATUS_CONFIG: Record<
     icon: MessageCircle,
   },
   pending: {
-    label: '待機中',
+    label: 'Pending',
     color: 'text-status-pending',
     dotColor: 'bg-status-pending',
     bgColor: 'bg-status-pending-bg',
@@ -51,7 +51,7 @@ export const STATUS_CONFIG: Record<
     icon: GripVertical,
   },
   planned: {
-    label: '計画済',
+    label: 'Planned',
     color: 'text-status-planned',
     dotColor: 'bg-status-planned',
     bgColor: 'bg-status-planned-bg',
@@ -59,7 +59,7 @@ export const STATUS_CONFIG: Record<
     icon: Lightbulb,
   },
   testing: {
-    label: 'テスト中',
+    label: 'Testing',
     color: 'text-status-testing',
     dotColor: 'bg-status-testing',
     bgColor: 'bg-status-testing-bg',
@@ -67,7 +67,7 @@ export const STATUS_CONFIG: Record<
     icon: FlaskConical,
   },
   completed: {
-    label: '完了',
+    label: 'Completed',
     color: 'text-status-completed',
     dotColor: 'bg-status-completed',
     bgColor: 'bg-status-completed-bg',
