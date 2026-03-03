@@ -1,5 +1,14 @@
 @import 'tailwindcss';
 
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop {
+    border-color: var(--color-border, currentColor);
+  }
+}
+
 /* Shadcn UI テーマ変数（Light / Neutral base） */
 :root {
   --background: #fafafa;
