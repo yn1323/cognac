@@ -32,7 +32,7 @@ export function DetailTabs({
               type="button"
               onClick={() => onTabChange?.(tab)}
               className={cn(
-                'rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors',
+                'cursor-pointer rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors',
                 isActive
                   ? 'bg-foreground text-background'
                   : 'text-muted-foreground hover:text-foreground',
@@ -56,7 +56,7 @@ export function DetailTabs({
             type="button"
             onClick={() => onTabChange?.(tab)}
             className={cn(
-              'border-b-2 px-3 pb-2 text-sm font-medium transition-colors',
+              'cursor-pointer border-b-2 px-3 pb-2 text-sm font-medium transition-colors',
               isActive
                 ? 'border-foreground text-foreground'
                 : 'border-transparent text-muted-foreground hover:text-foreground',

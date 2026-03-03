@@ -17,7 +17,7 @@ export function SPNavItem({ icon: Icon, label, active, onClick }: SPNavItemProps
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center gap-1"
+      className="flex cursor-pointer flex-col items-center gap-1"
     >
       <Icon
         className={cn(

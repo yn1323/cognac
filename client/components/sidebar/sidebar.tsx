@@ -25,10 +25,11 @@ const NAV_ITEMS: NavItem[] = [
 
 interface SidebarProps {
   activeItem?: string
+  onItemClick?: (label: string) => void
   className?: string
 }
 
-export function Sidebar({ activeItem = 'Tasks', className }: SidebarProps) {
+export function Sidebar({ activeItem = 'Tasks', onItemClick, className }: SidebarProps) {
   return (
     <aside
       className={cn(
@@ -39,7 +40,7 @@ export function Sidebar({ activeItem = 'Tasks', className }: SidebarProps) {
       {/* ヘッダー: ブランドロゴ + 折りたたみアイコン */}
       <div className="flex items-center justify-between rounded-md p-2">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-sidebar-primary">
+          <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-blue-500">
             <Wine className="h-4 w-4 text-sidebar-primary-foreground" />
           </div>
           <div className="flex flex-col">
@@ -48,9 +49,6 @@ export function Sidebar({ activeItem = 'Tasks', className }: SidebarProps) {
             </span>
           </div>
         </div>
-        <button type="button" className="text-muted-foreground">
-          <PanelLeftClose className="h-4 w-4" />
-        </button>
       </div>
 
       {/* ナビゲーション */}
@@ -64,8 +62,9 @@ export function Sidebar({ activeItem = 'Tasks', className }: SidebarProps) {
             <button
               key={item.label}
               type="button"
+              onClick={() => onItemClick?.(item.label)}
               className={cn(
-                'flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                'flex cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
                 isActive
                   ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                   : 'text-sidebar-foreground hover:bg-sidebar-accent/50',

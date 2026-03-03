@@ -28,6 +28,9 @@ import { SPMetric } from '@/components/sp-metric'
 import { SPTaskCard } from '@/components/sp-task-card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { TaskModal } from '@/components/task-modal'
+import { useNavigate } from 'react-router-dom'
+import { useCallback } from 'react'
 
 // --- 固定データ ---
 
@@ -116,10 +119,15 @@ const MOCK_TASKS: Task[] = [
 
 // --- PC版 ---
 
-function PCDashboard() {
+function PCDashboard({ onNewTask, onNavigate }: { onNewTask: () => void; onNavigate: (path: string) => void }) {
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar className="h-full shrink-0" />
+      <Sidebar
+        className="h-full shrink-0"
+        onItemClick={(label) => {
+          if (label === 'Settings') onNavigate('/settings')
+        }}
+      />
 
       <main className="flex flex-1 flex-col gap-6 overflow-y-auto p-8">
         {/* ページヘッダー */}
@@ -136,7 +144,10 @@ function PCDashboard() {
             <Pause className="mr-2 h-4 w-4" />
             Pause All
           </Button>
-          <Button className="bg-blue-600 text-white hover:bg-blue-700">
+          <Button 
+            className="bg-blue-600 text-white hover:bg-blue-700"
+            onClick={onNewTask}
+          >
             <Plus className="mr-2 h-4 w-4" />
             New Task
           </Button>
@@ -213,7 +224,7 @@ function PCDashboard() {
 
 // --- SP版 ---
 
-function SPDashboard() {
+function SPDashboard({ onNewTask, onNavigate }: { onNewTask: () => void; onNavigate: (path: string) => void }) {
   return (
     <div className="flex h-screen flex-col bg-background">
       <SPHeader />
@@ -308,10 +319,14 @@ function SPDashboard() {
       {/* ボトムナビ */}
       <SPBottomNav>
         <SPNavItem icon={ListChecks} label="Tasks" active />
-        <button type="button" className="flex flex-col items-center gap-1">
-          <PlusCircle className="h-7 w-7 text-primary" />
-        </button>
-        <SPNavItem icon={Settings} label="Settings" />
+          <button 
+            type="button" 
+            className="flex flex-col items-center gap-1"
+            onClick={onNewTask}
+          >
+            <PlusCircle className="h-7 w-7 text-primary" />
+          </button>
+        <SPNavItem icon={Settings} label="Settings" onClick={() => onNavigate('/settings')} />
       </SPBottomNav>
     </div>
   )
@@ -320,15 +335,19 @@ function SPDashboard() {
 // --- エクスポート ---
 
 export function DashboardPage() {
+  const navigate = useNavigate()
+  const handleNewTask = useCallback(() => navigate('?new-task=true'), [navigate])
+
   return (
     <>
+      <TaskModal />
       {/* PC版: md以上で表示 */}
       <div className="hidden md:block">
-        <PCDashboard />
+        <PCDashboard onNewTask={handleNewTask} onNavigate={navigate} />
       </div>
       {/* SP版: md未満で表示 */}
       <div className="md:hidden">
-        <SPDashboard />
+        <SPDashboard onNewTask={handleNewTask} onNavigate={navigate} />
       </div>
     </>
   )

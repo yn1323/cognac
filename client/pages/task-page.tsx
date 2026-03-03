@@ -3,6 +3,7 @@
 // PC: サイドバー + メインコンテンツ / SP: SPDetailHeader + ボディ
 
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Sidebar } from '@/components/sidebar'
 import { SPDetailHeader } from '@/components/sp-detail-header'
 import { DetailTabs, type Tab } from '@/components/detail-tabs'
@@ -62,10 +63,22 @@ function SPTabBody({ activeTab }: { activeTab: Tab }) {
 
 // --- PC版 ---
 
-function PCTaskDetail({ activeTab, onTabChange }: { activeTab: Tab; onTabChange: (tab: Tab) => void }) {
+const NAV_MAP: Record<string, string> = {
+  Tasks: '/',
+  Settings: '/settings',
+}
+
+function PCTaskDetail({ activeTab, onTabChange, onNavigate }: { activeTab: Tab; onTabChange: (tab: Tab) => void; onNavigate: (path: string) => void }) {
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar activeItem="Tasks" className="h-full shrink-0" />
+      <Sidebar
+        activeItem="Tasks"
+        onItemClick={(label) => {
+          const path = NAV_MAP[label]
+          if (path) onNavigate(path)
+        }}
+        className="h-full shrink-0"
+      />
 
       <main className="flex flex-1 flex-col gap-6 overflow-y-auto p-8">
         {/* ヘッダー */}
@@ -143,12 +156,13 @@ function SPTaskDetail({ activeTab, onTabChange }: { activeTab: Tab; onTabChange:
 
 export function TaskPage() {
   const [activeTab, setActiveTab] = useState<Tab>('Overview')
+  const navigate = useNavigate()
 
   return (
     <>
       {/* PC版: md以上で表示 */}
       <div className="hidden md:block">
-        <PCTaskDetail activeTab={activeTab} onTabChange={setActiveTab} />
+        <PCTaskDetail activeTab={activeTab} onTabChange={setActiveTab} onNavigate={navigate} />
       </div>
       {/* SP版: md未満で表示 */}
       <div className="md:hidden">
