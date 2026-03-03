@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.solitary-coding/
+*.tsbuildinfo
+
+settings.local.json

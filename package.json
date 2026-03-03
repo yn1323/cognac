@@ -1,0 +1,21 @@
+{
+  "name": "solitary-coding-monorepo",
+  "private": true,
+  "packageManager": "pnpm@10.6.2",
+  "scripts": {
+    "typecheck": "pnpm -r --parallel typecheck",
+    "lint": "pnpm -r --parallel lint",
+    "test": "pnpm -r --parallel test",
+    "build": "pnpm -r build",
+    "dev": "pnpm --filter @solitary-coding/server dev"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild"
+    ]
+  }
+}

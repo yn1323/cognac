@@ -56,8 +56,22 @@
       "WebFetch",
       "WebSearch",
       "TodoWrite",
-      "Agent"
+      "Agent",
+      "Bash(pnpm approve-builds better-sqlite3 esbuild)",
+      "Bash(pnpm install)",
+      "Bash(pnpm config set --location project onlyBuiltDependencies 'better-sqlite3 esbuild')",
+      "Bash(printf 'onlyBuiltDependencies[]= better-sqlite3\\\\nonlyBuiltDependencies[]= esbuild\\\\n')",
+      "Bash(pnpm approve-builds --help)",
+      "Bash(printf 'a\\\\n')",
+      "Bash(pnpm approve-builds)",
+      "Bash(printf 'a\\\\ny\\\\n')",
+      "Bash(pnpm -r exec echo \"ok\")",
+      "Bash(pnpm --filter @solitary-coding/shared typecheck)",
+      "Bash(pnpm --filter @solitary-coding/shared build)"
     ],
-    "deny": []
+    "deny": [],
+    "additionalDirectories": [
+      "/tmp"
+    ]
   }
 }
