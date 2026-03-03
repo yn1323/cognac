@@ -1,5 +1,6 @@
 // ステータス設定
 // 色・ラベル・アイコンを一元管理する
+// カラートークンは index.css の CSS変数を参照（ダークモード自動対応）
 
 import type { TaskStatus } from '@cognac/shared'
 import type { LucideIcon } from 'lucide-react'
@@ -18,18 +19,75 @@ export const STATUS_CONFIG: Record<
   TaskStatus,
   {
     label: string
-    color: string // text-[#xxx] 形式（テキスト・アイコン用）
-    dotColor: string // bg-[#xxx] 形式（ドット用）
-    bgColor: string // bg-[#xxx] 形式（バッジ背景用）
+    color: string // テキスト・アイコン用 Tailwindクラス
+    dotColor: string // ドット用 Tailwindクラス
+    bgColor: string // バッジ背景用 Tailwindクラス
+    borderColor: string // ボーダー用 Tailwindクラス
     icon: LucideIcon
   }
 > = {
-  executing: { label: '実行中', color: 'text-[#2563eb]', dotColor: 'bg-[#2563eb]', bgColor: 'bg-[#dbeafe]', icon: Loader },
-  discussing: { label: '議論中', color: 'text-[#d97706]', dotColor: 'bg-[#d97706]', bgColor: 'bg-[#fef3c7]', icon: MessageCircle },
-  pending: { label: '待機中', color: 'text-muted-foreground', dotColor: 'bg-muted-foreground', bgColor: 'bg-secondary', icon: GripVertical },
-  planned: { label: '計画済', color: 'text-[#7c3aed]', dotColor: 'bg-[#7c3aed]', bgColor: 'bg-[#ede9fe]', icon: Lightbulb },
-  testing: { label: 'テスト中', color: 'text-[#ca8a04]', dotColor: 'bg-[#ca8a04]', bgColor: 'bg-[#fef3c7]', icon: FlaskConical },
-  completed: { label: '完了', color: 'text-[#16a34a]', dotColor: 'bg-[#16a34a]', bgColor: 'bg-[#dcfce7]', icon: CheckCircle },
-  stopped: { label: '停止', color: 'text-[#ef4444]', dotColor: 'bg-[#ef4444]', bgColor: 'bg-[#fef2f2]', icon: XCircle },
-  paused: { label: '一時停止', color: 'text-[#ea580c]', dotColor: 'bg-[#ea580c]', bgColor: 'bg-[#fff7ed]', icon: PauseCircle },
+  executing: {
+    label: '実行中',
+    color: 'text-status-executing',
+    dotColor: 'bg-status-executing',
+    bgColor: 'bg-status-executing-bg',
+    borderColor: 'border-status-executing/25',
+    icon: Loader,
+  },
+  discussing: {
+    label: '議論中',
+    color: 'text-status-discussing',
+    dotColor: 'bg-status-discussing',
+    bgColor: 'bg-status-discussing-bg',
+    borderColor: '',
+    icon: MessageCircle,
+  },
+  pending: {
+    label: '待機中',
+    color: 'text-status-pending',
+    dotColor: 'bg-status-pending',
+    bgColor: 'bg-status-pending-bg',
+    borderColor: '',
+    icon: GripVertical,
+  },
+  planned: {
+    label: '計画済',
+    color: 'text-status-planned',
+    dotColor: 'bg-status-planned',
+    bgColor: 'bg-status-planned-bg',
+    borderColor: '',
+    icon: Lightbulb,
+  },
+  testing: {
+    label: 'テスト中',
+    color: 'text-status-testing',
+    dotColor: 'bg-status-testing',
+    bgColor: 'bg-status-testing-bg',
+    borderColor: '',
+    icon: FlaskConical,
+  },
+  completed: {
+    label: '完了',
+    color: 'text-status-completed',
+    dotColor: 'bg-status-completed',
+    bgColor: 'bg-status-completed-bg',
+    borderColor: '',
+    icon: CheckCircle,
+  },
+  stopped: {
+    label: '停止',
+    color: 'text-status-stopped',
+    dotColor: 'bg-status-stopped',
+    bgColor: 'bg-status-stopped-bg',
+    borderColor: 'border-status-stopped/25',
+    icon: XCircle,
+  },
+  paused: {
+    label: '一時停止',
+    color: 'text-status-paused',
+    dotColor: 'bg-status-paused',
+    bgColor: 'bg-status-paused-bg',
+    borderColor: '',
+    icon: PauseCircle,
+  },
 }

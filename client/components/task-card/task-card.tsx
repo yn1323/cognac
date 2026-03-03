@@ -21,12 +21,6 @@ function formatRelativeTime(dateStr: string): string {
   return `${days}日前`
 }
 
-// ステータスごとのボーダー色（特殊な場合のみ）
-const STATUS_BORDER: Partial<Record<string, string>> = {
-  executing: 'border-[#2563eb]/25',
-  stopped: 'border-[#ef4444]/25',
-}
-
 // フェーズ表示テキスト
 function getPhaseText(task: Task): string | null {
   if (task.status === 'discussing') return 'ディスカッション中'
@@ -43,7 +37,7 @@ interface TaskCardProps {
 export function TaskCard({ task, onRetry }: TaskCardProps) {
   const config = STATUS_CONFIG[task.status]
   const phaseText = getPhaseText(task)
-  const borderClass = STATUS_BORDER[task.status]
+  const borderClass = config.borderColor
 
   return (
     <Link to={`/tasks/${task.id}`} className="block">
@@ -101,7 +95,7 @@ export function TaskCard({ task, onRetry }: TaskCardProps) {
 
             {/* リトライ回数 */}
             {task.retry_count > 0 && task.status === 'stopped' && (
-              <span className="text-xs font-medium text-[#ef4444]">
+              <span className="text-xs font-medium text-status-stopped">
                 CI failed ({task.retry_count}/5)
               </span>
             )}

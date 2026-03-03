@@ -1,30 +1,112 @@
 @import 'tailwindcss';
 
-/* Shadcn UI テーマ変数 */
+/* Shadcn UI テーマ変数（Light / Neutral base） */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0.004 285.82);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0.004 285.82);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0.004 285.82);
-  --primary: oklch(0.205 0.006 285.82);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0.001 285.82);
-  --secondary-foreground: oklch(0.205 0.006 285.82);
-  --muted: oklch(0.97 0.001 285.82);
-  --muted-foreground: oklch(0.556 0.005 285.82);
-  --accent: oklch(0.97 0.001 285.82);
-  --accent-foreground: oklch(0.205 0.006 285.82);
-  --destructive: oklch(0.577 0.245 27.33);
-  --destructive-foreground: oklch(0.577 0.245 27.33);
-  --border: oklch(0.922 0.004 285.82);
-  --input: oklch(0.922 0.004 285.82);
-  --ring: oklch(0.708 0.005 285.82);
+  --background: #fafafa;
+  --foreground: #0a0a0a;
+  --card: #fafafa;
+  --card-foreground: #0a0a0a;
+  --popover: #fafafa;
+  --popover-foreground: #0a0a0a;
+  --primary: #171717;
+  --primary-foreground: #fafafa;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #171717;
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+  --accent: #f5f5f5;
+  --accent-foreground: #171717;
+  --destructive: #e7000b;
+  --destructive-foreground: #fafafa;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #a3a3a3;
   --radius: 0.625rem;
+
+  /* サイドバー */
+  --sidebar: #fafafa;
+  --sidebar-foreground: #09090b;
+  --sidebar-accent: #f4f4f4;
+  --sidebar-accent-foreground: #18181b;
+  --sidebar-border: #e4e4e7;
+  --sidebar-primary: #18181b;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-ring: #71717a;
+
+  /* ステータスカラー */
+  --status-executing: #2563eb;
+  --status-executing-bg: #dbeafe;
+  --status-discussing: #d97706;
+  --status-discussing-bg: #fef3c7;
+  --status-pending: #737373;
+  --status-pending-bg: #f5f5f5;
+  --status-planned: #7c3aed;
+  --status-planned-bg: #ede9fe;
+  --status-testing: #ca8a04;
+  --status-testing-bg: #fef3c7;
+  --status-completed: #16a34a;
+  --status-completed-bg: #dcfce7;
+  --status-stopped: #ef4444;
+  --status-stopped-bg: #fef2f2;
+  --status-paused: #ea580c;
+  --status-paused-bg: #fff7ed;
+}
+
+/* ダークモード */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --card: #0a0a0a;
+  --card-foreground: #fafafa;
+  --popover: #0a0a0a;
+  --popover-foreground: #fafafa;
+  --primary: #e5e5e5;
+  --primary-foreground: #171717;
+  --secondary: #262626;
+  --secondary-foreground: #fafafa;
+  --muted: #262626;
+  --muted-foreground: #a3a3a3;
+  --accent: #262626;
+  --accent-foreground: #fafafa;
+  --destructive: #ff6669;
+  --destructive-foreground: #fafafa;
+  --border: #ffffff1a;
+  --input: #ffffff1a;
+  --ring: #737373;
+
+  /* サイドバー（dark） */
+  --sidebar: #18181b;
+  --sidebar-foreground: #fafafa;
+  --sidebar-accent: #2a2a30;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: #ffffff1a;
+  --sidebar-primary: #1447e6;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-ring: #71717a;
+
+  /* ステータスカラー（dark） */
+  --status-executing: #60a5fa;
+  --status-executing-bg: #1e3a5f;
+  --status-discussing: #fbbf24;
+  --status-discussing-bg: #422006;
+  --status-pending: #a3a3a3;
+  --status-pending-bg: #262626;
+  --status-planned: #a78bfa;
+  --status-planned-bg: #2e1065;
+  --status-testing: #facc15;
+  --status-testing-bg: #422006;
+  --status-completed: #4ade80;
+  --status-completed-bg: #052e16;
+  --status-stopped: #f87171;
+  --status-stopped-bg: #450a0a;
+  --status-paused: #fb923c;
+  --status-paused-bg: #431407;
 }
 
 @theme inline {
+  --font-sans: 'Noto Sans Variable', 'Noto Sans JP Variable', sans-serif;
+
+  /* 基本カラー */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -44,6 +126,36 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  /* サイドバー */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* ステータス */
+  --color-status-executing: var(--status-executing);
+  --color-status-executing-bg: var(--status-executing-bg);
+  --color-status-discussing: var(--status-discussing);
+  --color-status-discussing-bg: var(--status-discussing-bg);
+  --color-status-pending: var(--status-pending);
+  --color-status-pending-bg: var(--status-pending-bg);
+  --color-status-planned: var(--status-planned);
+  --color-status-planned-bg: var(--status-planned-bg);
+  --color-status-testing: var(--status-testing);
+  --color-status-testing-bg: var(--status-testing-bg);
+  --color-status-completed: var(--status-completed);
+  --color-status-completed-bg: var(--status-completed-bg);
+  --color-status-stopped: var(--status-stopped);
+  --color-status-stopped-bg: var(--status-stopped-bg);
+  --color-status-paused: var(--status-paused);
+  --color-status-paused-bg: var(--status-paused-bg);
+
+  /* 半径 */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -53,11 +165,5 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family:
-    'Helvetica Neue',
-    Arial,
-    'Hiragino Kaku Gothic ProN',
-    'Hiragino Sans',
-    Meiryo,
-    sans-serif;
+  font-family: 'Noto Sans Variable', 'Noto Sans JP Variable', sans-serif;
 }
