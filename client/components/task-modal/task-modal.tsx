@@ -2,30 +2,37 @@
 // PC: オーバーレイ + センターモーダル / SP: フルスクリーンシート
 // デザイン design.pen PC=wLVYI, SP=qi7HK に準拠
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { X, Upload, Camera } from 'lucide-react'
+import { X, Upload, Camera, Loader2 } from 'lucide-react'
+import type { PriorityLabel } from '@cognac/shared'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { useCreateTask, useUploadTaskImages } from '@/hooks/use-tasks'
 import { cn } from '@/lib/utils'
+
+// shared パッケージからランタイムimportするとNode.js依存が引っ張られるのでローカル定義
+const PRIORITY_MAP: Record<PriorityLabel, number> = { Low: 0, Normal: 1, High: 2, Urgent: 3 }
 
 // --- 型定義 ---
 
-type Priority = 'Low' | 'Normal' | 'High' | 'Urgent'
-
-const PC_PRIORITIES: Priority[] = ['Low', 'Normal', 'High', 'Urgent']
-const SP_PRIORITIES: Priority[] = ['Low', 'Normal', 'High']
+const PC_PRIORITIES: PriorityLabel[] = ['Low', 'Normal', 'High', 'Urgent']
+const SP_PRIORITIES: PriorityLabel[] = ['Low', 'Normal', 'High']
 
 interface FormProps {
   title: string
   setTitle: (v: string) => void
   description: string
   setDescription: (v: string) => void
-  priority: Priority
-  setPriority: (v: Priority) => void
+  priority: PriorityLabel
+  setPriority: (v: PriorityLabel) => void
+  files: File[]
+  onFilesAdd: (newFiles: File[]) => void
+  onFileRemove: (index: number) => void
   handleClose: () => void
   handleSubmit: (e: React.FormEvent) => void
+  isSubmitting: boolean
 }
 
 // --- ラジオボタン ---
@@ -35,9 +42,9 @@ function PriorityRadioGroup({
   value,
   onChange,
 }: {
-  options: Priority[]
-  value: Priority
-  onChange: (v: Priority) => void
+  options: PriorityLabel[]
+  value: PriorityLabel
+  onChange: (v: PriorityLabel) => void
 }) {
   return (
     <div className="flex gap-4">
@@ -69,6 +76,126 @@ function PriorityRadioGroup({
   )
 }
 
+// --- 画像プレビュー ---
+
+function ImagePreviewList({
+  files,
+  onRemove,
+}: {
+  files: File[]
+  onRemove: (index: number) => void
+}) {
+  // blob URLをメモ化して、files変更時のみ再生成 + クリーンアップでリーク防止
+  const urls = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files])
+  useEffect(() => {
+    return () => urls.forEach((u) => URL.revokeObjectURL(u))
+  }, [urls])
+
+  if (files.length === 0) return null
+
+  return (
+    <div className="flex flex-wrap gap-2 mt-2">
+      {files.map((file, i) => (
+        <div key={`${file.name}-${i}`} className="relative group">
+          <img
+            src={urls[i]}
+            alt={file.name}
+            className="h-16 w-16 rounded-md object-cover border border-border"
+          />
+          <button
+            type="button"
+            onClick={() => onRemove(i)}
+            className="absolute -top-1.5 -right-1.5 hidden group-hover:flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// --- ドロップゾーン ---
+
+function DropZone({
+  onFilesAdd,
+  icon: Icon,
+  text,
+  className,
+}: {
+  onFilesAdd: (files: File[]) => void
+  icon: typeof Upload
+  text: string
+  className?: string
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [isDragOver, setIsDragOver] = useState(false)
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(true)
+  }, [])
+
+  const handleDragLeave = useCallback(() => {
+    setIsDragOver(false)
+  }, [])
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      setIsDragOver(false)
+      const droppedFiles = Array.from(e.dataTransfer.files).filter((f) =>
+        f.type.startsWith('image/'),
+      )
+      if (droppedFiles.length > 0) onFilesAdd(droppedFiles)
+    },
+    [onFilesAdd],
+  )
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const selected = e.target.files
+      if (selected && selected.length > 0) {
+        onFilesAdd(Array.from(selected))
+      }
+      // 同じファイルを再選択できるようにリセット
+      e.target.value = ''
+    },
+    [onFilesAdd],
+  )
+
+  return (
+    <>
+      <div
+        onClick={() => inputRef.current?.click()}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={cn(
+          'flex h-25 w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed cursor-pointer transition-colors',
+          isDragOver
+            ? 'border-blue-500 bg-blue-50/50'
+            : 'border-border bg-muted/30 hover:bg-muted/50',
+          className,
+        )}
+      >
+        <Icon className={cn('h-5 w-5', isDragOver ? 'text-blue-500' : 'text-muted-foreground')} />
+        <p className={cn('text-xs', isDragOver ? 'text-blue-500' : 'text-muted-foreground')}>
+          {text}
+        </p>
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handleInputChange}
+        className="sr-only"
+      />
+    </>
+  )
+}
+
 // --- PC版 ---
 
 function PCTaskModal({
@@ -78,8 +205,12 @@ function PCTaskModal({
   setDescription,
   priority,
   setPriority,
+  files,
+  onFilesAdd,
+  onFileRemove,
   handleClose,
   handleSubmit,
+  isSubmitting,
 }: FormProps) {
   return (
     <div
@@ -115,6 +246,7 @@ function PCTaskModal({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Implement user authentication"
               required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -126,6 +258,7 @@ function PCTaskModal({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="タスクの詳細を入力（任意）"
               className="h-25 resize-none"
+              disabled={isSubmitting}
             />
           </div>
 
@@ -142,19 +275,32 @@ function PCTaskModal({
           {/* Images */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Images (optional)</label>
-            <div className="flex h-25 w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 text-muted-foreground cursor-pointer hover:bg-muted/50 transition-colors">
-              <Upload className="h-5 w-5" />
-              <p className="text-xs">ドラッグ&ドロップまたはクリックで画像を追加</p>
-            </div>
+            <DropZone
+              onFilesAdd={onFilesAdd}
+              icon={Upload}
+              text="ドラッグ&ドロップまたはクリックで画像を追加"
+            />
+            <ImagePreviewList files={files} onRemove={onFileRemove} />
           </div>
 
           {/* フッターボタン */}
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={handleClose}>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
-              Create Task
+            <Button
+              type="submit"
+              className="bg-blue-600 text-white hover:bg-blue-700"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create Task'
+              )}
             </Button>
           </div>
         </form>
@@ -172,8 +318,12 @@ function SPTaskModal({
   setDescription,
   priority,
   setPriority,
+  files,
+  onFilesAdd,
+  onFileRemove,
   handleClose,
   handleSubmit,
+  isSubmitting,
 }: FormProps) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
@@ -206,6 +356,7 @@ function SPTaskModal({
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Implement user authentication"
             required
+            disabled={isSubmitting}
           />
         </div>
 
@@ -217,6 +368,7 @@ function SPTaskModal({
             onChange={(e) => setDescription(e.target.value)}
             placeholder="タスクの詳細を入力（任意）"
             className="h-25 resize-none"
+            disabled={isSubmitting}
           />
         </div>
 
@@ -233,10 +385,13 @@ function SPTaskModal({
         {/* Images */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">Images (optional)</label>
-          <div className="flex h-25 w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border text-muted-foreground cursor-pointer">
-            <Camera className="h-6 w-6" />
-            <p className="text-[13px]">タップして画像を追加</p>
-          </div>
+          <DropZone
+            onFilesAdd={onFilesAdd}
+            icon={Camera}
+            text="タップして画像を追加"
+            className="border-solid"
+          />
+          <ImagePreviewList files={files} onRemove={onFileRemove} />
         </div>
 
         {/* スペーサー */}
@@ -249,14 +404,23 @@ function SPTaskModal({
             variant="outline"
             className="flex-1"
             onClick={handleClose}
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
           <Button
             type="submit"
             className="flex-1 bg-blue-600 text-white hover:bg-blue-700"
+            disabled={isSubmitting}
           >
-            Create Task
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              'Create Task'
+            )}
           </Button>
         </div>
       </form>
@@ -271,9 +435,14 @@ export function TaskModal() {
   const navigate = useNavigate()
   const isOpen = searchParams.get('new-task') === 'true'
 
+  const createTask = useCreateTask()
+  const uploadImages = useUploadTaskImages()
+
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [priority, setPriority] = useState<Priority>('Normal')
+  const [priority, setPriority] = useState<PriorityLabel>('Normal')
+  const [files, setFiles] = useState<File[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleClose = useCallback(() => {
     navigate('/', { replace: true })
@@ -285,6 +454,8 @@ export function TaskModal() {
       setTitle('')
       setDescription('')
       setPriority('Normal')
+      setFiles([])
+      setIsSubmitting(false)
     }
   }, [isOpen])
 
@@ -312,10 +483,36 @@ export function TaskModal() {
 
   if (!isOpen) return null
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const onFilesAdd = (newFiles: File[]) => {
+    setFiles((prev) => [...prev, ...newFiles].slice(0, 5))
+  }
+
+  const onFileRemove = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log({ title, description, priority })
-    handleClose()
+    setIsSubmitting(true)
+
+    try {
+      // 1. タスク作成
+      const task = await createTask.mutateAsync({
+        title,
+        description: description || undefined,
+        priority: PRIORITY_MAP[priority],
+      })
+
+      // 2. 画像があればアップロード
+      if (files.length > 0) {
+        await uploadImages.mutateAsync({ taskId: task.id, files })
+      }
+
+      handleClose()
+    } catch (err) {
+      console.error('タスク作成に失敗:', err)
+      setIsSubmitting(false)
+    }
   }
 
   const formProps: FormProps = {
@@ -325,8 +522,12 @@ export function TaskModal() {
     setDescription,
     priority,
     setPriority,
+    files,
+    onFilesAdd,
+    onFileRemove,
     handleClose,
     handleSubmit,
+    isSubmitting,
   }
 
   return (

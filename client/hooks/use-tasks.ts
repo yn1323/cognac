@@ -35,3 +35,10 @@ export function useDeleteTask() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
   })
 }
+
+export function useUploadTaskImages() {
+  return useMutation({
+    mutationFn: ({ taskId, files }: { taskId: number; files: File[] }) =>
+      api.tasks.uploadImages(taskId, files),
+  })
+}

@@ -10,16 +10,17 @@ import type { Task } from '@cognac/shared'
  */
 export function createTask(
   db: Database.Database,
-  data: { title: string; description?: string },
+  data: { title: string; description?: string; priority?: number },
 ): Task {
   const stmt = db.prepare(`
-    INSERT INTO tasks (title, description)
-    VALUES (@title, @description)
+    INSERT INTO tasks (title, description, priority)
+    VALUES (@title, @description, @priority)
   `)
 
   const result = stmt.run({
     title: data.title,
     description: data.description ?? null,
+    priority: data.priority ?? 0,
   })
 
   // 作ったばかりのタスクを返す

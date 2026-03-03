@@ -2,7 +2,7 @@
 // PC: サイドバー + メインコンテンツ / SP: ヘッダー + ボディ + ボトムナビ
 // デザイン design.pen PC=EUZoe, SP=S77Vv に準拠
 
-import type { Task } from '@cognac/shared'
+import type { Task, TaskStatus } from '@cognac/shared'
 import {
   Clock,
   Play,
@@ -11,12 +11,9 @@ import {
   Pause,
   Plus,
   PlusCircle,
-  LayoutDashboard,
   ListChecks,
-  Terminal,
   Settings,
-  ChevronUp,
-  ChevronDown,
+  Loader2,
 } from 'lucide-react'
 import { Sidebar } from '@/components/sidebar'
 import { PageHeader } from '@/components/page-header'
@@ -26,100 +23,95 @@ import { SPHeader } from '@/components/sp-header'
 import { SPBottomNav, SPNavItem } from '@/components/sp-bottom-nav'
 import { SPMetric } from '@/components/sp-metric'
 import { SPTaskCard } from '@/components/sp-task-card'
+import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { TaskModal } from '@/components/task-modal'
+import { formatRelativeTime } from '@/lib/format'
+import { STATUS_CONFIG } from '@/lib/status-config'
+import { cn } from '@/lib/utils'
 import { useNavigate } from 'react-router-dom'
-import { useCallback } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import { useTasks } from '@/hooks/use-tasks'
 
-// --- 固定データ ---
+// --- フィルター定義 ---
 
-const MOCK_TASKS: Task[] = [
-  {
-    id: 1,
-    title: 'Implement user authentication with JWT',
-    description: 'JWT認証を実装。リフレッシュトークンとCSRF対策も含む',
-    status: 'executing',
-    priority: 1,
-    queue_order: 1,
-    branch_name: 'task/1-implement-jwt-auth',
-    retry_count: 0,
-    process_retry_count: 0,
-    paused_reason: null,
-    paused_phase: null,
-    created_at: '2026-03-03T14:00:00Z',
-    started_at: '2026-03-03T14:30:00Z',
-    completed_at: null,
-  },
-  {
-    id: 2,
-    title: 'Add drag-and-drop task reordering',
-    description: 'キューの並べ替え機能。タッチ対応のD&Dライブラリを使う',
-    status: 'discussing',
-    priority: 2,
-    queue_order: 2,
-    branch_name: null,
-    retry_count: 0,
-    process_retry_count: 0,
-    paused_reason: null,
-    paused_phase: null,
-    created_at: '2026-03-03T14:20:00Z',
-    started_at: '2026-03-03T14:27:00Z',
-    completed_at: null,
-  },
-  {
-    id: 3,
-    title: 'Implement SSE event streaming',
-    description: 'SSEでリアルタイムにタスク実行状況を配信する',
-    status: 'pending',
-    priority: 3,
-    queue_order: 3,
-    branch_name: null,
-    retry_count: 0,
-    process_retry_count: 0,
-    paused_reason: null,
-    paused_phase: null,
-    created_at: '2026-03-03T14:22:00Z',
-    started_at: null,
-    completed_at: null,
-  },
-  {
-    id: 4,
-    title: 'Set up Hono backend with SQLite',
-    description: 'HonoサーバーとSQLite DBの初期セットアップ',
-    status: 'completed',
-    priority: 4,
-    queue_order: null,
-    branch_name: 'task/4-setup-hono-sqlite',
-    retry_count: 0,
-    process_retry_count: 0,
-    paused_reason: null,
-    paused_phase: null,
-    created_at: '2026-03-03T13:00:00Z',
-    started_at: '2026-03-03T13:05:00Z',
-    completed_at: '2026-03-03T13:50:00Z',
-  },
-  {
-    id: 5,
-    title: 'Add error classification system',
-    description: 'エラー分類（アプリ/インフラ/プロセス）の実装',
-    status: 'stopped',
-    priority: 5,
-    queue_order: null,
-    branch_name: 'task/5-error-classification',
-    retry_count: 5,
-    process_retry_count: 0,
-    paused_reason: null,
-    paused_phase: null,
-    created_at: '2026-03-03T14:02:00Z',
-    started_at: '2026-03-03T14:02:00Z',
-    completed_at: null,
-  },
+type FilterTab = 'all' | 'active' | 'completed'
+
+const FILTER_TABS: { key: FilterTab; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'active', label: 'Active' },
+  { key: 'completed', label: 'Completed' },
 ]
+
+const ACTIVE_STATUSES: TaskStatus[] = [
+  'pending',
+  'discussing',
+  'planned',
+  'executing',
+  'testing',
+  'paused',
+]
+const COMPLETED_STATUSES: TaskStatus[] = ['completed', 'stopped']
+
+function filterTasks(tasks: Task[], filter: FilterTab): Task[] {
+  if (filter === 'all') return tasks
+  if (filter === 'active') return tasks.filter((t) => ACTIVE_STATUSES.includes(t.status))
+  return tasks.filter((t) => COMPLETED_STATUSES.includes(t.status))
+}
+
+// --- メトリクス計算 ---
+
+function useMetrics(tasks: Task[]) {
+  return useMemo(
+    () =>
+      tasks.reduce(
+        (acc, t) => {
+          if (t.status === 'pending') acc.pending++
+          else if (t.status === 'executing') acc.executing++
+          else if (t.status === 'completed') acc.completed++
+          else if (t.status === 'stopped' || t.status === 'paused') acc.failed++
+          return acc
+        },
+        { pending: 0, executing: 0, completed: 0, failed: 0 },
+      ),
+    [tasks],
+  )
+}
+
+// --- SP用ヘルパー ---
+
+function getSPSubtitle(task: Task): string {
+  const time = formatRelativeTime(task.started_at ?? task.created_at)
+  if (task.status === 'executing') return `Phase 3 · ${time}`
+  if (task.status === 'discussing') return `ディスカッション中 · ${time}`
+  if (task.status === 'stopped' && task.retry_count > 0)
+    return `CI failed (${task.retry_count}/5) · ${time}`
+  return time
+}
+
+function getSPBorderColor(task: Task): string {
+  const config = STATUS_CONFIG[task.status]
+  return config.borderColor || 'border-border'
+}
+
+// --- 共通Props ---
+
+interface DashboardProps {
+  tasks: Task[]
+  isLoading: boolean
+  error: Error | null
+  onNewTask: () => void
+  onNavigate: (path: string) => void
+}
 
 // --- PC版 ---
 
-function PCDashboard({ onNewTask, onNavigate }: { onNewTask: () => void; onNavigate: (path: string) => void }) {
+function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: DashboardProps) {
+  const [activeFilter, setActiveFilter] = useState<FilterTab>('all')
+  const metrics = useMetrics(tasks)
+  const filteredTasks = useMemo(() => filterTasks(tasks, activeFilter), [tasks, activeFilter])
+
   return (
     <div className="flex h-screen bg-background">
       <Sidebar
@@ -144,7 +136,7 @@ function PCDashboard({ onNewTask, onNavigate }: { onNewTask: () => void; onNavig
             <Pause className="mr-2 h-4 w-4" />
             Pause All
           </Button>
-          <Button 
+          <Button
             className="bg-blue-600 text-white hover:bg-blue-700"
             onClick={onNewTask}
           >
@@ -155,22 +147,22 @@ function PCDashboard({ onNewTask, onNavigate }: { onNewTask: () => void; onNavig
 
         {/* メトリクスカード */}
         <div className="grid grid-cols-4 gap-4">
-          <MetricCard label="Pending" value={5} icon={Clock} />
+          <MetricCard label="Pending" value={metrics.pending} icon={Clock} />
           <MetricCard
             label="Executing"
-            value={1}
+            value={metrics.executing}
             icon={Play}
             className="[&_svg]:text-[#2563eb]"
           />
           <MetricCard
             label="Completed"
-            value={12}
+            value={metrics.completed}
             icon={CheckCircle}
             className="[&_svg]:text-[#16a34a]"
           />
           <MetricCard
             label="Failed"
-            value={2}
+            value={metrics.failed}
             icon={AlertCircle}
             className="[&_svg]:text-destructive"
           />
@@ -184,38 +176,67 @@ function PCDashboard({ onNewTask, onNavigate }: { onNewTask: () => void; onNavig
               <h2 className="text-base font-semibold leading-[1.4] text-foreground">
                 Task Queue
               </h2>
-              <span className="text-sm text-muted-foreground">20 tasks</span>
+              <span className="text-sm text-muted-foreground">
+                {filteredTasks.length} tasks
+              </span>
             </div>
 
             {/* フィルタータブ */}
             <div className="flex gap-1">
-              <button
-                type="button"
-                className="rounded-md px-3 py-1.5 text-[13px] font-medium text-foreground bg-muted"
-              >
-                All
-              </button>
-              <button
-                type="button"
-                className="rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground"
-              >
-                Active
-              </button>
-              <button
-                type="button"
-                className="rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground"
-              >
-                Completed
-              </button>
+              {FILTER_TABS.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  className={cn(
+                    'rounded-md px-3 py-1.5 text-[13px] font-medium',
+                    activeFilter === tab.key
+                      ? 'bg-muted text-foreground'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                  onClick={() => setActiveFilter(tab.key)}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
           </div>
 
           {/* タスクカード */}
-          <div className="flex flex-col gap-2">
-            {MOCK_TASKS.map((task) => (
-              <TaskCard key={task.id} task={task} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center gap-2 py-12 text-center">
+              <AlertCircle className="h-8 w-8 text-destructive" />
+              <p className="text-sm text-muted-foreground">
+                タスクの取得に失敗しました
+              </p>
+            </div>
+          ) : filteredTasks.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 py-12 text-center">
+              <p className="text-sm text-muted-foreground">
+                {activeFilter === 'all'
+                  ? 'タスクがまだないよ〜'
+                  : `${FILTER_TABS.find((t) => t.key === activeFilter)?.label}のタスクはないよ〜`}
+              </p>
+              {activeFilter === 'all' && (
+                <Button
+                  className="bg-blue-600 text-white hover:bg-blue-700"
+                  onClick={onNewTask}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Task
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {filteredTasks.map((task) => (
+                <TaskCard key={task.id} task={task} />
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>
@@ -224,7 +245,9 @@ function PCDashboard({ onNewTask, onNavigate }: { onNewTask: () => void; onNavig
 
 // --- SP版 ---
 
-function SPDashboard({ onNewTask, onNavigate }: { onNewTask: () => void; onNavigate: (path: string) => void }) {
+function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: DashboardProps) {
+  const metrics = useMetrics(tasks)
+
   return (
     <div className="flex h-screen flex-col bg-background">
       <SPHeader />
@@ -240,23 +263,23 @@ function SPDashboard({ onNewTask, onNavigate }: { onNewTask: () => void; onNavig
 
         {/* メトリクス */}
         <div className="flex gap-2">
-          <SPMetric value={5} label="Pending" />
+          <SPMetric value={metrics.pending} label="Pending" />
           <SPMetric
-            value={1}
+            value={metrics.executing}
             label="Exec"
             textColor="text-[#2563eb]"
             bgColor="bg-[#eff6ff]"
             borderColor="border-[#2563eb30]"
           />
           <SPMetric
-            value={12}
+            value={metrics.completed}
             label="Done"
             textColor="text-[#16a34a]"
             bgColor="bg-[#f0fdf4]"
             borderColor="border-[#16a34a30]"
           />
           <SPMetric
-            value={2}
+            value={metrics.failed}
             label="Stop"
             textColor="text-[#dc2626]"
             bgColor="bg-[#fef2f2]"
@@ -265,67 +288,57 @@ function SPDashboard({ onNewTask, onNavigate }: { onNewTask: () => void; onNavig
         </div>
 
         {/* タスクカード */}
-        <div className="flex flex-col gap-2.5">
-          <SPTaskCard
-            title="Implement auth API"
-            subtitle="Phase 3 · 14:32 started"
-            badge={
-              <Badge className="bg-[#2563eb] text-white">Executing</Badge>
-            }
-            borderColor="border-[#2563eb] border-2"
-          />
-          <SPTaskCard
-            title="Add drag-and-drop reorder"
-            subtitle="Round 2 of 3 · 3 personas"
-            badge={
-              <Badge className="bg-[#eab308] text-white">Discussing</Badge>
-            }
-          />
-          <SPTaskCard
-            title="Setup SSE endpoints"
-            subtitle="Queued · Created 14:10"
-            badge={
-              <Badge variant="secondary">Pending</Badge>
-            }
-            actions={
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="h-auto px-2 py-1 text-xs">
-                  <ChevronUp className="mr-1 h-3 w-3" />
-                  Up
-                </Button>
-                <Button variant="outline" size="sm" className="h-auto px-2 py-1 text-xs">
-                  <ChevronDown className="mr-1 h-3 w-3" />
-                  Down
-                </Button>
-              </div>
-            }
-          />
-          <SPTaskCard
-            title="Add error classification"
-            subtitle="CI failed (5/5) · 30 min ago"
-            badge={
-              <Badge className="bg-[#ef4444] text-white">Stopped</Badge>
-            }
-            borderColor="border-[#ef444440]"
-            actions={
-              <Button variant="outline" size="sm" className="h-auto px-2.5 py-1 text-xs">
-                Retry
-              </Button>
-            }
-          />
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center gap-2 py-8 text-center">
+            <AlertCircle className="h-8 w-8 text-destructive" />
+            <p className="text-sm text-muted-foreground">
+              タスクの取得に失敗しました
+            </p>
+          </div>
+        ) : tasks.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-8 text-center">
+            <p className="text-sm text-muted-foreground">タスクがまだないよ〜</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {tasks.map((task) => (
+              <SPTaskCard
+                key={task.id}
+                title={task.title}
+                subtitle={getSPSubtitle(task)}
+                badge={<StatusBadge status={task.status} />}
+                borderColor={getSPBorderColor(task)}
+                actions={
+                  task.status === 'stopped' ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-auto px-2.5 py-1 text-xs"
+                    >
+                      Retry
+                    </Button>
+                  ) : undefined
+                }
+              />
+            ))}
+          </div>
+        )}
       </main>
 
       {/* ボトムナビ */}
       <SPBottomNav>
         <SPNavItem icon={ListChecks} label="Tasks" active />
-          <button 
-            type="button" 
-            className="flex flex-col items-center gap-1"
-            onClick={onNewTask}
-          >
-            <PlusCircle className="h-7 w-7 text-primary" />
-          </button>
+        <button
+          type="button"
+          className="flex flex-col items-center gap-1"
+          onClick={onNewTask}
+        >
+          <PlusCircle className="h-7 w-7 text-primary" />
+        </button>
         <SPNavItem icon={Settings} label="Settings" onClick={() => onNavigate('/settings')} />
       </SPBottomNav>
     </div>
@@ -337,17 +350,30 @@ function SPDashboard({ onNewTask, onNavigate }: { onNewTask: () => void; onNavig
 export function DashboardPage() {
   const navigate = useNavigate()
   const handleNewTask = useCallback(() => navigate('?new-task=true'), [navigate])
+  const { data: tasks = [], isLoading, error } = useTasks()
 
   return (
     <>
       <TaskModal />
       {/* PC版: md以上で表示 */}
       <div className="hidden md:block">
-        <PCDashboard onNewTask={handleNewTask} onNavigate={navigate} />
+        <PCDashboard
+          tasks={tasks}
+          isLoading={isLoading}
+          error={error}
+          onNewTask={handleNewTask}
+          onNavigate={navigate}
+        />
       </div>
       {/* SP版: md未満で表示 */}
       <div className="md:hidden">
-        <SPDashboard onNewTask={handleNewTask} onNavigate={navigate} />
+        <SPDashboard
+          tasks={tasks}
+          isLoading={isLoading}
+          error={error}
+          onNewTask={handleNewTask}
+          onNavigate={navigate}
+        />
       </div>
     </>
   )

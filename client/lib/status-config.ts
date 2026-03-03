@@ -75,7 +75,7 @@ export const STATUS_CONFIG: Record<
     icon: CheckCircle,
   },
   stopped: {
-    label: '停止',
+    label: 'Stopped',
     color: 'text-status-stopped',
     dotColor: 'bg-status-stopped',
     bgColor: 'bg-status-stopped-bg',
@@ -83,7 +83,7 @@ export const STATUS_CONFIG: Record<
     icon: XCircle,
   },
   paused: {
-    label: '一時停止',
+    label: 'Paused',
     color: 'text-status-paused',
     dotColor: 'bg-status-paused',
     bgColor: 'bg-status-paused-bg',

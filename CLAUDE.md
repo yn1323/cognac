@@ -78,6 +78,7 @@ pending → discussing → planned → executing → testing → completed
 - **ブランチ命名**: `task/<task-id>-<slugified-title>` (slug部分は最大30文字)
 - **Node.js 22**必須 (CIでNode 22を使用)
 - **`packageManager: pnpm@10.6.2`** — npm/yarnではなくpnpmを使用
+- **画面名とpencil NodeIDの紐づけ** — `doc/spec/pencilDesignId.md`
 
 ## CI
 
@@ -100,6 +101,7 @@ pushトリガーの4つのGitHub Actionsワークフロー: `build.yml`、`lint.
    - `pnpm lint` (エラーがあれば修正する)
    - `pnpm typecheck`
 - 実装完了後SKILL`/simplify`を実行し、コードの品質を保ちたい
+- 未リリースのため、DB設計に変更が入った場合、テーブル全削除or sqliteDB削除して作りなおしてOK。（マイグレーションは考えなくて良い）
 
 ### トーン・文体
 
