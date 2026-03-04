@@ -6,6 +6,7 @@ import { z } from 'zod'
 import type Database from 'better-sqlite3'
 import * as taskQueries from '../db/queries/tasks.js'
 import * as taskImageQueries from '../db/queries/task-images.js'
+import * as logQueries from '../db/queries/execution-logs.js'
 
 // バリデーションスキーマ
 const createTaskSchema = z.object({
@@ -140,6 +141,17 @@ export function tasksRouter(db: Database.Database) {
 
     taskImageQueries.deleteTaskImage(db, imageId)
     return c.json({ ok: true })
+  })
+
+  // 実行ログ一覧
+  app.get('/:id/logs', (c) => {
+    const id = Number(c.req.param('id'))
+    const task = taskQueries.getTask(db, id)
+    if (!task) {
+      return c.json({ error: 'タスクが見つからない' }, 404)
+    }
+    const logs = logQueries.getLogsByTaskId(db, id)
+    return c.json(logs)
   })
 
   // タスク更新

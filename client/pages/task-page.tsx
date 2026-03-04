@@ -13,7 +13,7 @@ import {
   Trash2,
   XCircle,
 } from 'lucide-react'
-import type { Task } from '@cognac/shared'
+import type { Task, TaskEvent } from '@cognac/shared'
 import { EditTaskModal } from '@/components/edit-task-modal'
 import { useToast } from '@/components/toast'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -25,7 +25,8 @@ import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 import { useTask, useDeleteTask, useCancelTask, useRetryTask } from '@/hooks/use-tasks'
 import { formatRelativeTime } from '@/lib/format'
-import { DELETABLE_STATUSES, RETRYABLE_STATUSES, STATUS_CONFIG, STATUS_PHASE_MAP } from '@/lib/status-config'
+import { ACTIVE_STATUSES, DELETABLE_STATUSES, RETRYABLE_STATUSES, STATUS_CONFIG, STATUS_PHASE_MAP } from '@/lib/status-config'
+import { useTaskSSE } from '@/hooks/use-sse'
 import { NAV_MAP } from '@/lib/constants'
 import { PCOverviewTab, SPOverviewTab } from '@/pages/task-detail/overview-tab'
 import {
@@ -51,7 +52,14 @@ interface TaskActions {
 
 // --- PC版タブボディ ---
 
-function PCTabBody({ activeTab, task }: { activeTab: Tab; task: Task }) {
+interface TabBodyProps {
+  activeTab: Tab
+  task: Task
+  sseEvents: TaskEvent[]
+  sseConnected: boolean
+}
+
+function PCTabBody({ activeTab, task, sseEvents, sseConnected }: TabBodyProps) {
   switch (activeTab) {
     case '概要':
       return <PCOverviewTab task={task} />
@@ -60,7 +68,7 @@ function PCTabBody({ activeTab, task }: { activeTab: Tab; task: Task }) {
     case 'プラン':
       return <PCPlanTab />
     case 'ログ':
-      return <PCLogsTab />
+      return <PCLogsTab task={task} events={sseEvents} connected={sseConnected} />
     case 'CI':
       return <PCCITab />
   }
@@ -68,7 +76,7 @@ function PCTabBody({ activeTab, task }: { activeTab: Tab; task: Task }) {
 
 // --- SP版タブボディ ---
 
-function SPTabBody({ activeTab, task }: { activeTab: Tab; task: Task }) {
+function SPTabBody({ activeTab, task, sseEvents, sseConnected }: TabBodyProps) {
   switch (activeTab) {
     case '概要':
       return <SPOverviewTab task={task} />
@@ -77,7 +85,7 @@ function SPTabBody({ activeTab, task }: { activeTab: Tab; task: Task }) {
     case 'プラン':
       return <SPPlanTab />
     case 'ログ':
-      return <SPLogsTab />
+      return <SPLogsTab task={task} events={sseEvents} connected={sseConnected} />
     case 'CI':
       return <SPCITab />
   }
@@ -91,12 +99,16 @@ function PCTaskDetail({
   onTabChange,
   onNavigate,
   actions,
+  sseEvents,
+  sseConnected,
 }: {
   task: Task
   activeTab: Tab
   onTabChange: (tab: Tab) => void
   onNavigate: (path: string) => void
   actions: TaskActions
+  sseEvents: TaskEvent[]
+  sseConnected: boolean
 }) {
   return (
     <div className="flex h-screen bg-background">
@@ -197,7 +209,7 @@ function PCTaskDetail({
         />
 
         {/* タブボディ */}
-        <PCTabBody activeTab={activeTab} task={task} />
+        <PCTabBody activeTab={activeTab} task={task} sseEvents={sseEvents} sseConnected={sseConnected} />
       </main>
     </div>
   )

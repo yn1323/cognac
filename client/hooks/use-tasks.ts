@@ -68,6 +68,14 @@ export function useRetryTask() {
   })
 }
 
+export function useTaskLogs(taskId: number) {
+  return useQuery({
+    queryKey: ['tasks', taskId, 'logs'],
+    queryFn: () => api.tasks.getLogs(taskId),
+    enabled: Number.isFinite(taskId),
+  })
+}
+
 export function useTaskImages(taskId: number) {
   return useQuery({
     queryKey: ['tasks', taskId, 'images'],

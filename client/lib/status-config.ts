@@ -2,7 +2,7 @@
 // 色・ラベル・アイコンを一元管理する
 // カラートークンは index.css の CSS変数を参照（ダークモード自動対応）
 
-import type { TaskStatus } from '@cognac/shared'
+import type { TaskStatus, Phase } from '@cognac/shared'
 import type { LucideIcon } from 'lucide-react'
 import {
   Loader,
@@ -20,6 +20,19 @@ export const DELETABLE_STATUSES = new Set<TaskStatus>(['pending', 'stopped', 'co
 
 // リトライ可能なステータス
 export const RETRYABLE_STATUSES = new Set<TaskStatus>(['stopped', 'paused'])
+
+// アクティブ（実行中）なステータス
+export const ACTIVE_STATUSES = new Set<TaskStatus>(['executing', 'testing', 'discussing', 'planned'])
+
+// フェーズの日本語ラベル
+export const PHASE_LABELS: Record<Phase, string> = {
+  persona: 'ペルソナ',
+  discussion: 'ディスカッション',
+  plan: 'プラン',
+  execute: '実行',
+  ci: 'CI',
+  git: 'Git',
+}
 
 // ステータス → フェーズ表示名のマッピング
 export const STATUS_PHASE_MAP: Record<TaskStatus, string> = {
