@@ -16,6 +16,7 @@ export interface DiscussionConfig {
   maxRounds: number
   minPersonas: number
   maxPersonas: number
+  skipDiscussion: boolean // true=ブートストラップモード（Phase 2スキップ）
 }
 
 // Claude Code実行設定
@@ -48,6 +49,7 @@ const defaultConfig: CognacConfig = {
     maxRounds: 3,
     minPersonas: 2,
     maxPersonas: 4,
+    skipDiscussion: false,
   },
   claude: {
     maxTurnsExecution: 30,

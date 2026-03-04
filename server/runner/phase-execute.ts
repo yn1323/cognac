@@ -19,12 +19,15 @@ function buildExecutionPrompt(task: Task): string {
 }
 
 // Phase 3を実行する
+// executionPrompt が渡されたらそのまま使用（フルパイプラインモード）
+// 渡されなければ buildExecutionPrompt でフォールバック（ブートストラップモード）
 export async function executePhase3(
   task: Task,
   config: CognacConfig,
   onEvent?: (event: TaskEvent) => void,
+  executionPrompt?: string,
 ): Promise<{ sessionId: string; tokenInput: number; tokenOutput: number; durationMs: number }> {
-  const prompt = buildExecutionPrompt(task)
+  const prompt = executionPrompt ?? buildExecutionPrompt(task)
   const parser = new StreamParser()
 
   const response = await callClaude(
