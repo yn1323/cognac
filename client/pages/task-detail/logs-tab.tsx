@@ -1,16 +1,18 @@
 // タスク詳細ページ — ログタブ
-// アクティブ: SSEイベントをリアルタイム表示
+// アクティブ: SSEイベントをリアルタイム表示（親コンポーネントからprops経由）
 // 非アクティブ: DB履歴ログを表示
 // デザイン design.pen PC=ndNzU, SP=cZcuS に準拠
 
 import { useState, useMemo } from 'react'
 import type { Task, TaskEvent, ExecutionLog, Phase } from '@cognac/shared'
-import { useTaskSSE } from '@/hooks/use-sse'
 import { useTaskLogs } from '@/hooks/use-tasks'
 import { LogView } from '@/components/log-view'
+import { ACTIVE_STATUSES, PHASE_LABELS } from '@/lib/status-config'
 
 interface LogsTabProps {
   task: Task
+  events: TaskEvent[]
+  connected: boolean
 }
 
 // phase_start〜phase_endの範囲内のイベントだけ抽出する
@@ -28,8 +30,6 @@ function filterByPhase(events: TaskEvent[], targetPhase: Phase): TaskEvent[] {
     return inPhase
   })
 }
-
-const ACTIVE_STATUSES = new Set(['executing', 'testing', 'discussing', 'planned'])
 
 // DB履歴ログの1行表示
 function LogEntry({ log }: { log: ExecutionLog }) {
@@ -65,9 +65,26 @@ function LogEntry({ log }: { log: ExecutionLog }) {
   )
 }
 
-// DB履歴ログのリスト表示
+// DB履歴ログの表示（output_rawがあればLogViewで、なければサマリー表示）
 function HistoryLogView({ taskId }: { taskId: number }) {
   const { data: logs, isLoading } = useTaskLogs(taskId)
+
+  // output_rawにSSEイベントJSONが保存されていればリッチ表示
+  const allEvents = useMemo(() => {
+    if (!logs) return []
+    const events: TaskEvent[] = []
+    for (const log of logs) {
+      if (log.output_raw) {
+        try {
+          const parsed = JSON.parse(log.output_raw) as TaskEvent[]
+          events.push(...parsed)
+        } catch {
+          // パース失敗はスキップ
+        }
+      }
+    }
+    return events
+  }, [logs])
 
   if (isLoading) {
     return (
@@ -85,6 +102,11 @@ function HistoryLogView({ taskId }: { taskId: number }) {
     )
   }
 
+  if (allEvents.length > 0) {
+    return <LogView events={allEvents} />
+  }
+
+  // output_rawがなければサマリー表示にフォールバック
   return (
     <div className="space-y-0">
       {logs.map((log) => (
@@ -96,9 +118,8 @@ function HistoryLogView({ taskId }: { taskId: number }) {
 
 // --- PC版 ---
 
-export function PCLogsTab({ task }: LogsTabProps) {
+export function PCLogsTab({ task, events, connected }: LogsTabProps) {
   const isActive = ACTIVE_STATUSES.has(task.status)
-  const { events, connected } = useTaskSSE(isActive ? task.id : null)
   const [phaseFilter, setPhaseFilter] = useState<Phase | 'all'>('all')
   const [search, setSearch] = useState('')
 
@@ -108,7 +129,15 @@ export function PCLogsTab({ task }: LogsTabProps) {
       result = filterByPhase(result, phaseFilter)
     }
     if (search) {
-      result = result.filter((e) => JSON.stringify(e).includes(search))
+      const lower = search.toLowerCase()
+      result = result.filter((e) => {
+        if (e.type === 'claude_output') return e.content.toLowerCase().includes(lower)
+        if (e.type === 'file_changed') return e.path.toLowerCase().includes(lower)
+        if (e.type === 'command_executed') return e.command.toLowerCase().includes(lower)
+        if (e.type === 'error') return e.message.toLowerCase().includes(lower)
+        if (e.type === 'ci_result') return e.step.toLowerCase().includes(lower)
+        return false
+      })
     }
     return result
   }, [events, phaseFilter, search])
@@ -132,12 +161,9 @@ export function PCLogsTab({ task }: LogsTabProps) {
             className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
           >
             <option value="all">全フェーズ</option>
-            <option value="execute">実行</option>
-            <option value="ci">CI</option>
-            <option value="persona">ペルソナ</option>
-            <option value="discussion">ディスカッション</option>
-            <option value="plan">プラン</option>
-            <option value="git">Git</option>
+            {(Object.entries(PHASE_LABELS) as [Phase, string][]).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
           </select>
         )}
         {/* 検索（リアルタイム時のみ） */}
@@ -168,9 +194,8 @@ export function PCLogsTab({ task }: LogsTabProps) {
 
 // --- SP版 ---
 
-export function SPLogsTab({ task }: LogsTabProps) {
+export function SPLogsTab({ task, events, connected }: LogsTabProps) {
   const isActive = ACTIVE_STATUSES.has(task.status)
-  const { events, connected } = useTaskSSE(isActive ? task.id : null)
 
   return (
     <div className="flex flex-1 flex-col">

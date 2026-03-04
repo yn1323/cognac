@@ -223,12 +223,16 @@ function SPTaskDetail({
   onTabChange,
   onNavigate,
   actions,
+  sseEvents,
+  sseConnected,
 }: {
   task: Task
   activeTab: Tab
   onTabChange: (tab: Tab) => void
   onNavigate: (path: string) => void
   actions: TaskActions
+  sseEvents: TaskEvent[]
+  sseConnected: boolean
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -312,7 +316,7 @@ function SPTaskDetail({
 
       {/* ボディ */}
       <main className="flex flex-1 flex-col overflow-y-auto p-4">
-        <SPTabBody activeTab={activeTab} task={task} />
+        <SPTabBody activeTab={activeTab} task={task} sseEvents={sseEvents} sseConnected={sseConnected} />
       </main>
     </div>
   )
@@ -334,6 +338,11 @@ export function TaskPage() {
   const deleteTask = useDeleteTask()
   const cancelTask = useCancelTask()
   const retryTask = useRetryTask()
+
+  // SSE接続: ログタブがアクティブ && タスクが実行中のときだけ接続
+  // Hooksルールに従い、早期returnの前に配置（taskがない場合はnullを渡す）
+  const shouldConnectSSE = activeTab === 'ログ' && task != null && ACTIVE_STATUSES.has(task.status)
+  const { events: sseEvents, connected: sseConnected } = useTaskSSE(shouldConnectSSE ? task.id : null)
 
   if (isLoading) {
     return (
@@ -421,6 +430,8 @@ export function TaskPage() {
           onTabChange={setActiveTab}
           onNavigate={navigate}
           actions={actions}
+          sseEvents={sseEvents}
+          sseConnected={sseConnected}
         />
       </div>
       {/* SP版: md未満で表示 */}
@@ -431,6 +442,8 @@ export function TaskPage() {
           onTabChange={setActiveTab}
           onNavigate={navigate}
           actions={actions}
+          sseEvents={sseEvents}
+          sseConnected={sseConnected}
         />
       </div>
 

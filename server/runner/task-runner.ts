@@ -15,6 +15,8 @@ export class TaskRunner implements RunnerStatus {
   private paused = false
   private currentTaskId: number | null = null
   private timer: ReturnType<typeof setTimeout> | null = null
+  // フェーズごとのSSEイベントを蓄積（DB永続化用）
+  private phaseEvents: TaskEvent[] = []
 
   constructor(
     private db: Database.Database,
@@ -86,9 +88,17 @@ export class TaskRunner implements RunnerStatus {
     this.scheduleNextPoll()
   }
 
-  // タスクイベントを配信するヘルパー
+  // タスクイベントを配信 + 蓄積するヘルパー
   private emit(taskId: number, event: TaskEvent): void {
     this.eventBus.publish(taskId, event)
+    this.phaseEvents.push(event)
+  }
+
+  // 蓄積したイベントをJSONで取得してリセット
+  private drainPhaseEvents(): string {
+    const json = JSON.stringify(this.phaseEvents)
+    this.phaseEvents = []
+    return json
   }
 
   // メインのタスク実行パイプライン（ブートストラップ版）
@@ -98,6 +108,9 @@ export class TaskRunner implements RunnerStatus {
     const timestamp = new Date().toISOString()
 
     try {
+      // イベント蓄積をリセット
+      this.phaseEvents = []
+
       // --- ブランチ名を生成（実際のgit操作は未実装） ---
       const branchName = buildBranchName(id)
       taskQueries.updateTask(this.db, id, {
@@ -152,6 +165,7 @@ export class TaskRunner implements RunnerStatus {
           token_input: execResult.tokenInput,
           token_output: execResult.tokenOutput,
           duration_ms: execResult.durationMs,
+          output_raw: this.drainPhaseEvents(),
         })
 
         this.emit(id, {
@@ -168,11 +182,25 @@ export class TaskRunner implements RunnerStatus {
         const ciSteps = getCiSteps(this.db, this.config)
         const ciResult = runCi(ciSteps, (event) => this.emit(id, event))
 
+        const ciDurationMs = ciResult.results.reduce((sum, r) => sum + r.durationMs, 0)
+
         this.emit(id, {
           type: 'phase_end',
           phase: 'ci',
           timestamp: new Date().toISOString(),
-          durationMs: ciResult.results.reduce((sum, r) => sum + r.durationMs, 0),
+          durationMs: ciDurationMs,
+        })
+
+        // CIフェーズのイベントをDBに記録
+        logQueries.createLog(this.db, {
+          task_id: id,
+          phase: 'ci',
+          duration_ms: ciDurationMs,
+          output_raw: this.drainPhaseEvents(),
+          ...(ciResult.success ? {} : {
+            error_type: 'app' as const,
+            error_message: ciResult.results.find((r) => !r.success)?.output?.slice(0, 500),
+          }),
         })
 
         if (ciResult.success) {
