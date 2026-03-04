@@ -7,6 +7,9 @@ import type Database from 'better-sqlite3'
 import * as taskQueries from '../db/queries/tasks.js'
 import * as taskImageQueries from '../db/queries/task-images.js'
 import * as logQueries from '../db/queries/execution-logs.js'
+import * as personaQueries from '../db/queries/personas.js'
+import * as discussionQueries from '../db/queries/discussions.js'
+import * as planQueries from '../db/queries/plans.js'
 
 // バリデーションスキーマ
 const createTaskSchema = z.object({
@@ -141,6 +144,37 @@ export function tasksRouter(db: Database.Database) {
 
     taskImageQueries.deleteTaskImage(db, imageId)
     return c.json({ ok: true })
+  })
+
+  // ペルソナ一覧
+  app.get('/:id/personas', (c) => {
+    const id = Number(c.req.param('id'))
+    const task = taskQueries.getTask(db, id)
+    if (!task) {
+      return c.json({ error: 'タスクが見つからない' }, 404)
+    }
+    return c.json(personaQueries.getPersonasByTaskId(db, id))
+  })
+
+  // ディスカッション一覧
+  app.get('/:id/discussions', (c) => {
+    const id = Number(c.req.param('id'))
+    const task = taskQueries.getTask(db, id)
+    if (!task) {
+      return c.json({ error: 'タスクが見つからない' }, 404)
+    }
+    return c.json(discussionQueries.getDiscussionsByTaskId(db, id))
+  })
+
+  // プラン取得
+  app.get('/:id/plan', (c) => {
+    const id = Number(c.req.param('id'))
+    const task = taskQueries.getTask(db, id)
+    if (!task) {
+      return c.json({ error: 'タスクが見つからない' }, 404)
+    }
+    const plan = planQueries.getPlanByTaskId(db, id)
+    return c.json(plan ?? null)
   })
 
   // 実行ログ一覧

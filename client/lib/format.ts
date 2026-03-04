@@ -1,6 +1,17 @@
 // フォーマット用ユーティリティ
 
 /**
+ * ミリ秒を読みやすい文字列に変換する
+ * 60秒未満: "12s", 60秒以上: "1:05"
+ */
+export function formatDuration(ms: number): string {
+  const s = Math.round(ms / 1000)
+  if (s < 60) return `${s}s`
+  const m = Math.floor(s / 60)
+  return `${m}:${String(s % 60).padStart(2, '0')}`
+}
+
+/**
  * ISO日時文字列を YYYY/M/D H:MM 形式に変換する
  * null の場合は '-' を返す
  */

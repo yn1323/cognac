@@ -68,11 +68,35 @@ export function useRetryTask() {
   })
 }
 
-export function useTaskLogs(taskId: number) {
+export function useTaskPersonas(taskId: number) {
+  return useQuery({
+    queryKey: ['tasks', taskId, 'personas'],
+    queryFn: () => api.tasks.getPersonas(taskId),
+    enabled: Number.isFinite(taskId),
+  })
+}
+
+export function useTaskDiscussions(taskId: number) {
+  return useQuery({
+    queryKey: ['tasks', taskId, 'discussions'],
+    queryFn: () => api.tasks.getDiscussions(taskId),
+    enabled: Number.isFinite(taskId),
+  })
+}
+
+export function useTaskPlan(taskId: number) {
+  return useQuery({
+    queryKey: ['tasks', taskId, 'plan'],
+    queryFn: () => api.tasks.getPlan(taskId),
+    enabled: Number.isFinite(taskId),
+  })
+}
+
+export function useTaskLogs(taskId: number, enabled = true) {
   return useQuery({
     queryKey: ['tasks', taskId, 'logs'],
     queryFn: () => api.tasks.getLogs(taskId),
-    enabled: Number.isFinite(taskId),
+    enabled: enabled && Number.isFinite(taskId),
   })
 }
 

@@ -1,36 +1,18 @@
 // タスク詳細ページ — 概要タブ
 // デザイン design.pen PC=9d5bz, SP=lNPXJ に準拠
-// Task Information カードはAPIの実データ表示、Personas / Progress はモック維持
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Check, User } from 'lucide-react'
-import type { Task, TaskImage } from '@cognac/shared'
+import type { Task, TaskImage, TaskStatus } from '@cognac/shared'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { formatDateTime } from '@/lib/format'
 import { STATUS_CONFIG, STATUS_PHASE_MAP } from '@/lib/status-config'
-import { useTaskImages } from '@/hooks/use-tasks'
+import { useTaskImages, useTaskPersonas } from '@/hooks/use-tasks'
+import { getPersonaColor } from '@/lib/persona-colors'
 
-// --- モックデータ（Personas / Progress は今後API接続予定） ---
-
-const MOCK_PERSONAS = [
-  {
-    name: 'セキュリティエンジニア',
-    desc: '認証・セキュリティ設計の専門家',
-    color: '#7c3aed',
-  },
-  {
-    name: 'フロントエンドエンジニア',
-    desc: 'React / UI実装の専門家',
-    color: '#2563eb',
-  },
-  {
-    name: 'テストエンジニア',
-    desc: 'テスト設計・品質保証の専門家',
-    color: '#ea580c',
-  },
-]
+// --- 進捗ステップ ---
 
 interface ProgressStep {
   label: string
@@ -39,30 +21,74 @@ interface ProgressStep {
   number?: number
 }
 
-const MOCK_PROGRESS: ProgressStep[] = [
-  {
-    label: 'Phase 2-A: ペルソナ選択',
-    sub: '3名選択済み — 完了',
-    status: 'completed',
-  },
-  {
-    label: 'Phase 2-B: マルチペルソナ議論',
-    sub: 'ラウンド 1/3 — 進行中',
-    status: 'active',
-  },
-  {
-    label: 'Phase 2-C: プラン確認',
-    sub: 'Pending',
-    status: 'waiting',
-    number: 3,
-  },
-  {
-    label: 'Phase 3: コード実行',
-    sub: 'Pending',
-    status: 'waiting',
-    number: 4,
-  },
-]
+// paused_phaseからフェーズインデックスへの変換
+const PAUSED_PHASE_INDEX: Record<string, number> = {
+  persona: 0,
+  discussion: 1,
+  plan: 2,
+  executing: 3,
+  testing: 4,
+}
+
+// ステータスに対応するアクティブフェーズのインデックス
+const ACTIVE_PHASE_INDEX: Partial<Record<TaskStatus, number>> = {
+  pending: -1,
+  discussing: 1, // 2-Aは完了、2-Bがアクティブ
+  planned: 3,    // 2-A/2-B/2-Cは完了、Phase 3は待機
+  executing: 3,
+  testing: 4,
+  completed: 5,  // 全完了
+}
+
+const PHASES = [
+  { label: 'Phase 2-A: ペルソナ選択', phase: 'persona' },
+  { label: 'Phase 2-B: マルチペルソナ議論', phase: 'discussion' },
+  { label: 'Phase 2-C: プラン策定', phase: 'plan' },
+  { label: 'Phase 3: コード実行', phase: 'executing' },
+  { label: 'CI: テスト・検証', phase: 'testing' },
+] as const
+
+function buildProgressSteps(task: Task, personaCount: number): ProgressStep[] {
+  const s = task.status as TaskStatus
+
+  let activeIdx = ACTIVE_PHASE_INDEX[s] ?? -1
+
+  // paused/stoppedはpaused_phaseに基づいてフェーズを決定
+  if ((s === 'paused' || s === 'stopped') && task.paused_phase) {
+    activeIdx = PAUSED_PHASE_INDEX[task.paused_phase] ?? -1
+  }
+
+  return PHASES.map((p, i) => {
+    let status: 'completed' | 'active' | 'waiting'
+    let sub: string
+
+    if (i < activeIdx) {
+      status = 'completed'
+      sub = '完了'
+    } else if (i === activeIdx) {
+      if (s === 'completed') {
+        status = 'completed'
+        sub = '完了'
+      } else if (s === 'paused' || s === 'stopped') {
+        status = 'active'
+        sub = s === 'paused' ? '一時停止中' : '停止'
+      } else {
+        status = 'active'
+        sub = '進行中'
+      }
+    } else {
+      status = 'waiting'
+      sub = 'Pending'
+    }
+
+    // ペルソナ選択の補足情報
+    if (i === 0 && status === 'completed' && personaCount > 0) {
+      sub = `${personaCount}名選択済み — 完了`
+    }
+
+    return { label: p.label, sub, status, number: status === 'waiting' ? i + 1 : undefined }
+  })
+}
 
 // --- 共通パーツ ---
 
@@ -198,6 +224,14 @@ function TaskImagesSection({ taskId, size = 'md' }: { taskId: number; size?: 'md
 // --- PC版 ---
 
 export function PCOverviewTab({ task }: { task: Task }) {
+  const { data: personas } = useTaskPersonas(task.id)
+  const personaList = personas ?? []
+
+  const progressSteps = useMemo(
+    () => buildProgressSteps(task, personaList.length),
+    [task, personaList.length],
+  )
+
   return (
     <div className="flex flex-col gap-6">
       {/* Task Information カード */}
@@ -257,28 +291,34 @@ export function PCOverviewTab({ task }: { task: Task }) {
         <h2 className="text-base font-semibold text-foreground">
           選択されたペルソナ
         </h2>
-        <div className="grid grid-cols-3 gap-4">
-          {MOCK_PERSONAS.map((persona) => (
-            <Card key={persona.name} className="p-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-                  style={{ backgroundColor: persona.color }}
-                >
-                  <User className="h-4 w-4 text-white" />
+        {personaList.length > 0 ? (
+          <div className="grid grid-cols-3 gap-4">
+            {personaList.map((persona, i) => (
+              <Card key={persona.id} className="p-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+                    style={{ backgroundColor: getPersonaColor(i) }}
+                  >
+                    <User className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-semibold text-foreground">
+                      {persona.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {persona.focus}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-semibold text-foreground">
-                    {persona.name}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {persona.desc}
-                  </span>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            タスクの実行待ち
+          </p>
+        )}
       </div>
 
       {/* Task Progress */}
@@ -288,7 +328,7 @@ export function PCOverviewTab({ task }: { task: Task }) {
         </h2>
         <Card className="p-6">
           <div className="flex flex-col gap-5">
-            {MOCK_PROGRESS.map((step) => (
+            {progressSteps.map((step) => (
               <ProgressStepItem key={step.label} step={step} />
             ))}
           </div>
@@ -301,6 +341,14 @@ export function PCOverviewTab({ task }: { task: Task }) {
 // --- SP版 ---
 
 export function SPOverviewTab({ task }: { task: Task }) {
+  const { data: personas } = useTaskPersonas(task.id)
+  const personaList = personas ?? []
+
+  const progressSteps = useMemo(
+    () => buildProgressSteps(task, personaList.length),
+    [task, personaList.length],
+  )
+
   return (
     <div className="flex flex-col gap-4">
       {/* Task Information */}
@@ -352,21 +400,27 @@ export function SPOverviewTab({ task }: { task: Task }) {
         <h3 className="mb-3 text-[15px] font-semibold text-foreground">
           ペルソナ
         </h3>
-        <div className="flex flex-col gap-3">
-          {MOCK_PERSONAS.map((persona) => (
-            <div key={persona.name} className="flex items-center gap-2.5">
-              <div
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-                style={{ backgroundColor: persona.color }}
-              >
-                <User className="h-3.5 w-3.5 text-white" />
+        {personaList.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            {personaList.map((persona, i) => (
+              <div key={persona.id} className="flex items-center gap-2.5">
+                <div
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
+                  style={{ backgroundColor: getPersonaColor(i) }}
+                >
+                  <User className="h-3.5 w-3.5 text-white" />
+                </div>
+                <span className="text-[13px] font-medium text-foreground">
+                  {persona.name}
+                </span>
               </div>
-              <span className="text-[13px] font-medium text-foreground">
-                {persona.name}
-              </span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            タスクの実行待ち
+          </p>
+        )}
       </Card>
 
       {/* Progress */}
@@ -375,7 +429,7 @@ export function SPOverviewTab({ task }: { task: Task }) {
           進捗
         </h3>
         <div className="flex flex-col gap-2.5">
-          {MOCK_PROGRESS.map((step) => (
+          {progressSteps.map((step) => (
             <ProgressStepItem key={step.label} step={step} size="sm" />
           ))}
         </div>

@@ -1,7 +1,7 @@
 // APIクライアント
 // fetchのラッパー。ベースURLはvite proxyで /api にマッピングされてるから相対パスでOK
 
-import type { Task, TaskImage, ExecutionLog, CreateTaskInput, UpdateTaskInput } from '@cognac/shared'
+import type { Task, TaskImage, ExecutionLog, CreateTaskInput, UpdateTaskInput, Persona, Discussion, Plan } from '@cognac/shared'
 
 const BASE = '/api'
 
@@ -35,6 +35,12 @@ export const api = {
       fetchJson<Task>(`/tasks/${id}/cancel`, { method: 'POST' }),
     retry: (id: number) =>
       fetchJson<Task>(`/tasks/${id}/retry`, { method: 'POST' }),
+    getPersonas: (taskId: number) =>
+      fetchJson<Persona[]>(`/tasks/${taskId}/personas`),
+    getDiscussions: (taskId: number) =>
+      fetchJson<Discussion[]>(`/tasks/${taskId}/discussions`),
+    getPlan: (taskId: number) =>
+      fetchJson<Plan | null>(`/tasks/${taskId}/plan`),
     getLogs: (taskId: number) =>
       fetchJson<ExecutionLog[]>(`/tasks/${taskId}/logs`),
     getImages: (taskId: number) =>

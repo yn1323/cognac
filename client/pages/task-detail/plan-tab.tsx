@@ -1,55 +1,65 @@
 // タスク詳細ページ — プランタブ
 // デザイン design.pen PC=pdM6h, SP=8w1Xs に準拠
 
-import { FileText, Terminal, Copy } from 'lucide-react'
+import { useState } from 'react'
+import { FileText, Terminal, Copy, Check } from 'lucide-react'
+import type { Task } from '@cognac/shared'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { useTaskPlan } from '@/hooks/use-tasks'
 
-// --- モックデータ ---
+// 複雑度バッジの色
+const COMPLEXITY_STYLES: Record<string, { bg: string; text: string }> = {
+  low: { bg: 'bg-[#dcfce7]', text: 'text-[#16a34a]' },
+  medium: { bg: 'bg-[#fef9c3]', text: 'text-[#ca8a04]' },
+  high: { bg: 'bg-[#fee2e2]', text: 'text-[#dc2626]' },
+}
 
-const MOCK_PLAN_STEPS = [
-  {
-    number: 1,
-    title: '認証ミドルウェア + JWTユーティリティのセットアップ',
-    desc: 'server/src/middleware/auth.ts と server/src/utils/jwt.ts を作成。トークン生成・検証・リフレッシュのユーティリティ関数を実装。',
-    files: ['server/src/middleware/auth.ts', 'server/src/utils/jwt.ts'],
-  },
-  {
-    number: 2,
-    title: '認証APIエンドポイントの作成',
-    desc: 'POST /api/auth/login, POST /api/auth/logout, POST /api/auth/refresh のエンドポイントを実装。',
-  },
-  {
-    number: 3,
-    title: 'Zustand認証ストアの実装',
-    desc: 'client/src/stores/authStore.ts を作成。ログイン状態、ユーザー情報、トークン管理のストアを実装。',
-  },
-  {
-    number: 4,
-    title: 'ProtectedRouteコンポーネントの構築',
-    desc: '認証済みユーザーのみアクセス可能なルートガードコンポーネントを作成。未認証時はログインページへリダイレクト。',
-  },
-  {
-    number: 5,
-    title: '認証フローのテスト作成',
-    desc: 'JWT ユーティリティ、APIエンドポイント、ProtectedRouteのユニットテスト・結合テストを作成。',
-  },
-]
+// コピーボタン
+function CopyButton({ text, size = 'md' }: { text: string; size?: 'md' | 'sm' }) {
+  const [copied, setCopied] = useState(false)
 
-const MOCK_PROMPT_LINES = [
-  { text: '以下の実装計画に従ってコードを書いてください。', color: '#d4d4d4' },
-  { text: '', color: '#d4d4d4' },
-  { text: '## Step 1: JWT Middleware', color: '#569cd6' },
-  { text: '- server/src/middleware/auth.ts を作成', color: '#d4d4d4' },
-  { text: '- jsonwebtoken を使ってトークン検証', color: '#d4d4d4' },
-  { text: '- SameSite=Strict の Cookie 設定', color: '#d4d4d4' },
-  { text: '...', color: '#6a737d' },
-]
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <Button variant="outline" size="sm" onClick={handleCopy}>
+      {copied ? (
+        <>
+          <Check className={`${size === 'sm' ? 'h-3 w-3' : 'h-3.5 w-3.5'} mr-1.5`} />
+          コピー済み
+        </>
+      ) : (
+        <>
+          <Copy className={`${size === 'sm' ? 'h-3 w-3' : 'h-3.5 w-3.5'} mr-1.5`} />
+          コピー
+        </>
+      )}
+    </Button>
+  )
+}
 
 // --- PC版 ---
 
-export function PCPlanTab() {
+export function PCPlanTab({ task }: { task: Task }) {
+  const { data: plan } = useTaskPlan(task.id)
+
+  if (!plan) {
+    return (
+      <p className="py-8 text-center text-sm text-muted-foreground">
+        プラン生成を待っています
+      </p>
+    )
+  }
+
+  const complexityStyle = plan.estimated_complexity
+    ? COMPLEXITY_STYLES[plan.estimated_complexity]
+    : null
+
   return (
     <div className="flex flex-col gap-6">
       {/* ステータスバナー */}
@@ -58,65 +68,35 @@ export function PCPlanTab() {
         <span className="text-[13px] font-medium leading-[1.4] text-[#1e40af]">
           ディスカッションの合意からプランを生成しました。実行準備完了。
         </span>
+        {complexityStyle && (
+          <span className={`ml-auto rounded-full px-2.5 py-0.5 text-xs font-medium ${complexityStyle.bg} ${complexityStyle.text}`}>
+            複雑度: {plan.estimated_complexity}
+          </span>
+        )}
       </div>
 
       {/* Implementation Plan カード */}
       <Card className="overflow-hidden">
-        {/* ヘッダー */}
         <div className="flex items-center justify-between px-6 pt-6">
           <div className="flex items-center gap-3">
             <h2 className="text-base font-semibold text-foreground">
               実装プラン
             </h2>
-            <Badge>5 ステップ</Badge>
+            {plan.total_rounds > 0 && (
+              <Badge>{plan.total_rounds} ラウンドの議論を経て作成</Badge>
+            )}
           </div>
         </div>
 
-        {/* ステップリスト */}
-        <div className="flex flex-col px-6">
-          {MOCK_PLAN_STEPS.map((step, i) => (
-            <div
-              key={step.number}
-              className={`flex flex-col gap-1 py-4 ${i < MOCK_PLAN_STEPS.length - 1 ? 'border-b' : ''}`}
-            >
-              {/* ステップヘッダー */}
-              <div className="flex items-center gap-2">
-                <div className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-primary">
-                  <span className="text-[11px] font-semibold text-primary-foreground">
-                    {step.number}
-                  </span>
-                </div>
-                <span className="text-sm font-semibold leading-[1.4] text-foreground">
-                  {step.title}
-                </span>
-              </div>
-
-              {/* 説明 */}
-              <p className="text-[13px] leading-[1.5] text-muted-foreground">
-                {step.desc}
-              </p>
-
-              {/* ファイルパス */}
-              {step.files && (
-                <div className="flex flex-col gap-1.5 pl-[30px] pt-1">
-                  {step.files.map((f) => (
-                    <span
-                      key={f}
-                      className="text-xs leading-[1.4] text-[#2563eb]"
-                    >
-                      {f}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+        <div className="p-6">
+          <pre className="whitespace-pre-wrap text-sm leading-[1.6] text-foreground">
+            {plan.plan_markdown}
+          </pre>
         </div>
       </Card>
 
       {/* Execution Prompt カード */}
       <Card className="overflow-hidden">
-        {/* ヘッダー */}
         <div className="flex items-center justify-between px-6 pt-6">
           <div className="flex items-center gap-2">
             <Terminal className="h-4 w-4 text-foreground" />
@@ -124,24 +104,14 @@ export function PCPlanTab() {
               実行プロンプト
             </h2>
           </div>
-          <Button variant="outline" size="sm">
-            <Copy className="mr-1.5 h-3.5 w-3.5" />
-            コピー
-          </Button>
+          <CopyButton text={plan.execution_prompt} />
         </div>
 
-        {/* コードブロック */}
         <div className="p-6">
-          <div className="flex flex-col rounded-lg bg-[#1e1e1e] p-4">
-            {MOCK_PROMPT_LINES.map((line, i) => (
-              <span
-                key={i}
-                className="font-mono text-xs leading-[1.6]"
-                style={{ color: line.color }}
-              >
-                {line.text || '\u00A0'}
-              </span>
-            ))}
+          <div className="overflow-x-auto rounded-lg bg-[#1e1e1e] p-4">
+            <pre className="font-mono text-xs leading-[1.6] text-[#d4d4d4]">
+              {plan.execution_prompt}
+            </pre>
           </div>
         </div>
       </Card>
@@ -151,7 +121,21 @@ export function PCPlanTab() {
 
 // --- SP版 ---
 
-export function SPPlanTab() {
+export function SPPlanTab({ task }: { task: Task }) {
+  const { data: plan } = useTaskPlan(task.id)
+
+  if (!plan) {
+    return (
+      <p className="py-6 text-center text-xs text-muted-foreground">
+        プラン生成を待っています
+      </p>
+    )
+  }
+
+  const complexityStyle = plan.estimated_complexity
+    ? COMPLEXITY_STYLES[plan.estimated_complexity]
+    : null
+
   return (
     <div className="flex flex-col gap-4">
       {/* ステータスバナー */}
@@ -160,30 +144,38 @@ export function SPPlanTab() {
         <span className="text-xs font-medium leading-[1.4] text-[#1e40af]">
           プラン実行準備完了
         </span>
+        {complexityStyle && (
+          <span className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-medium ${complexityStyle.bg} ${complexityStyle.text}`}>
+            {plan.estimated_complexity}
+          </span>
+        )}
       </div>
 
       {/* プランカード */}
+      <Card className="overflow-hidden p-3.5">
+        <pre className="whitespace-pre-wrap text-[13px] leading-[1.5] text-foreground">
+          {plan.plan_markdown}
+        </pre>
+      </Card>
+
+      {/* 実行プロンプト */}
       <Card className="overflow-hidden">
-        {MOCK_PLAN_STEPS.map((step, i) => (
-          <div
-            key={step.number}
-            className={`flex flex-col gap-1 px-3.5 py-3 ${i < MOCK_PLAN_STEPS.length - 1 ? 'border-b' : ''}`}
-          >
-            <div className="flex items-center gap-2">
-              <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary">
-                <span className="text-[10px] font-semibold text-primary-foreground">
-                  {step.number}
-                </span>
-              </div>
-              <span className="text-[13px] font-semibold leading-[1.4] text-foreground">
-                {step.title}
-              </span>
-            </div>
-            <p className="pl-7 text-xs leading-[1.4] text-muted-foreground">
-              {step.desc}
-            </p>
+        <div className="flex items-center justify-between px-3.5 pt-3.5">
+          <div className="flex items-center gap-1.5">
+            <Terminal className="h-3.5 w-3.5 text-foreground" />
+            <span className="text-[13px] font-semibold text-foreground">
+              実行プロンプト
+            </span>
           </div>
-        ))}
+          <CopyButton text={plan.execution_prompt} size="sm" />
+        </div>
+        <div className="p-3.5">
+          <div className="overflow-x-auto rounded-lg bg-[#1e1e1e] p-3">
+            <pre className="font-mono text-[11px] leading-[1.5] text-[#d4d4d4]">
+              {plan.execution_prompt}
+            </pre>
+          </div>
+        </div>
       </Card>
     </div>
   )

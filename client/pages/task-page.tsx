@@ -2,7 +2,7 @@
 // タブ切り替えで Overview / Discussion / Plan / Logs / CI を表示
 // PC: サイドバー + メインコンテンツ / SP: SPDetailHeader + ボディ
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   AlertCircle,
@@ -23,6 +23,7 @@ import { DetailTabs, type Tab } from '@/components/detail-tabs'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu'
+import { useQueryClient } from '@tanstack/react-query'
 import { useTask, useDeleteTask, useCancelTask, useRetryTask } from '@/hooks/use-tasks'
 import { formatRelativeTime } from '@/lib/format'
 import { ACTIVE_STATUSES, DELETABLE_STATUSES, RETRYABLE_STATUSES, STATUS_CONFIG, STATUS_PHASE_MAP } from '@/lib/status-config'
@@ -64,13 +65,13 @@ function PCTabBody({ activeTab, task, sseEvents, sseConnected }: TabBodyProps) {
     case '概要':
       return <PCOverviewTab task={task} />
     case 'ディスカッション':
-      return <PCDiscussionTab />
+      return <PCDiscussionTab task={task} />
     case 'プラン':
-      return <PCPlanTab />
+      return <PCPlanTab task={task} />
     case 'ログ':
       return <PCLogsTab task={task} events={sseEvents} connected={sseConnected} />
     case 'CI':
-      return <PCCITab />
+      return <PCCITab task={task} events={sseEvents} />
   }
 }
 
@@ -81,13 +82,13 @@ function SPTabBody({ activeTab, task, sseEvents, sseConnected }: TabBodyProps) {
     case '概要':
       return <SPOverviewTab task={task} />
     case 'ディスカッション':
-      return <SPDiscussionTab />
+      return <SPDiscussionTab task={task} />
     case 'プラン':
-      return <SPPlanTab />
+      return <SPPlanTab task={task} />
     case 'ログ':
       return <SPLogsTab task={task} events={sseEvents} connected={sseConnected} />
     case 'CI':
-      return <SPCITab />
+      return <SPCITab task={task} events={sseEvents} />
   }
 }
 
@@ -343,10 +344,27 @@ export function TaskPage() {
   const cancelTask = useCancelTask()
   const retryTask = useRetryTask()
 
-  // SSE接続: ログタブがアクティブ && タスクが実行中のときだけ接続
+  const qc = useQueryClient()
+
+  // SSE接続: タスクが実行中のときは全タブで接続（リアルタイム更新に使う）
   // Hooksルールに従い、早期returnの前に配置（taskがない場合はnullを渡す）
-  const shouldConnectSSE = activeTab === 'ログ' && task != null && ACTIVE_STATUSES.has(task.status)
+  const shouldConnectSSE = task != null && ACTIVE_STATUSES.has(task.status)
   const { events: sseEvents, connected: sseConnected } = useTaskSSE(shouldConnectSSE ? task.id : null)
+
+  // SSEイベントに応じてReact Queryキャッシュを無効化
+  useEffect(() => {
+    if (sseEvents.length === 0 || !task) return
+    const latest = sseEvents[sseEvents.length - 1]
+    if (latest.type === 'persona_selected') {
+      qc.invalidateQueries({ queryKey: ['tasks', task.id, 'personas'] })
+    }
+    if (latest.type === 'discussion_round_end' || latest.type === 'discussion_statement') {
+      qc.invalidateQueries({ queryKey: ['tasks', task.id, 'discussions'] })
+    }
+    if (latest.type === 'plan_created') {
+      qc.invalidateQueries({ queryKey: ['tasks', task.id, 'plan'] })
+    }
+  }, [sseEvents.length, task, qc])
 
   if (isLoading) {
     return (
