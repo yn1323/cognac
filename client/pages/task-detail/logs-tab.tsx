@@ -29,12 +29,12 @@ export function PCLogsTab() {
       <div className="flex items-center gap-2">
         {/* フェーズ選択 */}
         <select className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground">
-          <option>All Phases</option>
+          <option>全フェーズ</option>
         </select>
         {/* 検索 */}
         <input
           type="text"
-          placeholder="Search logs..."
+          placeholder="ログを検索..."
           className="h-9 w-60 rounded-md border border-input bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground"
         />
       </div>

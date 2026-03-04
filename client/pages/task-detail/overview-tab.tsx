@@ -16,17 +16,17 @@ import { useTaskImages } from '@/hooks/use-tasks'
 
 const MOCK_PERSONAS = [
   {
-    name: 'Security Engineer',
+    name: 'セキュリティエンジニア',
     desc: '認証・セキュリティ設計の専門家',
     color: '#7c3aed',
   },
   {
-    name: 'Frontend Engineer',
+    name: 'フロントエンドエンジニア',
     desc: 'React / UI実装の専門家',
     color: '#2563eb',
   },
   {
-    name: 'Test Engineer',
+    name: 'テストエンジニア',
     desc: 'テスト設計・品質保証の専門家',
     color: '#ea580c',
   },
@@ -41,24 +41,24 @@ interface ProgressStep {
 
 const MOCK_PROGRESS: ProgressStep[] = [
   {
-    label: 'Phase 2-A: Persona Selection',
-    sub: '3 personas selected — Completed',
+    label: 'Phase 2-A: ペルソナ選択',
+    sub: '3名選択済み — 完了',
     status: 'completed',
   },
   {
-    label: 'Phase 2-B: Multi-Persona Discussion',
-    sub: 'Round 1 of 3 — In progress',
+    label: 'Phase 2-B: マルチペルソナ議論',
+    sub: 'ラウンド 1/3 — 進行中',
     status: 'active',
   },
   {
-    label: 'Phase 2-C: Plan Confirmation',
-    sub: 'Waiting',
+    label: 'Phase 2-C: プラン確認',
+    sub: 'Pending',
     status: 'waiting',
     number: 3,
   },
   {
-    label: 'Phase 3: Code Execution',
-    sub: 'Waiting',
+    label: 'Phase 3: コード実行',
+    sub: 'Pending',
     status: 'waiting',
     number: 4,
   },
@@ -159,7 +159,7 @@ function TaskImagesSection({ taskId, size = 'md' }: { taskId: number; size?: 'md
           'font-semibold text-foreground',
           size === 'sm' ? 'mb-3 text-[15px]' : 'mb-4 text-base',
         )}>
-          Attached Images
+          添付画像
         </h2>
         <div className="flex flex-wrap gap-3">
           {images.map((img) => (
@@ -203,12 +203,12 @@ export function PCOverviewTab({ task }: { task: Task }) {
       {/* Task Information カード */}
       <Card className="p-6">
         <h2 className="mb-4 text-base font-semibold text-foreground">
-          Task Information
+          タスク情報
         </h2>
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
-              Status
+              ステータス
             </span>
             <Badge variant={task.status}>
               {STATUS_CONFIG[task.status].label}
@@ -216,7 +216,7 @@ export function PCOverviewTab({ task }: { task: Task }) {
           </div>
           <div className="flex items-center gap-2">
             <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
-              Current Phase
+              現在のフェーズ
             </span>
             <span className="text-[13px] text-foreground">
               {task.paused_phase ?? STATUS_PHASE_MAP[task.status]}
@@ -224,7 +224,7 @@ export function PCOverviewTab({ task }: { task: Task }) {
           </div>
           <div className="flex items-center gap-2">
             <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
-              Branch
+              ブランチ
             </span>
             <span className="text-[13px] text-[#2563eb]">
               {task.branch_name ?? '-'}
@@ -232,7 +232,7 @@ export function PCOverviewTab({ task }: { task: Task }) {
           </div>
           <div className="flex items-center gap-2">
             <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
-              Created
+              作成日時
             </span>
             <span className="text-[13px] text-foreground">
               {formatDateTime(task.created_at)}
@@ -240,10 +240,10 @@ export function PCOverviewTab({ task }: { task: Task }) {
           </div>
           <div className="flex flex-col gap-2">
             <span className="text-[13px] font-medium text-muted-foreground">
-              Description
+              説明
             </span>
             <p className="text-[13px] leading-[1.6] text-foreground">
-              {task.description ?? 'No description'}
+              {task.description ?? '説明なし'}
             </p>
           </div>
         </div>
@@ -255,7 +255,7 @@ export function PCOverviewTab({ task }: { task: Task }) {
       {/* Selected Personas */}
       <div className="flex flex-col gap-4">
         <h2 className="text-base font-semibold text-foreground">
-          Selected Personas
+          選択されたペルソナ
         </h2>
         <div className="grid grid-cols-3 gap-4">
           {MOCK_PERSONAS.map((persona) => (
@@ -284,7 +284,7 @@ export function PCOverviewTab({ task }: { task: Task }) {
       {/* Task Progress */}
       <div className="flex flex-col gap-4">
         <h2 className="text-base font-semibold text-foreground">
-          Task Progress
+          タスク進捗
         </h2>
         <Card className="p-6">
           <div className="flex flex-col gap-5">
@@ -306,12 +306,12 @@ export function SPOverviewTab({ task }: { task: Task }) {
       {/* Task Information */}
       <Card className="p-4">
         <h3 className="mb-3 text-[15px] font-semibold text-foreground">
-          Task Information
+          タスク情報
         </h3>
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
             <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
-              Status
+              ステータス
             </span>
             <Badge variant={task.status}>
               {STATUS_CONFIG[task.status].label}
@@ -319,7 +319,7 @@ export function SPOverviewTab({ task }: { task: Task }) {
           </div>
           <div className="flex items-center gap-2">
             <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
-              Phase
+              フェーズ
             </span>
             <span className="text-xs text-foreground">
               {task.paused_phase ?? STATUS_PHASE_MAP[task.status]}
@@ -327,7 +327,7 @@ export function SPOverviewTab({ task }: { task: Task }) {
           </div>
           <div className="flex items-center gap-2">
             <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
-              Branch
+              ブランチ
             </span>
             <span className="text-xs text-[#2563eb]">
               {task.branch_name ?? '-'}
@@ -335,10 +335,10 @@ export function SPOverviewTab({ task }: { task: Task }) {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs font-medium text-muted-foreground">
-              Description
+              説明
             </span>
             <p className="text-xs leading-[1.5] text-foreground">
-              {task.description ?? 'No description'}
+              {task.description ?? '説明なし'}
             </p>
           </div>
         </div>
@@ -350,7 +350,7 @@ export function SPOverviewTab({ task }: { task: Task }) {
       {/* Personas */}
       <Card className="p-4">
         <h3 className="mb-3 text-[15px] font-semibold text-foreground">
-          Personas
+          ペルソナ
         </h3>
         <div className="flex flex-col gap-3">
           {MOCK_PERSONAS.map((persona) => (
@@ -372,7 +372,7 @@ export function SPOverviewTab({ task }: { task: Task }) {
       {/* Progress */}
       <Card className="p-4">
         <h3 className="mb-3 text-[15px] font-semibold text-foreground">
-          Progress
+          進捗
         </h3>
         <div className="flex flex-col gap-2.5">
           {MOCK_PROGRESS.map((step) => (

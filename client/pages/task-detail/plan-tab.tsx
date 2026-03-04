@@ -11,28 +11,28 @@ import { Button } from '@/components/ui/button'
 const MOCK_PLAN_STEPS = [
   {
     number: 1,
-    title: 'Setup auth middleware + JWT utilities',
+    title: '認証ミドルウェア + JWTユーティリティのセットアップ',
     desc: 'server/src/middleware/auth.ts と server/src/utils/jwt.ts を作成。トークン生成・検証・リフレッシュのユーティリティ関数を実装。',
     files: ['server/src/middleware/auth.ts', 'server/src/utils/jwt.ts'],
   },
   {
     number: 2,
-    title: 'Create auth API endpoints',
+    title: '認証APIエンドポイントの作成',
     desc: 'POST /api/auth/login, POST /api/auth/logout, POST /api/auth/refresh のエンドポイントを実装。',
   },
   {
     number: 3,
-    title: 'Implement Zustand auth store',
+    title: 'Zustand認証ストアの実装',
     desc: 'client/src/stores/authStore.ts を作成。ログイン状態、ユーザー情報、トークン管理のストアを実装。',
   },
   {
     number: 4,
-    title: 'Build ProtectedRoute component',
+    title: 'ProtectedRouteコンポーネントの構築',
     desc: '認証済みユーザーのみアクセス可能なルートガードコンポーネントを作成。未認証時はログインページへリダイレクト。',
   },
   {
     number: 5,
-    title: 'Write tests for auth flow',
+    title: '認証フローのテスト作成',
     desc: 'JWT ユーティリティ、APIエンドポイント、ProtectedRouteのユニットテスト・結合テストを作成。',
   },
 ]
@@ -56,7 +56,7 @@ export function PCPlanTab() {
       <div className="flex items-center gap-3 rounded-lg border border-[#2563eb30] bg-[#eff6ff] px-4 py-3">
         <FileText className="h-[18px] w-[18px] shrink-0 text-[#2563eb]" />
         <span className="text-[13px] font-medium leading-[1.4] text-[#1e40af]">
-          Plan generated from discussion consensus. Ready for execution.
+          ディスカッションの合意からプランを生成しました。実行準備完了。
         </span>
       </div>
 
@@ -66,9 +66,9 @@ export function PCPlanTab() {
         <div className="flex items-center justify-between px-6 pt-6">
           <div className="flex items-center gap-3">
             <h2 className="text-base font-semibold text-foreground">
-              Implementation Plan
+              実装プラン
             </h2>
-            <Badge>5 steps</Badge>
+            <Badge>5 ステップ</Badge>
           </div>
         </div>
 
@@ -121,12 +121,12 @@ export function PCPlanTab() {
           <div className="flex items-center gap-2">
             <Terminal className="h-4 w-4 text-foreground" />
             <h2 className="text-base font-semibold text-foreground">
-              Execution Prompt
+              実行プロンプト
             </h2>
           </div>
           <Button variant="outline" size="sm">
             <Copy className="mr-1.5 h-3.5 w-3.5" />
-            Copy
+            コピー
           </Button>
         </div>
 
@@ -158,7 +158,7 @@ export function SPPlanTab() {
       <div className="flex items-center gap-2.5 rounded-lg border border-[#2563eb30] bg-[#eff6ff] px-3 py-2.5">
         <FileText className="h-4 w-4 shrink-0 text-[#2563eb]" />
         <span className="text-xs font-medium leading-[1.4] text-[#1e40af]">
-          Plan ready for execution
+          プラン実行準備完了
         </span>
       </div>
 

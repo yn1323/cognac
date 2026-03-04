@@ -122,10 +122,10 @@ function useDashboardFilters(tasks: Task[]) {
 
 function getSPSubtitle(task: Task): string {
   const time = formatRelativeTime(task.started_at ?? task.created_at)
-  if (task.status === 'executing') return `Phase 3 · ${time}`
-  if (task.status === 'discussing') return `ディスカッション中 · ${time}`
+  if (task.status === 'executing') return `Phase 3 Executing · ${time}`
+  if (task.status === 'discussing') return `Discussing · ${time}`
   if (task.status === 'stopped' && task.retry_count > 0)
-    return `CI failed (${task.retry_count}/5) · ${time}`
+    return `CI失敗 (${task.retry_count}/5) · ${time}`
   return time
 }
 
@@ -154,31 +154,31 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
       <Sidebar
         className="h-full shrink-0"
         onItemClick={(label) => {
-          if (label === 'Settings') onNavigate('/settings')
+          if (label === '設定') onNavigate('/settings')
         }}
       />
 
       <main className="flex flex-1 flex-col gap-6 overflow-y-auto p-8">
         {/* ページヘッダー */}
         <PageHeader
-          title="Tasks"
-          subtitle="Manage and monitor your AI-driven development tasks"
+          title="タスク"
+          subtitle="AI駆動の開発タスクを管理・監視します"
         >
           {/* Runner Status */}
           <div className="flex items-center gap-1.5 rounded-full bg-[#dcfce7] px-3 py-1.5">
             <span className="h-2 w-2 rounded-full bg-[#22c55e]" />
-            <span className="text-xs font-semibold text-[#166534]">Running</span>
+            <span className="text-xs font-semibold text-[#166534]">実行中</span>
           </div>
           <Button variant="outline">
             <Pause className="mr-2 h-4 w-4" />
-            Pause All
+            全停止
           </Button>
           <Button
             className="bg-blue-600 text-white hover:bg-blue-700"
             onClick={onNewTask}
           >
             <Plus className="mr-2 h-4 w-4" />
-            New Task
+            新規タスク
           </Button>
         </PageHeader>
 
@@ -223,10 +223,10 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
           {/* ヘッダー */}
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold leading-[1.4] text-foreground">
-              Task Queue
+              タスクキュー
             </h2>
             <span className="text-sm text-muted-foreground">
-              {filteredTasks.length} tasks
+              {filteredTasks.length} 件
             </span>
           </div>
 
@@ -255,7 +255,7 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
                   onClick={onNewTask}
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  New Task
+                  新規タスク
                 </Button>
               )}
             </div>
@@ -285,9 +285,9 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
         {/* タイトル + Running バッジ */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold leading-[1.3] text-foreground">
-            Tasks
+            タスク
           </h1>
-          <Badge className="bg-[#16a34a] text-white">Running</Badge>
+          <Badge className="bg-[#16a34a] text-white">実行中</Badge>
         </div>
 
         {/* メトリクス（フィルター兼用） */}
@@ -301,21 +301,21 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
           />
           <SPMetric
             value={metrics.executing}
-            label="Exec"
+            label="実行"
             active={activeFilters.has('executing')}
             onClick={() => toggle('executing')}
             {...FILTER_STYLES.executing.sp}
           />
           <SPMetric
             value={metrics.completed}
-            label="Done"
+            label="完了"
             active={activeFilters.has('completed')}
             onClick={() => toggle('completed')}
             {...FILTER_STYLES.completed.sp}
           />
           <SPMetric
             value={metrics.failed}
-            label="Stop"
+            label="失敗"
             active={activeFilters.has('failed')}
             onClick={() => toggle('failed')}
             {...FILTER_STYLES.failed.sp}
@@ -358,7 +358,7 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
                         size="sm"
                         className="h-auto px-2.5 py-1 text-xs"
                       >
-                        Retry
+                        リトライ
                       </Button>
                     ) : undefined
                   }
@@ -371,7 +371,7 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
 
       {/* ボトムナビ */}
       <SPBottomNav>
-        <SPNavItem icon={ListChecks} label="Tasks" active />
+        <SPNavItem icon={ListChecks} label="タスク" active />
         <button
           type="button"
           className="flex flex-col items-center gap-1"
@@ -379,7 +379,7 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
         >
           <PlusCircle className="h-7 w-7 text-primary" />
         </button>
-        <SPNavItem icon={Settings} label="Settings" onClick={() => onNavigate('/settings')} />
+        <SPNavItem icon={Settings} label="設定" onClick={() => onNavigate('/settings')} />
       </SPBottomNav>
     </div>
   )

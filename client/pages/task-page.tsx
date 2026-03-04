@@ -12,7 +12,7 @@ import {
   Trash2,
   XCircle,
 } from 'lucide-react'
-import type { Task, TaskStatus } from '@cognac/shared'
+import type { Task } from '@cognac/shared'
 import { EditTaskModal } from '@/components/edit-task-modal'
 import { useToast } from '@/components/toast'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 import { useTask, useDeleteTask, useCancelTask } from '@/hooks/use-tasks'
 import { formatRelativeTime } from '@/lib/format'
-import { STATUS_CONFIG, STATUS_PHASE_MAP } from '@/lib/status-config'
+import { DELETABLE_STATUSES, STATUS_CONFIG, STATUS_PHASE_MAP } from '@/lib/status-config'
 import { PCOverviewTab, SPOverviewTab } from '@/pages/task-detail/overview-tab'
 import {
   PCDiscussionTab,
@@ -33,10 +33,6 @@ import {
 import { PCPlanTab, SPPlanTab } from '@/pages/task-detail/plan-tab'
 import { PCLogsTab, SPLogsTab } from '@/pages/task-detail/logs-tab'
 import { PCCITab, SPCITab } from '@/pages/task-detail/ci-tab'
-
-// --- 定数 ---
-
-const DELETABLE_STATUSES: TaskStatus[] = ['pending', 'stopped', 'completed']
 
 // --- アクション用props ---
 
@@ -53,13 +49,13 @@ interface TaskActions {
 
 function PCTabBody({ activeTab, task }: { activeTab: Tab; task: Task }) {
   switch (activeTab) {
-    case 'Overview':
+    case '概要':
       return <PCOverviewTab task={task} />
-    case 'Discussion':
+    case 'ディスカッション':
       return <PCDiscussionTab />
-    case 'Plan':
+    case 'プラン':
       return <PCPlanTab />
-    case 'Logs':
+    case 'ログ':
       return <PCLogsTab />
     case 'CI':
       return <PCCITab />
@@ -70,13 +66,13 @@ function PCTabBody({ activeTab, task }: { activeTab: Tab; task: Task }) {
 
 function SPTabBody({ activeTab, task }: { activeTab: Tab; task: Task }) {
   switch (activeTab) {
-    case 'Overview':
+    case '概要':
       return <SPOverviewTab task={task} />
-    case 'Discussion':
+    case 'ディスカッション':
       return <SPDiscussionTab />
-    case 'Plan':
+    case 'プラン':
       return <SPPlanTab />
-    case 'Logs':
+    case 'ログ':
       return <SPLogsTab />
     case 'CI':
       return <SPCITab />
@@ -86,8 +82,8 @@ function SPTabBody({ activeTab, task }: { activeTab: Tab; task: Task }) {
 // --- PC版 ---
 
 const NAV_MAP: Record<string, string> = {
-  Tasks: '/',
-  Settings: '/settings',
+  タスク: '/',
+  設定: '/settings',
 }
 
 function PCTaskDetail({
@@ -106,7 +102,7 @@ function PCTaskDetail({
   return (
     <div className="flex h-screen bg-background">
       <Sidebar
-        activeItem="Tasks"
+        activeItem="タスク"
         onItemClick={(label) => {
           const path = NAV_MAP[label]
           if (path) onNavigate(path)
@@ -124,10 +120,10 @@ function PCTaskDetail({
               className="text-[#2563eb] hover:underline"
               onClick={() => onNavigate('/')}
             >
-              Tasks
+              タスク
             </button>
             <span className="text-muted-foreground">/</span>
-            <span className="text-muted-foreground">Task #{task.id}</span>
+            <span className="text-muted-foreground">タスク #{task.id}</span>
           </div>
 
           {/* タイトル行 */}
@@ -144,7 +140,7 @@ function PCTaskDetail({
                   {STATUS_PHASE_MAP[task.status]}
                 </span>
                 <span className="text-[13px] text-muted-foreground">
-                  Created {formatRelativeTime(task.created_at)}
+                  作成 {formatRelativeTime(task.created_at)}
                 </span>
               </div>
             </div>
@@ -158,7 +154,7 @@ function PCTaskDetail({
                   onClick={actions.onCancel}
                   disabled={actions.isCancelling}
                 >
-                  Cancel
+                  キャンセル
                 </Button>
               ) : (
                 <>
@@ -167,7 +163,7 @@ function PCTaskDetail({
                     size="sm"
                     onClick={actions.onEditOpen}
                   >
-                    Edit
+                    編集
                   </Button>
                   <Button
                     variant="destructive"
@@ -175,7 +171,7 @@ function PCTaskDetail({
                     onClick={actions.onDelete}
                     disabled={!actions.canDelete || actions.isDeleting}
                   >
-                    Delete
+                    削除
                   </Button>
                 </>
               )}
@@ -219,7 +215,7 @@ function SPTaskDetail({
       {/* ヘッダー + タブ */}
       <SPDetailHeader
         title={task.title}
-        subtitle={`Task #${task.id} · ${STATUS_CONFIG[task.status].label}`}
+        subtitle={`タスク #${task.id} · ${STATUS_CONFIG[task.status].label}`}
         onBack={() => onNavigate('/')}
         actions={
           <DropdownMenu
@@ -244,7 +240,7 @@ function SPTaskDetail({
                 variant="destructive"
                 icon={XCircle}
               >
-                Cancel
+                キャンセル
               </DropdownMenuItem>
             ) : (
               <>
@@ -255,7 +251,7 @@ function SPTaskDetail({
                   }}
                   icon={Pencil}
                 >
-                  Edit
+                  編集
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
@@ -266,7 +262,7 @@ function SPTaskDetail({
                   icon={Trash2}
                   disabled={!actions.canDelete}
                 >
-                  Delete
+                  削除
                 </DropdownMenuItem>
               </>
             )}
@@ -294,7 +290,7 @@ export function TaskPage() {
   const { id } = useParams<{ id: string }>()
   const taskId = Number(id)
   const { data: task, isLoading, error } = useTask(taskId)
-  const [activeTab, setActiveTab] = useState<Tab>('Overview')
+  const [activeTab, setActiveTab] = useState<Tab>('概要')
   const [editOpen, setEditOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
@@ -326,7 +322,7 @@ export function TaskPage() {
     )
   }
 
-  const canDelete = DELETABLE_STATUSES.includes(task.status)
+  const canDelete = DELETABLE_STATUSES.has(task.status)
 
   const handleDelete = () => setDeleteDialogOpen(true)
 

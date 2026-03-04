@@ -19,8 +19,8 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { icon: ListChecks, label: 'Tasks', active: true },
-  { icon: Settings, label: 'Settings' },
+  { icon: ListChecks, label: 'タスク', active: true },
+  { icon: Settings, label: '設定' },
 ]
 
 interface SidebarProps {
@@ -29,7 +29,7 @@ interface SidebarProps {
   className?: string
 }
 
-export function Sidebar({ activeItem = 'Tasks', onItemClick, className }: SidebarProps) {
+export function Sidebar({ activeItem = 'タスク', onItemClick, className }: SidebarProps) {
   return (
     <aside
       className={cn(
@@ -53,9 +53,6 @@ export function Sidebar({ activeItem = 'Tasks', onItemClick, className }: Sideba
 
       {/* ナビゲーション */}
       <nav className="flex flex-1 flex-col gap-0.5">
-        <span className="px-3 py-1.5 text-xs font-medium text-muted-foreground">
-          Navigation
-        </span>
         {NAV_ITEMS.map((item) => {
           const isActive = item.label === activeItem
           return (

@@ -12,9 +12,9 @@ import { cn } from '@/lib/utils'
 
 // フェーズ表示テキスト
 function getPhaseText(task: Task): string | null {
-  if (task.status === 'discussing') return 'ディスカッション中'
-  if (task.status === 'executing') return 'Phase 3'
-  if (task.status === 'testing') return 'テスト中'
+  if (task.status === 'discussing') return 'Discussing'
+  if (task.status === 'executing') return 'Phase 3 Executing'
+  if (task.status === 'testing') return 'Testing'
   return null
 }
 
@@ -70,7 +70,7 @@ export function TaskCard({ task, onRetry }: TaskCardProps) {
             {/* リトライ回数 */}
             {task.retry_count > 0 && task.status === 'stopped' && (
               <span className="text-xs font-medium text-status-stopped">
-                CI failed ({task.retry_count}/5)
+                CI失敗 ({task.retry_count}/5)
               </span>
             )}
           </div>
@@ -87,7 +87,7 @@ export function TaskCard({ task, onRetry }: TaskCardProps) {
               onRetry?.(task.id)
             }}
           >
-            Retry
+            リトライ
           </Button>
         )}
 

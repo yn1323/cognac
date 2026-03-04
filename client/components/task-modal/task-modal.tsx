@@ -68,7 +68,7 @@ function PCTaskModal({
           >
             <X className="h-5 w-5" />
           </button>
-          <h2 className="text-xl font-semibold text-foreground">Create New Task</h2>
+          <h2 className="text-xl font-semibold text-foreground">新規タスク作成</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             新しいタスクを作成して実行キューに追加します
           </p>
@@ -78,11 +78,11 @@ function PCTaskModal({
         <form onSubmit={handleSubmit} className="space-y-5 p-6">
           {/* Title */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Title</label>
+            <label className="text-sm font-medium text-foreground">タイトル</label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Implement user authentication"
+              placeholder="例: ユーザー認証を実装する"
               maxLength={200}
               disabled={isSubmitting}
             />
@@ -91,7 +91,7 @@ function PCTaskModal({
 
           {/* Description */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Description</label>
+            <label className="text-sm font-medium text-foreground">説明</label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -103,7 +103,7 @@ function PCTaskModal({
 
           {/* Priority */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Priority</label>
+            <label className="text-sm font-medium text-foreground">優先度</label>
             <PriorityRadioGroup
               options={PC_PRIORITIES}
               value={priority}
@@ -113,7 +113,7 @@ function PCTaskModal({
 
           {/* Images */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Images (optional)</label>
+            <label className="text-sm font-medium text-foreground">画像（任意）</label>
             <DropZone
               onFilesAdd={onFilesAdd}
               icon={Upload}
@@ -125,7 +125,7 @@ function PCTaskModal({
           {/* フッターボタン */}
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
-              Cancel
+              キャンセル
             </Button>
             <Button
               type="submit"
@@ -135,10 +135,10 @@ function PCTaskModal({
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  作成中...
                 </>
               ) : (
-                'Create Task'
+                'タスク作成'
               )}
             </Button>
           </div>
@@ -169,7 +169,7 @@ function SPTaskModal({
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* ヘッダーバー */}
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <h2 className="text-lg font-semibold text-foreground">New Task</h2>
+        <h2 className="text-lg font-semibold text-foreground">新規タスク</h2>
         <button
           type="button"
           onClick={handleClose}
@@ -190,11 +190,11 @@ function SPTaskModal({
 
         {/* Title */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Title</label>
+          <label className="text-sm font-medium text-foreground">タイトル</label>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Implement user authentication"
+            placeholder="例: ユーザー認証を実装する"
             maxLength={200}
             disabled={isSubmitting}
           />
@@ -203,7 +203,7 @@ function SPTaskModal({
 
         {/* Description */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Description</label>
+          <label className="text-sm font-medium text-foreground">説明</label>
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -215,7 +215,7 @@ function SPTaskModal({
 
         {/* Priority (SP: 3択) */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Priority</label>
+          <label className="text-sm font-medium text-foreground">優先度</label>
           <PriorityRadioGroup
             options={SP_PRIORITIES}
             value={priority}
@@ -225,7 +225,7 @@ function SPTaskModal({
 
         {/* Images */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Images (optional)</label>
+          <label className="text-sm font-medium text-foreground">画像（任意）</label>
           <DropZone
             onFilesAdd={onFilesAdd}
             icon={Camera}
@@ -260,7 +260,7 @@ function SPTaskModal({
                 Creating...
               </>
             ) : (
-              'Create Task'
+              'タスク作成'
             )}
           </Button>
         </div>

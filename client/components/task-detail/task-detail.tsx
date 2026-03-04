@@ -1,18 +1,18 @@
 // タスク詳細表示
 // 概要情報 + 実行ログ
 
+import { useState } from 'react'
 import type { Task, TaskEvent } from '@cognac/shared'
 import { StatusBadge } from '@/components/status-badge'
 import { LogView } from '@/components/log-view'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useDeleteTask } from '@/hooks/use-tasks'
 import { useNavigate } from 'react-router-dom'
 import { Trash2 } from 'lucide-react'
 import { formatDateTime } from '@/lib/format'
-
-// 削除可能なステータス
-const DELETABLE_STATUSES = ['pending', 'stopped', 'completed'] as const
+import { DELETABLE_STATUSES } from '@/lib/status-config'
 
 export function TaskDetail({
   task,
@@ -25,13 +25,14 @@ export function TaskDetail({
 }) {
   const deleteTask = useDeleteTask()
   const navigate = useNavigate()
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  const canDelete = (DELETABLE_STATUSES as readonly string[]).includes(task.status)
+  const canDelete = DELETABLE_STATUSES.has(task.status)
 
   const handleDelete = () => {
-    if (!confirm(`「${task.title}」を削除する？`)) return
     deleteTask.mutate(task.id, {
       onSuccess: () => navigate('/'),
+      onError: () => setShowDeleteConfirm(false),
     })
   }
 
@@ -71,13 +72,24 @@ export function TaskDetail({
             <Button
               variant="destructive"
               size="sm"
-              onClick={handleDelete}
+              onClick={() => setShowDeleteConfirm(true)}
               disabled={deleteTask.isPending}
             >
               <Trash2 className="h-4 w-4" />
               削除
             </Button>
           )}
+
+          <ConfirmDialog
+            open={showDeleteConfirm}
+            onConfirm={handleDelete}
+            onCancel={() => setShowDeleteConfirm(false)}
+            title={`「${task.title}」を削除する？`}
+            description="この操作は取り消せません。タスクに関連するすべてのデータが削除されます。"
+            confirmLabel="削除する"
+            variant="destructive"
+            isLoading={deleteTask.isPending}
+          />
         </CardContent>
       </Card>
 

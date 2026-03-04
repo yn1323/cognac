@@ -109,7 +109,7 @@ function PCEditModal({
           >
             <X className="h-5 w-5" />
           </button>
-          <h2 className="text-xl font-semibold text-foreground">Edit Task</h2>
+          <h2 className="text-xl font-semibold text-foreground">タスク編集</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             タスクの内容を編集します
           </p>
@@ -118,11 +118,11 @@ function PCEditModal({
         {/* フォーム */}
         <form onSubmit={handleSubmit} className="space-y-5 p-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Title</label>
+            <label className="text-sm font-medium text-foreground">タイトル</label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Implement user authentication"
+              placeholder="例: ユーザー認証を実装する"
               maxLength={200}
               disabled={isSubmitting}
             />
@@ -130,7 +130,7 @@ function PCEditModal({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Description</label>
+            <label className="text-sm font-medium text-foreground">説明</label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -141,7 +141,7 @@ function PCEditModal({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Priority</label>
+            <label className="text-sm font-medium text-foreground">優先度</label>
             <PriorityRadioGroup
               options={PC_PRIORITIES}
               value={priority}
@@ -151,7 +151,7 @@ function PCEditModal({
 
           {/* Images */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Images</label>
+            <label className="text-sm font-medium text-foreground">画像</label>
             <DropZone
               onFilesAdd={onFilesAdd}
               icon={Upload}
@@ -162,7 +162,7 @@ function PCEditModal({
 
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-              Cancel
+              キャンセル
             </Button>
             <Button
               type="submit"
@@ -172,10 +172,10 @@ function PCEditModal({
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
+                  保存中...
                 </>
               ) : (
-                'Save Changes'
+                '変更を保存'
               )}
             </Button>
           </div>
@@ -206,7 +206,7 @@ function SPEditModal({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <h2 className="text-lg font-semibold text-foreground">Edit Task</h2>
+        <h2 className="text-lg font-semibold text-foreground">タスク編集</h2>
         <button
           type="button"
           onClick={onClose}
@@ -225,11 +225,11 @@ function SPEditModal({
         </p>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Title</label>
+          <label className="text-sm font-medium text-foreground">タイトル</label>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Implement user authentication"
+            placeholder="例: ユーザー認証を実装する"
             maxLength={200}
             disabled={isSubmitting}
           />
@@ -237,7 +237,7 @@ function SPEditModal({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Description</label>
+          <label className="text-sm font-medium text-foreground">説明</label>
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -248,7 +248,7 @@ function SPEditModal({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Priority</label>
+          <label className="text-sm font-medium text-foreground">優先度</label>
           <PriorityRadioGroup
             options={SP_PRIORITIES}
             value={priority}
@@ -258,7 +258,7 @@ function SPEditModal({
 
         {/* Images */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Images</label>
+          <label className="text-sm font-medium text-foreground">画像</label>
           <DropZone
             onFilesAdd={onFilesAdd}
             icon={Camera}
@@ -291,7 +291,7 @@ function SPEditModal({
                 Saving...
               </>
             ) : (
-              'Save Changes'
+              '変更を保存'
             )}
           </Button>
         </div>

@@ -32,7 +32,7 @@ export function PCDiscussionTab() {
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-border" />
         <span className="text-xs font-medium text-muted-foreground">
-          Round 1
+          ラウンド 1
         </span>
         <div className="h-px flex-1 bg-border" />
       </div>
@@ -75,7 +75,7 @@ export function SPDiscussionTab() {
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-border" />
         <span className="text-xs font-medium text-muted-foreground">
-          Round 1
+          ラウンド 1
         </span>
         <div className="h-px flex-1 bg-border" />
       </div>

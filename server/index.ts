@@ -27,7 +27,7 @@ export function createApp({ db, eventBus, runner, publicDir }: CreateAppOptions)
   // APIルーティング
   app.route('/api/tasks', tasksRouter(db))
   app.route('/api/tasks', streamRouter(eventBus))
-  app.route('/api', systemRouter(runner))
+  app.route('/api', systemRouter(runner, db))
 
   // アップロード画像の静的配信
   app.use('/uploads/*', serveStatic({ root: '.cognac/' }))

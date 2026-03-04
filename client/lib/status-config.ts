@@ -4,6 +4,9 @@
 
 import type { TaskStatus } from '@cognac/shared'
 import type { LucideIcon } from 'lucide-react'
+
+// 削除可能なステータス
+export const DELETABLE_STATUSES = new Set<TaskStatus>(['pending', 'stopped', 'completed'])
 import {
   Loader,
   MessageCircle,
@@ -17,14 +20,14 @@ import {
 
 // ステータス → フェーズ表示名のマッピング
 export const STATUS_PHASE_MAP: Record<TaskStatus, string> = {
-  pending: 'Queued',
-  discussing: 'Phase 2-B: Multi-Persona Discussion',
-  planned: 'Phase 2-C: Plan Confirmed',
-  executing: 'Phase 3: Code Execution',
-  testing: 'Phase 4: CI Testing',
-  completed: 'Completed',
-  paused: 'Paused',
-  stopped: 'Stopped',
+  pending: 'キュー待ち',
+  discussing: 'Phase 2-B: マルチペルソナ議論',
+  planned: 'Phase 2-C: プラン確定',
+  executing: 'Phase 3: コード実行',
+  testing: 'Phase 4: CI テスト',
+  completed: '完了',
+  paused: '一時停止',
+  stopped: '停止',
 }
 
 export const STATUS_CONFIG: Record<

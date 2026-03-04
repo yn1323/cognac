@@ -52,5 +52,7 @@ export const api = {
   },
   system: {
     status: () => fetchJson<{ status: string; timestamp: string }>('/status'),
+    deleteDatabase: () =>
+      fetchJson<{ ok: boolean }>('/database', { method: 'DELETE' }),
   },
 }

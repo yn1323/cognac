@@ -13,10 +13,10 @@ export function PCCITab() {
         <Loader className="h-[18px] w-[18px] shrink-0 text-[#2563eb]" />
         <div className="flex flex-col gap-0.5">
           <span className="text-[13px] font-semibold leading-[1.4] text-[#1e40af]">
-            CI Run #3 — In Progress
+            CI実行 #3 — 進行中
           </span>
           <span className="text-xs leading-[1.4] text-[#3b82f6]">
-            Attempt 2 of 5 · Started 14:32:22
+            試行 2/5 · 開始 14:32:22
           </span>
         </div>
       </div>
@@ -43,7 +43,7 @@ export function PCCITab() {
 
         {/* Note */}
         <span className="text-xs leading-[1.4] text-muted-foreground">
-          Attempt 2 of 5 · Started 14:32:22
+          試行 2/5 · 開始 14:32:22
         </span>
       </div>
 
@@ -51,7 +51,7 @@ export function PCCITab() {
       <div className="flex items-center gap-1.5">
         <ExternalLink className="h-3.5 w-3.5 text-primary" />
         <span className="text-[13px] leading-[1.4] text-muted-foreground">
-          実行ログの詳細は Logs タブで確認できます
+          実行ログの詳細はログタブで確認できます
         </span>
       </div>
     </div>
@@ -68,7 +68,7 @@ export function SPCITab() {
         <div className="flex items-center gap-2">
           <Loader className="h-4 w-4 shrink-0 text-[#2563eb]" />
           <span className="text-xs font-semibold leading-[1.4] text-[#1e40af]">
-            CI Run #3 - 実行中
+            CI実行 #3 - 実行中
           </span>
         </div>
         <span className="text-xs font-medium text-[#1e40af]">2:34</span>
@@ -88,7 +88,7 @@ export function SPCITab() {
           <span className="text-xs text-muted-foreground">2:34</span>
         </div>
         <span className="text-[11px] leading-[1.4] text-muted-foreground">
-          Attempt 2 of 5 · Started 14:32
+          試行 2/5 · 開始 14:32
         </span>
       </div>
 
@@ -96,7 +96,7 @@ export function SPCITab() {
       <div className="flex items-center gap-1.5">
         <ExternalLink className="h-3 w-3 text-primary" />
         <span className="text-xs leading-[1.4] text-muted-foreground">
-          詳細は Logs タブで確認
+          詳細はログタブで確認
         </span>
       </div>
     </div>

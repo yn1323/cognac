@@ -1,8 +1,8 @@
 // 確認ダイアログ
-// デザインシステム: OtykB (Dialog)
+// デザインシステム: UgIg0 (Confirm Dialog)
 
 import { useEffect, useId } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, TriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface ConfirmDialogProps {
@@ -61,30 +61,41 @@ export function ConfirmDialog({
         onClick={isLoading ? undefined : onCancel}
       />
 
-      {/* ダイアログ本体 */}
+      {/* ダイアログ本体 — UgIg0 準拠: w-[400px], rounded-lg, border, shadow */}
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative mx-4 w-full max-w-120 rounded-lg border border-border bg-card shadow-[0_1px_1.75px_#0000000d]"
+        className="relative mx-4 w-full max-w-[400px] rounded-lg border border-border bg-card shadow-[0_20px_20px_#0000001a,0_10px_10px_#0000000a]"
       >
-        {/* Card Header */}
-        <div className="flex flex-col gap-2 p-6">
-          <h2 id={titleId} className="text-lg font-semibold text-foreground">
-            {title}
-          </h2>
+        {/* Header — padding:24, gap:12 */}
+        <div className="flex flex-col gap-3 p-6">
+          {/* アイコン + タイトル行 — gap:12 */}
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50">
+              <TriangleAlert className="h-5 w-5 text-destructive" />
+            </div>
+            <h2
+              id={titleId}
+              className="text-lg font-semibold leading-[1.4] text-foreground"
+            >
+              {title}
+            </h2>
+          </div>
           {description && (
-            <p className="text-sm text-muted-foreground">{description}</p>
+            <p className="text-sm leading-[1.43] text-muted-foreground">
+              {description}
+            </p>
           )}
         </div>
 
-        {/* Card Actions */}
-        <div className="flex justify-end gap-2 p-6 pt-0">
+        {/* Actions — justify:end, gap:8, padding:[16,24,24,24] */}
+        <div className="flex justify-end gap-2 px-6 pb-6 pt-4">
           <Button variant="outline" onClick={onCancel} disabled={isLoading}>
             {cancelLabel}
           </Button>
           <Button
-            variant={variant === 'destructive' ? 'destructive' : 'default'}
+            variant={variant}
             onClick={onConfirm}
             disabled={isLoading}
           >
