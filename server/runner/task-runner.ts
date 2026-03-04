@@ -4,7 +4,7 @@ import type { EventBus } from '../sse/event-bus.js'
 import type { RunnerStatus } from '../api/system.js'
 import * as taskQueries from '../db/queries/tasks.js'
 import * as logQueries from '../db/queries/execution-logs.js'
-import { createTaskBranch, mergeTaskBranch, resetTaskBranch } from './git-ops.js'
+import { buildBranchName } from './git-ops.js'
 import { executePhase3 } from './phase-execute.js'
 import { getCiSteps, runCi } from './ci-runner.js'
 import { classifyError } from './error-classifier.js'
@@ -98,20 +98,13 @@ export class TaskRunner implements RunnerStatus {
     const timestamp = new Date().toISOString()
 
     try {
-      // --- Gitブランチ作成 ---
-      this.emit(id, { type: 'phase_start', phase: 'git', timestamp })
-      const branchName = createTaskBranch(id, task.title, this.config.git.defaultBranch)
+      // --- ブランチ名を生成（実際のgit操作は未実装） ---
+      const branchName = buildBranchName(id)
       taskQueries.updateTask(this.db, id, {
         status: 'executing',
         branch_name: branchName,
         started_at: new Date().toISOString(),
       })
-      this.emit(id, {
-        type: 'git_operation',
-        operation: 'checkout',
-        detail: `ブランチ ${branchName} を作成`,
-      })
-      this.emit(id, { type: 'phase_end', phase: 'git', timestamp: new Date().toISOString(), durationMs: 0 })
 
       // --- Phase 3 + CI のリトライループ ---
       await this.executeWithRetry(task, branchName)
@@ -173,16 +166,6 @@ export class TaskRunner implements RunnerStatus {
         })
 
         if (ciResult.success) {
-          // --- マージ ---
-          this.emit(id, { type: 'phase_start', phase: 'git', timestamp: new Date().toISOString() })
-          mergeTaskBranch(branchName, this.config.git.defaultBranch)
-          this.emit(id, {
-            type: 'git_operation',
-            operation: 'merge',
-            detail: `${branchName} をマージ`,
-          })
-          this.emit(id, { type: 'phase_end', phase: 'git', timestamp: new Date().toISOString(), durationMs: 0 })
-
           taskQueries.updateTask(this.db, id, {
             status: 'completed',
             completed_at: new Date().toISOString(),
@@ -225,8 +208,7 @@ export class TaskRunner implements RunnerStatus {
             maxRetries,
             reason: `CI失敗（${failedStep?.step.name}）、リトライ ${attempt + 1}/${maxRetries}`,
           })
-          // ブランチリセットしてPhase 3からやり直し
-          resetTaskBranch(id, task.title, this.config.git.defaultBranch)
+          // TODO: ブランチリセットしてPhase 3からやり直し
         }
       } catch (err) {
         if (err instanceof ProcessTimeoutError) {
@@ -253,8 +235,7 @@ export class TaskRunner implements RunnerStatus {
             maxRetries: this.config.claude.processMaxRetries,
             reason: 'プロセスタイムアウト',
           })
-          // ブランチリセットしてリトライ
-          resetTaskBranch(id, task.title, this.config.git.defaultBranch)
+          // TODO: ブランチリセットしてリトライ
           continue
         }
 

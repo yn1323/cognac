@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, writeFile, unlink } from 'node:fs/promises'
 import { resolve, extname } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { Hono } from 'hono'
@@ -9,13 +9,13 @@ import * as taskImageQueries from '../db/queries/task-images.js'
 
 // バリデーションスキーマ
 const createTaskSchema = z.object({
-  title: z.string().min(1).max(200),
+  title: z.string().min(2, 'タイトルは2文字以上で入力してね').max(200, 'タイトルは200文字以内にしてね'),
   description: z.string().optional(),
   priority: z.number().int().min(0).max(3).optional(),
 })
 
 const updateTaskSchema = z.object({
-  title: z.string().min(1).max(200).optional(),
+  title: z.string().min(2, 'タイトルは2文字以上で入力してね').max(200, 'タイトルは200文字以内にしてね').optional(),
   description: z.string().optional(),
   priority: z.number().int().optional(),
   queue_order: z.number().int().optional(),
@@ -97,14 +97,15 @@ export function tasksRouter(db: Database.Database) {
     for (const file of files) {
       const ext = extname(file.name) || '.bin'
       const savedName = `${randomUUID()}${ext}`
-      const filePath = resolve(uploadDir, savedName)
+      const diskPath = resolve(uploadDir, savedName)
+      const urlPath = `uploads/${id}/${savedName}`
 
       const buffer = Buffer.from(await file.arrayBuffer())
-      await writeFile(filePath, buffer)
+      await writeFile(diskPath, buffer)
 
       const image = taskImageQueries.createTaskImage(db, {
         task_id: id,
-        file_path: filePath,
+        file_path: urlPath,
         original_name: file.name,
         mime_type: file.type,
       })
@@ -112,6 +113,33 @@ export function tasksRouter(db: Database.Database) {
     }
 
     return c.json(savedImages, 201)
+  })
+
+  // 画像一覧
+  app.get('/:id/images', (c) => {
+    const id = Number(c.req.param('id'))
+    return c.json(taskImageQueries.listTaskImages(db, id))
+  })
+
+  // 画像削除
+  app.delete('/:id/images/:imageId', async (c) => {
+    const taskId = Number(c.req.param('id'))
+    const imageId = Number(c.req.param('imageId'))
+
+    const image = taskImageQueries.getTaskImage(db, imageId)
+    if (!image || image.task_id !== taskId) {
+      return c.json({ error: '画像が見つからない' }, 404)
+    }
+
+    // ファイルをディスクから削除
+    try {
+      await unlink(resolve('.cognac', image.file_path))
+    } catch {
+      // ファイルが既に消えてても気にしない
+    }
+
+    taskImageQueries.deleteTaskImage(db, imageId)
+    return c.json({ ok: true })
   })
 
   // タスク更新

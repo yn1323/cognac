@@ -30,7 +30,7 @@ import { TaskModal } from '@/components/task-modal'
 import { formatRelativeTime } from '@/lib/format'
 import { STATUS_CONFIG } from '@/lib/status-config'
 import { cn } from '@/lib/utils'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCallback, useMemo, useState } from 'react'
 import { useTasks } from '@/hooks/use-tasks'
 
@@ -306,24 +306,25 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
         ) : (
           <div className="flex flex-col gap-2.5">
             {tasks.map((task) => (
-              <SPTaskCard
-                key={task.id}
-                title={task.title}
-                subtitle={getSPSubtitle(task)}
-                badge={<StatusBadge status={task.status} />}
-                borderColor={getSPBorderColor(task)}
-                actions={
-                  task.status === 'stopped' ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-auto px-2.5 py-1 text-xs"
-                    >
-                      Retry
-                    </Button>
-                  ) : undefined
-                }
-              />
+              <Link key={task.id} to={`/tasks/${task.id}`} className="block">
+                <SPTaskCard
+                  title={task.title}
+                  subtitle={getSPSubtitle(task)}
+                  badge={<StatusBadge status={task.status} />}
+                  borderColor={getSPBorderColor(task)}
+                  actions={
+                    task.status === 'stopped' ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-auto px-2.5 py-1 text-xs"
+                      >
+                        Retry
+                      </Button>
+                    ) : undefined
+                  }
+                />
+              </Link>
             ))}
           </div>
         )}

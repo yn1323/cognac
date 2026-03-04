@@ -47,3 +47,14 @@ export function listTaskImages(
   )
   return stmt.all(taskId) as TaskImage[]
 }
+
+/**
+ * タスク画像を削除する
+ */
+export function deleteTaskImage(
+  db: Database.Database,
+  id: number,
+): boolean {
+  const stmt = db.prepare('DELETE FROM task_images WHERE id = ?')
+  return stmt.run(id).changes > 0
+}

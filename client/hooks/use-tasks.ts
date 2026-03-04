@@ -60,9 +60,32 @@ export function useCancelTask() {
   })
 }
 
+export function useTaskImages(taskId: number) {
+  return useQuery({
+    queryKey: ['tasks', taskId, 'images'],
+    queryFn: () => api.tasks.getImages(taskId),
+    enabled: Number.isFinite(taskId),
+  })
+}
+
 export function useUploadTaskImages() {
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ taskId, files }: { taskId: number; files: File[] }) =>
       api.tasks.uploadImages(taskId, files),
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: ['tasks', vars.taskId, 'images'] })
+    },
+  })
+}
+
+export function useDeleteTaskImage() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ taskId, imageId }: { taskId: number; imageId: number }) =>
+      api.tasks.deleteImage(taskId, imageId),
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: ['tasks', vars.taskId, 'images'] })
+    },
   })
 }

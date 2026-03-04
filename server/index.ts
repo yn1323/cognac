@@ -29,6 +29,9 @@ export function createApp({ db, eventBus, runner, publicDir }: CreateAppOptions)
   app.route('/api/tasks', streamRouter(eventBus))
   app.route('/api', systemRouter(runner))
 
+  // アップロード画像の静的配信
+  app.use('/uploads/*', serveStatic({ root: '.cognac/' }))
+
   // 静的ファイルサービング（パッケージモード用）
   if (publicDir && existsSync(publicDir)) {
     // アセットファイル（JS/CSS/画像等）を配信

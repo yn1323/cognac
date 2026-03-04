@@ -3,15 +3,17 @@
 // task-modalのパターンを流用
 
 import { useState, useEffect } from 'react'
-import { X, Loader2 } from 'lucide-react'
-import type { Task, PriorityLabel } from '@cognac/shared'
+import { X, Upload, Camera, Loader2 } from 'lucide-react'
+import type { Task, TaskImage, PriorityLabel } from '@cognac/shared'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DropZone } from '@/components/ui/drop-zone'
 import { PriorityRadioGroup } from '@/components/ui/priority-radio-group'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/toast'
-import { useUpdateTask } from '@/hooks/use-tasks'
+import { useUpdateTask, useTaskImages, useUploadTaskImages, useDeleteTaskImage } from '@/hooks/use-tasks'
 import { PRIORITY_MAP, PRIORITY_REVERSE, PC_PRIORITIES, SP_PRIORITIES } from '@/lib/constants'
+import { validateTitle } from '@/lib/validation'
 
 // --- 型定義 ---
 
@@ -24,13 +26,51 @@ interface EditTaskModalProps {
 interface FormProps {
   title: string
   setTitle: (v: string) => void
+  titleError: string
   description: string
   setDescription: (v: string) => void
   priority: PriorityLabel
   setPriority: (v: PriorityLabel) => void
+  existingImages: TaskImage[]
+  onDeleteImage: (imageId: number) => void
+  onFilesAdd: (files: File[]) => void
+  isUploading: boolean
   onClose: () => void
   handleSubmit: (e: React.FormEvent) => void
   isSubmitting: boolean
+}
+
+// --- 既存画像サムネイル ---
+
+function ExistingImageList({
+  images,
+  onDelete,
+}: {
+  images: TaskImage[]
+  onDelete: (imageId: number) => void
+}) {
+  if (images.length === 0) return null
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {images.map((img) => (
+        <div key={img.id} className="relative group">
+          <img
+            src={`/${img.file_path}`}
+            alt={img.original_name}
+            className="h-16 w-16 rounded-md object-cover border border-border"
+          />
+          <button
+            type="button"
+            onClick={() => onDelete(img.id)}
+            className="absolute -top-1.5 -right-1.5 hidden group-hover:flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 // --- PC版 ---
@@ -38,10 +78,15 @@ interface FormProps {
 function PCEditModal({
   title,
   setTitle,
+  titleError,
   description,
   setDescription,
   priority,
   setPriority,
+  existingImages,
+  onDeleteImage,
+  onFilesAdd,
+  isUploading,
   onClose,
   handleSubmit,
   isSubmitting,
@@ -52,7 +97,7 @@ function PCEditModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-140 animate-in fade-in zoom-in-95 rounded-xl bg-background shadow-2xl duration-200"
+        className="w-full max-w-140 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 rounded-xl bg-background shadow-2xl duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
@@ -60,7 +105,7 @@ function PCEditModal({
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-5 right-5 rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            className="absolute top-5 right-5 cursor-pointer rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -78,9 +123,10 @@ function PCEditModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Implement user authentication"
-              required
+              maxLength={200}
               disabled={isSubmitting}
             />
+            {titleError && <p className="text-xs text-destructive">{titleError}</p>}
           </div>
 
           <div className="space-y-2">
@@ -101,6 +147,17 @@ function PCEditModal({
               value={priority}
               onChange={setPriority}
             />
+          </div>
+
+          {/* Images */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Images</label>
+            <DropZone
+              onFilesAdd={onFilesAdd}
+              icon={Upload}
+              text={isUploading ? 'アップロード中...' : 'ドラッグ&ドロップまたはクリックで画像を追加'}
+            />
+            <ExistingImageList images={existingImages} onDelete={onDeleteImage} />
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
@@ -133,10 +190,15 @@ function PCEditModal({
 function SPEditModal({
   title,
   setTitle,
+  titleError,
   description,
   setDescription,
   priority,
   setPriority,
+  existingImages,
+  onDeleteImage,
+  onFilesAdd,
+  isUploading,
   onClose,
   handleSubmit,
   isSubmitting,
@@ -168,9 +230,10 @@ function SPEditModal({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Implement user authentication"
-            required
+            maxLength={200}
             disabled={isSubmitting}
           />
+          {titleError && <p className="text-xs text-destructive">{titleError}</p>}
         </div>
 
         <div className="space-y-2">
@@ -191,6 +254,18 @@ function SPEditModal({
             value={priority}
             onChange={setPriority}
           />
+        </div>
+
+        {/* Images */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Images</label>
+          <DropZone
+            onFilesAdd={onFilesAdd}
+            icon={Camera}
+            text={isUploading ? 'アップロード中...' : 'タップして画像を追加'}
+            className="border-solid"
+          />
+          <ExistingImageList images={existingImages} onDelete={onDeleteImage} />
         </div>
 
         <div className="flex-1" />
@@ -230,8 +305,12 @@ function SPEditModal({
 export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
   const { toast } = useToast()
   const updateTask = useUpdateTask()
+  const { data: existingImages = [] } = useTaskImages(open ? task.id : NaN)
+  const uploadImages = useUploadTaskImages()
+  const deleteImage = useDeleteTaskImage()
 
   const [title, setTitle] = useState('')
+  const [titleError, setTitleError] = useState('')
   const [description, setDescription] = useState('')
   const [priority, setPriority] = useState<PriorityLabel>('Normal')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -240,6 +319,7 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
   useEffect(() => {
     if (open) {
       setTitle(task.title)
+      setTitleError('')
       setDescription(task.description ?? '')
       setPriority(PRIORITY_REVERSE[task.priority] ?? 'Normal')
       setIsSubmitting(false)
@@ -270,8 +350,35 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
 
   if (!open) return null
 
+  const handleTitleChange = (v: string) => {
+    setTitle(v)
+    if (titleError) setTitleError('')
+  }
+
+  // 画像を即座にアップロード（Save Changesとは独立）
+  const onFilesAdd = async (files: File[]) => {
+    try {
+      await uploadImages.mutateAsync({ taskId: task.id, files })
+    } catch (err) {
+      console.error('画像アップロードに失敗:', err)
+      toast('画像のアップロードに失敗しました', 'error')
+    }
+  }
+
+  const onDeleteImage = (imageId: number) => {
+    deleteImage.mutate(
+      { taskId: task.id, imageId },
+      { onError: () => toast('画像の削除に失敗しました', 'error') },
+    )
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const err = validateTitle(title)
+    if (err) {
+      setTitleError(err)
+      return
+    }
     setIsSubmitting(true)
 
     try {
@@ -294,11 +401,16 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
 
   const formProps: FormProps = {
     title,
-    setTitle,
+    setTitle: handleTitleChange,
+    titleError,
     description,
     setDescription,
     priority,
     setPriority,
+    existingImages,
+    onDeleteImage,
+    onFilesAdd,
+    isUploading: uploadImages.isPending,
     onClose,
     handleSubmit,
     isSubmitting,
