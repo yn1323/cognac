@@ -2,13 +2,14 @@
 // PC: オーバーレイ + センターモーダル / SP: フルスクリーンシート
 // task-modalのパターンを流用
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useScrollLock, useEscapeClose } from '@/hooks/use-scroll-lock'
 import { X, Upload, Camera, Loader2 } from 'lucide-react'
 import type { Task, TaskImage, PriorityLabel } from '@cognac/shared'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DropZone } from '@/components/ui/drop-zone'
+import { ImagePreviewList } from '@/components/ui/image-preview-list'
 import { PriorityRadioGroup } from '@/components/ui/priority-radio-group'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/toast'
@@ -34,8 +35,9 @@ interface FormProps {
   setPriority: (v: PriorityLabel) => void
   existingImages: TaskImage[]
   onDeleteImage: (imageId: number) => void
+  newFiles: File[]
   onFilesAdd: (files: File[]) => void
-  isUploading: boolean
+  onNewFileRemove: (index: number) => void
   onClose: () => void
   handleSubmit: (e: React.FormEvent) => void
   isSubmitting: boolean
@@ -86,8 +88,9 @@ function PCEditModal({
   setPriority,
   existingImages,
   onDeleteImage,
+  newFiles,
   onFilesAdd,
-  isUploading,
+  onNewFileRemove,
   onClose,
   handleSubmit,
   isSubmitting,
@@ -156,9 +159,10 @@ function PCEditModal({
             <DropZone
               onFilesAdd={onFilesAdd}
               icon={Upload}
-              text={isUploading ? 'アップロード中...' : 'ドラッグ&ドロップまたはクリックで画像を追加'}
+              text="ドラッグ&ドロップまたはクリックで画像を追加"
             />
             <ExistingImageList images={existingImages} onDelete={onDeleteImage} />
+            <ImagePreviewList files={newFiles} onRemove={onNewFileRemove} />
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
@@ -198,8 +202,9 @@ function SPEditModal({
   setPriority,
   existingImages,
   onDeleteImage,
+  newFiles,
   onFilesAdd,
-  isUploading,
+  onNewFileRemove,
   onClose,
   handleSubmit,
   isSubmitting,
@@ -263,10 +268,11 @@ function SPEditModal({
           <DropZone
             onFilesAdd={onFilesAdd}
             icon={Camera}
-            text={isUploading ? 'アップロード中...' : 'タップして画像を追加'}
+            text="タップして画像を追加"
             className="border-solid"
           />
           <ExistingImageList images={existingImages} onDelete={onDeleteImage} />
+          <ImagePreviewList files={newFiles} onRemove={onNewFileRemove} />
         </div>
 
         <div className="flex-1" />
@@ -315,6 +321,8 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
   const [description, setDescription] = useState('')
   const [priority, setPriority] = useState<PriorityLabel>('Normal')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [newFiles, setNewFiles] = useState<File[]>([])
+  const [deletedImageIds, setDeletedImageIds] = useState<Set<number>>(new Set())
 
   // モーダルが開くたびにtaskの値でリセット
   useEffect(() => {
@@ -324,6 +332,8 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
       setDescription(task.description ?? '')
       setPriority(PRIORITY_REVERSE[task.priority] ?? 'Normal')
       setIsSubmitting(false)
+      setNewFiles([])
+      setDeletedImageIds(new Set())
     }
   }, [open, task])
 
@@ -337,21 +347,18 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
     if (titleError) setTitleError('')
   }
 
-  // 画像を即座にアップロード（Save Changesとは独立）
-  const onFilesAdd = async (files: File[]) => {
-    try {
-      await uploadImages.mutateAsync({ taskId: task.id, files })
-    } catch (err) {
-      console.error('画像アップロードに失敗:', err)
-      toast('画像のアップロードに失敗しました', 'error')
-    }
+  // 画像をローカルstateに溜める（Saveまでアップロードしない）
+  const onFilesAdd = (files: File[]) => {
+    setNewFiles((prev) => [...prev, ...files].slice(0, 5))
   }
 
+  const onNewFileRemove = (index: number) => {
+    setNewFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  // 既存画像を削除マーク（Saveまで実際には削除しない）
   const onDeleteImage = (imageId: number) => {
-    deleteImage.mutate(
-      { taskId: task.id, imageId },
-      { onError: () => toast('画像の削除に失敗しました', 'error') },
-    )
+    setDeletedImageIds((prev) => new Set(prev).add(imageId))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -364,14 +371,27 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
     setIsSubmitting(true)
 
     try {
-      await updateTask.mutateAsync({
-        id: task.id,
-        data: {
-          title,
-          description: description || undefined,
-          priority: PRIORITY_MAP[priority],
-        },
-      })
+      // 画像アップロード・削除・テキスト更新を並列実行
+      await Promise.all([
+        newFiles.length > 0
+          ? uploadImages.mutateAsync({ taskId: task.id, files: newFiles })
+          : undefined,
+        deletedImageIds.size > 0
+          ? Promise.all(
+              Array.from(deletedImageIds).map((imageId) =>
+                deleteImage.mutateAsync({ taskId: task.id, imageId }),
+              ),
+            )
+          : undefined,
+        updateTask.mutateAsync({
+          id: task.id,
+          data: {
+            title,
+            description: description || undefined,
+            priority: PRIORITY_MAP[priority],
+          },
+        }),
+      ])
       onClose()
       toast('タスクを更新しました', 'success')
     } catch (err) {
@@ -381,6 +401,11 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
     }
   }
 
+  const visibleExistingImages = useMemo(
+    () => existingImages.filter((img) => !deletedImageIds.has(img.id)),
+    [existingImages, deletedImageIds],
+  )
+
   const formProps: FormProps = {
     title,
     setTitle: handleTitleChange,
@@ -389,10 +414,11 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
     setDescription,
     priority,
     setPriority,
-    existingImages,
+    existingImages: visibleExistingImages,
     onDeleteImage,
+    newFiles,
     onFilesAdd,
-    isUploading: uploadImages.isPending,
+    onNewFileRemove,
     onClose,
     handleSubmit,
     isSubmitting,
