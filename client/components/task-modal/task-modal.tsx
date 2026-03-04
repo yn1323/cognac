@@ -3,6 +3,7 @@
 // デザイン design.pen PC=wLVYI, SP=qi7HK に準拠
 
 import { useState, useEffect, useCallback } from 'react'
+import { useScrollLock, useEscapeClose } from '@/hooks/use-scroll-lock'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { X, Upload, Camera, Loader2 } from 'lucide-react'
 import type { PriorityLabel } from '@cognac/shared'
@@ -129,7 +130,7 @@ function PCTaskModal({
             </Button>
             <Button
               type="submit"
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              variant="primary"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -303,27 +304,8 @@ export function TaskModal() {
     }
   }, [isOpen])
 
-  // bodyスクロールロック
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [isOpen])
-
-  // Escapeキーで閉じる
-  useEffect(() => {
-    if (!isOpen) return
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleClose()
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [isOpen, handleClose])
+  useScrollLock(isOpen)
+  useEscapeClose(isOpen, handleClose)
 
   if (!isOpen) return null
 

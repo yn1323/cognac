@@ -25,6 +25,7 @@ import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 import { useTask, useDeleteTask, useCancelTask } from '@/hooks/use-tasks'
 import { formatRelativeTime } from '@/lib/format'
 import { DELETABLE_STATUSES, STATUS_CONFIG, STATUS_PHASE_MAP } from '@/lib/status-config'
+import { NAV_MAP } from '@/lib/constants'
 import { PCOverviewTab, SPOverviewTab } from '@/pages/task-detail/overview-tab'
 import {
   PCDiscussionTab,
@@ -80,11 +81,6 @@ function SPTabBody({ activeTab, task }: { activeTab: Tab; task: Task }) {
 }
 
 // --- PC版 ---
-
-const NAV_MAP: Record<string, string> = {
-  タスク: '/',
-  設定: '/settings',
-}
 
 function PCTaskDetail({
   task,

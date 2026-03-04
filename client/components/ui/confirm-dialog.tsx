@@ -1,9 +1,10 @@
 // 確認ダイアログ
 // デザインシステム: UgIg0 (Confirm Dialog)
 
-import { useEffect, useId } from 'react'
+import { useEffect, useId, useCallback } from 'react'
 import { Loader2, TriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useScrollLock } from '@/hooks/use-scroll-lock'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -30,25 +31,21 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const titleId = useId()
 
+  const handleEscape = useCallback(() => {
+    if (!isLoading) onCancel()
+  }, [isLoading, onCancel])
+
+  useScrollLock(open)
+
   // Escapeキーで閉じる（ローディング中は無効）
   useEffect(() => {
     if (!open) return
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isLoading) onCancel()
+      if (e.key === 'Escape') handleEscape()
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [open, onCancel, isLoading])
-
-  // スクロールロック
-  useEffect(() => {
-    if (!open) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = prev
-    }
-  }, [open])
+  }, [open, handleEscape])
 
   if (!open) return null
 

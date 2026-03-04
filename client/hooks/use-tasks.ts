@@ -46,7 +46,7 @@ export function useUpdateTask() {
     mutationFn: ({ id, data }: { id: number; data: UpdateTaskInput }) =>
       api.tasks.update(id, data),
     onSuccess: (_res, vars) => {
-      qc.invalidateQueries({ queryKey: ['tasks'] })
+      qc.invalidateQueries({ queryKey: ['tasks'], exact: true })
       qc.invalidateQueries({ queryKey: ['tasks', vars.id] })
     },
   })

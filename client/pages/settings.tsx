@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ListChecks, PlusCircle, Settings } from 'lucide-react'
 import { Sidebar } from '@/components/sidebar'
+import { NAV_MAP } from '@/lib/constants'
 import { SPBottomNav, SPNavItem } from '@/components/sp-bottom-nav'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -33,7 +34,8 @@ function PCSettings({
       <Sidebar
         activeItem="設定"
         onItemClick={(label) => {
-          if (label === 'タスク') navigate('/')
+          const path = NAV_MAP[label]
+          if (path) navigate(path)
         }}
         className="h-full shrink-0"
       />
@@ -71,11 +73,11 @@ function PCSettings({
           </CardContent>
         </Card>
 
-        {/* 危険ゾーン セクション */}
+        {/* Danger Zone セクション */}
         <Card>
           <CardHeader className="p-6">
             <CardTitle className="text-base text-destructive">
-              危険ゾーン
+              Danger Zone
             </CardTitle>
             <p className="text-[13px] text-muted-foreground">
               取り消しできない操作
@@ -104,7 +106,7 @@ function PCSettings({
 
         {/* 保存ボタン */}
         <div className="flex justify-end">
-          <Button className="bg-blue-600 hover:bg-blue-700">設定を保存</Button>
+          <Button variant="primary">設定を保存</Button>
         </div>
       </main>
     </div>
@@ -150,11 +152,11 @@ function SPSettings({
           </CardContent>
         </Card>
 
-        {/* 危険ゾーン セクション */}
+        {/* 危険Danger Zoneゾーン セクション */}
         <Card>
           <CardHeader className="p-4">
             <CardTitle className="text-[15px] text-destructive">
-              危険ゾーン
+              Danger Zone
             </CardTitle>
             <p className="text-xs text-muted-foreground">
               取り消しできない操作
@@ -184,7 +186,7 @@ function SPSettings({
 
         {/* 保存ボタン */}
         <div className="flex justify-end">
-          <Button className="bg-blue-600 hover:bg-blue-700">設定を保存</Button>
+          <Button variant="primary">設定を保存</Button>
         </div>
       </main>
 

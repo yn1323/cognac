@@ -3,6 +3,7 @@
 // task-modalのパターンを流用
 
 import { useState, useEffect } from 'react'
+import { useScrollLock, useEscapeClose } from '@/hooks/use-scroll-lock'
 import { X, Upload, Camera, Loader2 } from 'lucide-react'
 import type { Task, TaskImage, PriorityLabel } from '@cognac/shared'
 import { Button } from '@/components/ui/button'
@@ -166,7 +167,7 @@ function PCEditModal({
             </Button>
             <Button
               type="submit"
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              variant="primary"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -326,27 +327,8 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
     }
   }, [open, task])
 
-  // bodyスクロールロック
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [open])
-
-  // Escapeキーで閉じる
-  useEffect(() => {
-    if (!open) return
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [open, onClose])
+  useScrollLock(open)
+  useEscapeClose(open, onClose)
 
   if (!open) return null
 

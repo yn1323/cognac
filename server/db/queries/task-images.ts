@@ -21,7 +21,12 @@ export function createTaskImage(
   `)
 
   const result = stmt.run(data)
-  return getTaskImage(db, Number(result.lastInsertRowid))!
+  // INSERT直後のデータは入力値+ROWIDから構築（不要なSELECTを回避）
+  return {
+    id: Number(result.lastInsertRowid),
+    ...data,
+    created_at: new Date().toISOString(),
+  }
 }
 
 /**

@@ -20,14 +20,14 @@ import {
 
 // ステータス → フェーズ表示名のマッピング
 export const STATUS_PHASE_MAP: Record<TaskStatus, string> = {
-  pending: 'キュー待ち',
-  discussing: 'Phase 2-B: マルチペルソナ議論',
-  planned: 'Phase 2-C: プラン確定',
-  executing: 'Phase 3: コード実行',
-  testing: 'Phase 4: CI テスト',
-  completed: '完了',
-  paused: '一時停止',
-  stopped: '停止',
+  pending: 'Queued',
+  discussing: 'Phase 2-B: Discussing',
+  planned: 'Phase 2-C: Planned',
+  executing: 'Phase 3: Executing',
+  testing: 'Phase 4: CI Testing',
+  completed: 'Completed',
+  paused: 'Paused',
+  stopped: 'Stopped',
 }
 
 export const STATUS_CONFIG: Record<

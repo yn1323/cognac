@@ -29,6 +29,7 @@ import { Badge } from '@/components/ui/badge'
 import { TaskModal } from '@/components/task-modal'
 import { formatRelativeTime } from '@/lib/format'
 import { STATUS_CONFIG } from '@/lib/status-config'
+import { NAV_MAP } from '@/lib/constants'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCallback, useMemo, useState } from 'react'
 import { useTasks } from '@/hooks/use-tasks'
@@ -130,8 +131,7 @@ function getSPSubtitle(task: Task): string {
 }
 
 function getSPBorderColor(task: Task): string {
-  const config = STATUS_CONFIG[task.status]
-  return config.borderColor || 'border-border'
+  return STATUS_CONFIG[task.status].borderColor || 'border-border'
 }
 
 // --- 共通Props ---
@@ -154,7 +154,8 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
       <Sidebar
         className="h-full shrink-0"
         onItemClick={(label) => {
-          if (label === '設定') onNavigate('/settings')
+          const path = NAV_MAP[label]
+          if (path) onNavigate(path)
         }}
       />
 
@@ -174,7 +175,7 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
             全停止
           </Button>
           <Button
-            className="bg-blue-600 text-white hover:bg-blue-700"
+            variant="primary"
             onClick={onNewTask}
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -251,7 +252,7 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
               </p>
               {activeFilters.size === 0 ? null : (
                 <Button
-                  className="bg-blue-600 text-white hover:bg-blue-700"
+                  variant="primary"
                   onClick={onNewTask}
                 >
                   <Plus className="mr-2 h-4 w-4" />

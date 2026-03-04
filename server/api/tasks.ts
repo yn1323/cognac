@@ -89,28 +89,28 @@ export function tasksRouter(db: Database.Database) {
       }
     }
 
-    // 書き込み（バリデーション通過後に実行）
+    // 書き込み（バリデーション通過後にディスクI/Oを並列実行）
     const uploadDir = resolve('.cognac', 'uploads', String(id))
     await mkdir(uploadDir, { recursive: true })
 
-    const savedImages = []
-    for (const file of files) {
-      const ext = extname(file.name) || '.bin'
-      const savedName = `${randomUUID()}${ext}`
-      const diskPath = resolve(uploadDir, savedName)
-      const urlPath = `uploads/${id}/${savedName}`
+    const savedImages = await Promise.all(
+      files.map(async (file) => {
+        const ext = extname(file.name) || '.bin'
+        const savedName = `${randomUUID()}${ext}`
+        const diskPath = resolve(uploadDir, savedName)
+        const urlPath = `uploads/${id}/${savedName}`
 
-      const buffer = Buffer.from(await file.arrayBuffer())
-      await writeFile(diskPath, buffer)
+        const buffer = Buffer.from(await file.arrayBuffer())
+        await writeFile(diskPath, buffer)
 
-      const image = taskImageQueries.createTaskImage(db, {
-        task_id: id,
-        file_path: urlPath,
-        original_name: file.name,
-        mime_type: file.type,
-      })
-      savedImages.push(image)
-    }
+        return taskImageQueries.createTaskImage(db, {
+          task_id: id,
+          file_path: urlPath,
+          original_name: file.name,
+          mime_type: file.type,
+        })
+      }),
+    )
 
     return c.json(savedImages, 201)
   })
