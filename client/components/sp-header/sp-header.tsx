@@ -17,7 +17,7 @@ export function SPHeader({ className }: SPHeaderProps) {
       )}
     >
       <div className="flex items-center gap-2">
-        <div className="flex h-7 w-7 items-center justify-center rounded-[10px] bg-blue-500">
+        <div className="flex h-7 w-7 items-center justify-center rounded-[10px] bg-green-500">
           <Wine className="h-4 w-4 text-primary-foreground" />
         </div>
         <span className="text-base font-semibold leading-[1.4] text-foreground">
