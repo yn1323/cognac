@@ -129,6 +129,23 @@ export function tasksRouter(db: Database.Database) {
     return c.json(task)
   })
 
+  // タスクキャンセル（executing中のタスクをstoppedにする）
+  app.post('/:id/cancel', (c) => {
+    const id = Number(c.req.param('id'))
+    const task = taskQueries.getTask(db, id)
+    if (!task) {
+      return c.json({ error: 'タスクが見つからない' }, 404)
+    }
+    if (!['executing', 'testing', 'discussing', 'planned'].includes(task.status)) {
+      return c.json({ error: 'キャンセルできないステータス' }, 400)
+    }
+    const updated = taskQueries.updateTask(db, id, {
+      status: 'stopped',
+      paused_reason: 'ユーザーによるキャンセル',
+    })
+    return c.json(updated)
+  })
+
   // タスク削除（pending/stopped/completedのみ）
   app.delete('/:id', (c) => {
     const id = Number(c.req.param('id'))

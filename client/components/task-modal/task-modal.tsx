@@ -8,17 +8,11 @@ import { X, Upload, Camera, Loader2 } from 'lucide-react'
 import type { PriorityLabel } from '@cognac/shared'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PriorityRadioGroup } from '@/components/ui/priority-radio-group'
 import { Textarea } from '@/components/ui/textarea'
 import { useCreateTask, useUploadTaskImages } from '@/hooks/use-tasks'
+import { PRIORITY_MAP, PC_PRIORITIES, SP_PRIORITIES } from '@/lib/constants'
 import { cn } from '@/lib/utils'
-
-// shared パッケージからランタイムimportするとNode.js依存が引っ張られるのでローカル定義
-const PRIORITY_MAP: Record<PriorityLabel, number> = { Low: 0, Normal: 1, High: 2, Urgent: 3 }
-
-// --- 型定義 ---
-
-const PC_PRIORITIES: PriorityLabel[] = ['Low', 'Normal', 'High', 'Urgent']
-const SP_PRIORITIES: PriorityLabel[] = ['Low', 'Normal', 'High']
 
 interface FormProps {
   title: string
@@ -33,47 +27,6 @@ interface FormProps {
   handleClose: () => void
   handleSubmit: (e: React.FormEvent) => void
   isSubmitting: boolean
-}
-
-// --- ラジオボタン ---
-
-function PriorityRadioGroup({
-  options,
-  value,
-  onChange,
-}: {
-  options: PriorityLabel[]
-  value: PriorityLabel
-  onChange: (v: PriorityLabel) => void
-}) {
-  return (
-    <div className="flex gap-4">
-      {options.map((option) => (
-        <label key={option} className="flex cursor-pointer items-center gap-2">
-          <input
-            type="radio"
-            name="priority"
-            value={option}
-            checked={value === option}
-            onChange={() => onChange(option)}
-            className="sr-only"
-          />
-          {/* ラジオ円 */}
-          <div
-            className={cn(
-              'flex h-4 w-4 items-center justify-center rounded-full border bg-primary-foreground',
-              value === option ? 'border-blue-600' : 'border-input',
-            )}
-          >
-            {value === option && (
-              <div className="h-2.5 w-2.5 rounded-full bg-blue-600" />
-            )}
-          </div>
-          <span className="text-sm font-medium text-foreground">{option}</span>
-        </label>
-      ))}
-    </div>
-  )
 }
 
 // --- 画像プレビュー ---

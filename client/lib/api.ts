@@ -31,6 +31,8 @@ export const api = {
       fetchJson<Task>(`/tasks/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id: number) =>
       fetchJson<{ ok: boolean }>(`/tasks/${id}`, { method: 'DELETE' }),
+    cancel: (id: number) =>
+      fetchJson<Task>(`/tasks/${id}/cancel`, { method: 'POST' }),
     uploadImages: async (taskId: number, files: File[]): Promise<TaskImage[]> => {
       const formData = new FormData()
       for (const file of files) {

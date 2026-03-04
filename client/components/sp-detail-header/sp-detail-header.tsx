@@ -9,6 +9,7 @@ interface SPDetailHeaderProps {
   title: string
   subtitle?: string
   onBack?: () => void
+  actions?: ReactNode
   children?: ReactNode
   className?: string
 }
@@ -17,6 +18,7 @@ export function SPDetailHeader({
   title,
   subtitle,
   onBack,
+  actions,
   children,
   className,
 }: SPDetailHeaderProps) {
@@ -44,6 +46,7 @@ export function SPDetailHeader({
             </span>
           )}
         </div>
+        {actions}
       </div>
 
       {/* 下段: タブバースロット */}
