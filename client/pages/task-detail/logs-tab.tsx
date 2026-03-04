@@ -179,7 +179,7 @@ export function PCLogsTab({ task, events, connected }: LogsTabProps) {
       </div>
 
       {/* ログビュー */}
-      <div className="flex-1 overflow-hidden rounded-lg border bg-card">
+      <div className="min-h-0 flex-1 overflow-hidden rounded-lg border bg-card">
         <div className="flex h-full flex-col overflow-y-auto px-4 py-3">
           {isActive ? (
             <LogView events={filtered} />
@@ -212,7 +212,7 @@ export function SPLogsTab({ task, events, connected }: LogsTabProps) {
       )}
 
       {/* ログビュー */}
-      <div className="flex-1 overflow-y-auto rounded-lg border bg-card px-4 py-3">
+      <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border bg-card px-4 py-3">
         {isActive ? (
           <LogView events={events} />
         ) : (

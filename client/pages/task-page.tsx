@@ -121,7 +121,7 @@ function PCTaskDetail({
         className="h-full shrink-0"
       />
 
-      <main className="flex flex-1 flex-col gap-6 overflow-y-auto p-8">
+      <main className="flex flex-1 flex-col gap-6 overflow-hidden p-8">
         {/* ヘッダー */}
         <div className="flex flex-col gap-4">
           {/* パンくずリスト */}
@@ -209,7 +209,9 @@ function PCTaskDetail({
         />
 
         {/* タブボディ */}
-        <PCTabBody activeTab={activeTab} task={task} sseEvents={sseEvents} sseConnected={sseConnected} />
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <PCTabBody activeTab={activeTab} task={task} sseEvents={sseEvents} sseConnected={sseConnected} />
+        </div>
       </main>
     </div>
   )
@@ -315,8 +317,10 @@ function SPTaskDetail({
       </SPDetailHeader>
 
       {/* ボディ */}
-      <main className="flex flex-1 flex-col overflow-y-auto p-4">
-        <SPTabBody activeTab={activeTab} task={task} sseEvents={sseEvents} sseConnected={sseConnected} />
+      <main className="flex flex-1 flex-col overflow-hidden p-4">
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <SPTabBody activeTab={activeTab} task={task} sseEvents={sseEvents} sseConnected={sseConnected} />
+        </div>
       </main>
     </div>
   )
