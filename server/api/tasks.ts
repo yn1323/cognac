@@ -188,6 +188,7 @@ export function tasksRouter(db: Database.Database) {
       status: 'pending',
       retry_count: 0,
       process_retry_count: 0,
+      branch_name: null,
       paused_reason: null,
       paused_phase: null,
       started_at: null,

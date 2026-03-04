@@ -4,12 +4,6 @@
 
 import type { TaskStatus } from '@cognac/shared'
 import type { LucideIcon } from 'lucide-react'
-
-// 削除可能なステータス
-export const DELETABLE_STATUSES = new Set<TaskStatus>(['pending', 'stopped', 'completed'])
-
-// リトライ可能なステータス
-export const RETRYABLE_STATUSES = new Set<TaskStatus>(['stopped', 'paused'])
 import {
   Loader,
   MessageCircle,
@@ -20,6 +14,12 @@ import {
   Lightbulb,
   PauseCircle,
 } from 'lucide-react'
+
+// 削除可能なステータス
+export const DELETABLE_STATUSES = new Set<TaskStatus>(['pending', 'stopped', 'completed'])
+
+// リトライ可能なステータス
+export const RETRYABLE_STATUSES = new Set<TaskStatus>(['stopped', 'paused'])
 
 // ステータス → フェーズ表示名のマッピング
 export const STATUS_PHASE_MAP: Record<TaskStatus, string> = {

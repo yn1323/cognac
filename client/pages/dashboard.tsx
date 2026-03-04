@@ -400,12 +400,12 @@ export function DashboardPage() {
   const { data: tasks = [], isLoading, error } = useTasks()
   const retryTask = useRetryTask()
   const { toast } = useToast()
-  const handleRetry = (taskId: number) => {
+  const handleRetry = useCallback((taskId: number) => {
     retryTask.mutate(taskId, {
       onSuccess: () => toast('タスクをリトライキューに戻しました', 'success'),
       onError: () => toast('リトライに失敗しました', 'error'),
     })
-  }
+  }, [retryTask, toast])
 
   return (
     <>

@@ -58,7 +58,7 @@ export function updateTask(
     status: string
     priority: number
     queue_order: number
-    branch_name: string
+    branch_name: string | null
     retry_count: number
     process_retry_count: number
     paused_reason: string | null
