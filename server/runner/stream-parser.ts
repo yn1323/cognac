@@ -101,8 +101,9 @@ export class StreamParser {
       case 'result':
         return this.handleResult(chunk as ResultChunk)
 
+      case 'user':
       case 'system':
-        // system メッセージは表示不要
+        // user / system メッセージは表示不要
         return null
 
       default:

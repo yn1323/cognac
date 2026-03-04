@@ -155,14 +155,13 @@ export async function executePhaseDiscussion(
         config,
       )
 
-      // ラウンド1でsessionIdを取得
-      if (round === 1 && attempt === 0) {
-        sessionId = response.sessionId
-      }
-
       try {
         discussionRound = extractJson<DiscussionRound>(response.result)
         if (discussionRound.statements && discussionRound.statements.length > 0) {
+          // 成功時のみセッションIDを取得（リトライ成功時も対応）
+          if (!sessionId && response.sessionId) {
+            sessionId = response.sessionId
+          }
           break
         }
         discussionRound = null

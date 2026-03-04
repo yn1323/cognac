@@ -340,6 +340,11 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
   useScrollLock(open)
   useEscapeClose(open, onClose)
 
+  const visibleExistingImages = useMemo(
+    () => existingImages.filter((img) => !deletedImageIds.has(img.id)),
+    [existingImages, deletedImageIds],
+  )
+
   if (!open) return null
 
   const handleTitleChange = (v: string) => {
@@ -400,11 +405,6 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
       setIsSubmitting(false)
     }
   }
-
-  const visibleExistingImages = useMemo(
-    () => existingImages.filter((img) => !deletedImageIds.has(img.id)),
-    [existingImages, deletedImageIds],
-  )
 
   const formProps: FormProps = {
     title,
