@@ -109,15 +109,25 @@ export class TaskRunner implements RunnerStatus {
       // --- Phase 3 + CI のリトライループ ---
       await this.executeWithRetry(task, branchName)
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err)
       console.error(`タスク ${id} で致命的エラー:`, err)
+
+      // エラーログをDBに記録（ダッシュボードから確認できるように）
+      logQueries.createLog(this.db, {
+        task_id: id,
+        phase: 'execute',
+        error_type: 'app',
+        error_message: errorMessage,
+      })
+
       taskQueries.updateTask(this.db, id, {
         status: 'stopped',
-        paused_reason: err instanceof Error ? err.message : String(err),
+        paused_reason: errorMessage,
       })
       this.emit(id, {
         type: 'error',
         errorType: 'app',
-        message: err instanceof Error ? err.message : String(err),
+        message: errorMessage,
       })
       // 後続タスクも全停止
       taskQueries.stopPendingTasks(this.db)

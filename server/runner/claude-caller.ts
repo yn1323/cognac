@@ -83,7 +83,7 @@ export async function callClaude(
   }
 
   // CLI引数を組み立て
-  const args = ['-p', '--output-format', 'stream-json']
+  const args = ['-p', '--output-format', 'stream-json', '--verbose']
 
   if (systemFile) {
     args.push('--append-system-prompt-file', systemFile)
