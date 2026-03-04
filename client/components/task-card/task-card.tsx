@@ -67,21 +67,6 @@ export function TaskCard({ task, onRetry }: TaskCardProps) {
               {formatRelativeTime(task.started_at ?? task.created_at)}
             </span>
 
-            {/* Stopped状態ではリトライボタンを表示 */}
-            {task.status === 'stopped' && onRetry && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-auto px-2.5 py-1 text-xs"
-                onClick={(e) => {
-                  e.preventDefault()
-                  onRetry(task.id)
-                }}
-              >
-                Retry
-              </Button>
-            )}
-
             {/* リトライ回数 */}
             {task.retry_count > 0 && task.status === 'stopped' && (
               <span className="text-xs font-medium text-status-stopped">
@@ -91,8 +76,23 @@ export function TaskCard({ task, onRetry }: TaskCardProps) {
           </div>
         </div>
 
+        {/* Stopped状態ではリトライボタンを表示 */}
+        {task.status === 'stopped' && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-auto self-center px-2.5 py-1 text-xs"
+            onClick={(e) => {
+              e.preventDefault()
+              onRetry?.(task.id)
+            }}
+          >
+            Retry
+          </Button>
+        )}
+
         {/* ステータスアイコン */}
-        <div className="flex flex-col items-center pt-1">
+        <div className="flex flex-col items-center self-center">
           <config.icon className={cn('h-5 w-5', config.color)} />
         </div>
       </div>

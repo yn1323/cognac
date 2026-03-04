@@ -29,35 +29,55 @@ import { Badge } from '@/components/ui/badge'
 import { TaskModal } from '@/components/task-modal'
 import { formatRelativeTime } from '@/lib/format'
 import { STATUS_CONFIG } from '@/lib/status-config'
-import { cn } from '@/lib/utils'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCallback, useMemo, useState } from 'react'
 import { useTasks } from '@/hooks/use-tasks'
 
 // --- フィルター定義 ---
 
-type FilterTab = 'all' | 'active' | 'completed'
+type FilterCategory = 'pending' | 'executing' | 'completed' | 'failed'
 
-const FILTER_TABS: { key: FilterTab; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'active', label: 'Active' },
-  { key: 'completed', label: 'Completed' },
-]
+const FILTER_CATEGORY_STATUSES: Record<FilterCategory, TaskStatus[]> = {
+  pending: ['pending'],
+  executing: ['discussing', 'planned', 'executing', 'testing'],
+  completed: ['completed'],
+  failed: ['paused', 'stopped'],
+}
 
-const ACTIVE_STATUSES: TaskStatus[] = [
-  'pending',
-  'discussing',
-  'planned',
-  'executing',
-  'testing',
-  'paused',
-]
-const COMPLETED_STATUSES: TaskStatus[] = ['completed', 'stopped']
+const INITIAL_FILTERS = new Set<FilterCategory>(['pending', 'executing', 'failed'])
 
-function filterTasks(tasks: Task[], filter: FilterTab): Task[] {
-  if (filter === 'all') return tasks
-  if (filter === 'active') return tasks.filter((t) => ACTIVE_STATUSES.includes(t.status))
-  return tasks.filter((t) => COMPLETED_STATUSES.includes(t.status))
+/** カテゴリごとのactive時スタイル（デザイン design.pen PC=KCxvr, SP=DK6dH 準拠） */
+const FILTER_STYLES: Record<
+  FilterCategory,
+  {
+    pc: { activeBg: string; activeBorder: string; activeLabelColor: string; activeValueColor: string; activeIconColor: string }
+    sp: { activeTextColor: string; activeBgColor: string; activeBorderColor: string }
+  }
+> = {
+  pending: {
+    pc: { activeBg: 'bg-[#f9fafb]', activeBorder: 'border-[#6b7280]', activeLabelColor: 'text-[#6b7280]', activeValueColor: 'text-[#374151]', activeIconColor: 'text-[#6b7280]' },
+    sp: { activeTextColor: 'text-[#374151]', activeBgColor: 'bg-[#f9fafb]', activeBorderColor: 'border-[#6b7280]' },
+  },
+  executing: {
+    pc: { activeBg: 'bg-[#eff6ff]', activeBorder: 'border-[#2563eb]', activeLabelColor: 'text-[#2563eb]', activeValueColor: 'text-[#2563eb]', activeIconColor: 'text-[#2563eb]' },
+    sp: { activeTextColor: 'text-[#2563eb]', activeBgColor: 'bg-[#eff6ff]', activeBorderColor: 'border-[#2563eb]' },
+  },
+  completed: {
+    pc: { activeBg: 'bg-[#f0fdf4]', activeBorder: 'border-[#16a34a]', activeLabelColor: 'text-[#16a34a]', activeValueColor: 'text-[#16a34a]', activeIconColor: 'text-[#16a34a]' },
+    sp: { activeTextColor: 'text-[#16a34a]', activeBgColor: 'bg-[#f0fdf4]', activeBorderColor: 'border-[#16a34a]' },
+  },
+  failed: {
+    pc: { activeBg: 'bg-[#fef2f2]', activeBorder: 'border-[#dc2626]', activeLabelColor: 'text-[#dc2626]', activeValueColor: 'text-[#dc2626]', activeIconColor: 'text-[#dc2626]' },
+    sp: { activeTextColor: 'text-[#dc2626]', activeBgColor: 'bg-[#fef2f2]', activeBorderColor: 'border-[#dc2626]' },
+  },
+}
+
+function filterTasks(tasks: Task[], activeFilters: Set<FilterCategory>): Task[] {
+  const allowedStatuses = new Set<TaskStatus>()
+  for (const cat of activeFilters) {
+    for (const s of FILTER_CATEGORY_STATUSES[cat]) allowedStatuses.add(s)
+  }
+  return tasks.filter((t) => allowedStatuses.has(t.status))
 }
 
 // --- メトリクス計算 ---
@@ -77,6 +97,25 @@ function useMetrics(tasks: Task[]) {
       ),
     [tasks],
   )
+}
+
+// --- フィルターフック（PC/SP共通） ---
+
+function useDashboardFilters(tasks: Task[]) {
+  const [activeFilters, setActiveFilters] = useState<Set<FilterCategory>>(INITIAL_FILTERS)
+  const metrics = useMetrics(tasks)
+  const filteredTasks = useMemo(() => filterTasks(tasks, activeFilters), [tasks, activeFilters])
+  const toggle = useCallback(
+    (cat: FilterCategory) =>
+      setActiveFilters((prev) => {
+        const next = new Set(prev)
+        if (next.has(cat)) next.delete(cat)
+        else next.add(cat)
+        return next
+      }),
+    [],
+  )
+  return { activeFilters, metrics, filteredTasks, toggle }
 }
 
 // --- SP用ヘルパー ---
@@ -108,9 +147,7 @@ interface DashboardProps {
 // --- PC版 ---
 
 function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: DashboardProps) {
-  const [activeFilter, setActiveFilter] = useState<FilterTab>('all')
-  const metrics = useMetrics(tasks)
-  const filteredTasks = useMemo(() => filterTasks(tasks, activeFilter), [tasks, activeFilter])
+  const { activeFilters, metrics, filteredTasks, toggle } = useDashboardFilters(tasks)
 
   return (
     <div className="flex h-screen bg-background">
@@ -145,60 +182,52 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
           </Button>
         </PageHeader>
 
-        {/* メトリクスカード */}
+        {/* メトリクスカード（フィルター兼用） */}
         <div className="grid grid-cols-4 gap-4">
-          <MetricCard label="Pending" value={metrics.pending} icon={Clock} />
+          <MetricCard
+            label="Pending"
+            value={metrics.pending}
+            icon={Clock}
+            active={activeFilters.has('pending')}
+            onClick={() => toggle('pending')}
+            {...FILTER_STYLES.pending.pc}
+          />
           <MetricCard
             label="Executing"
             value={metrics.executing}
             icon={Play}
-            className="[&_svg]:text-[#2563eb]"
+            active={activeFilters.has('executing')}
+            onClick={() => toggle('executing')}
+            {...FILTER_STYLES.executing.pc}
           />
           <MetricCard
             label="Completed"
             value={metrics.completed}
             icon={CheckCircle}
-            className="[&_svg]:text-[#16a34a]"
+            active={activeFilters.has('completed')}
+            onClick={() => toggle('completed')}
+            {...FILTER_STYLES.completed.pc}
           />
           <MetricCard
             label="Failed"
             value={metrics.failed}
             icon={AlertCircle}
-            className="[&_svg]:text-destructive"
+            active={activeFilters.has('failed')}
+            onClick={() => toggle('failed')}
+            {...FILTER_STYLES.failed.pc}
           />
         </div>
 
         {/* タスクリストセクション */}
         <div className="flex flex-col gap-4">
           {/* ヘッダー */}
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold leading-[1.4] text-foreground">
-                Task Queue
-              </h2>
-              <span className="text-sm text-muted-foreground">
-                {filteredTasks.length} tasks
-              </span>
-            </div>
-
-            {/* フィルタータブ */}
-            <div className="flex gap-1">
-              {FILTER_TABS.map((tab) => (
-                <button
-                  key={tab.key}
-                  type="button"
-                  className={cn(
-                    'rounded-md px-3 py-1.5 text-[13px] font-medium',
-                    activeFilter === tab.key
-                      ? 'bg-muted text-foreground'
-                      : 'text-muted-foreground hover:text-foreground',
-                  )}
-                  onClick={() => setActiveFilter(tab.key)}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold leading-[1.4] text-foreground">
+              Task Queue
+            </h2>
+            <span className="text-sm text-muted-foreground">
+              {filteredTasks.length} tasks
+            </span>
           </div>
 
           {/* タスクカード */}
@@ -216,11 +245,11 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
           ) : filteredTasks.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
               <p className="text-sm text-muted-foreground">
-                {activeFilter === 'all'
-                  ? 'タスクがまだないよ〜'
-                  : `${FILTER_TABS.find((t) => t.key === activeFilter)?.label}のタスクはないよ〜`}
+                {activeFilters.size === 0
+                  ? 'フィルターを選択してね〜'
+                  : 'タスクがまだないよ〜'}
               </p>
-              {activeFilter === 'all' && (
+              {activeFilters.size === 0 ? null : (
                 <Button
                   className="bg-blue-600 text-white hover:bg-blue-700"
                   onClick={onNewTask}
@@ -246,7 +275,7 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
 // --- SP版 ---
 
 function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: DashboardProps) {
-  const metrics = useMetrics(tasks)
+  const { activeFilters, metrics, filteredTasks, toggle } = useDashboardFilters(tasks)
 
   return (
     <div className="flex h-screen flex-col bg-background">
@@ -261,29 +290,35 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
           <Badge className="bg-[#16a34a] text-white">Running</Badge>
         </div>
 
-        {/* メトリクス */}
+        {/* メトリクス（フィルター兼用） */}
         <div className="flex gap-2">
-          <SPMetric value={metrics.pending} label="Pending" />
+          <SPMetric
+            value={metrics.pending}
+            label="Pending"
+            active={activeFilters.has('pending')}
+            onClick={() => toggle('pending')}
+            {...FILTER_STYLES.pending.sp}
+          />
           <SPMetric
             value={metrics.executing}
             label="Exec"
-            textColor="text-[#2563eb]"
-            bgColor="bg-[#eff6ff]"
-            borderColor="border-[#2563eb30]"
+            active={activeFilters.has('executing')}
+            onClick={() => toggle('executing')}
+            {...FILTER_STYLES.executing.sp}
           />
           <SPMetric
             value={metrics.completed}
             label="Done"
-            textColor="text-[#16a34a]"
-            bgColor="bg-[#f0fdf4]"
-            borderColor="border-[#16a34a30]"
+            active={activeFilters.has('completed')}
+            onClick={() => toggle('completed')}
+            {...FILTER_STYLES.completed.sp}
           />
           <SPMetric
             value={metrics.failed}
             label="Stop"
-            textColor="text-[#dc2626]"
-            bgColor="bg-[#fef2f2]"
-            borderColor="border-[#dc262630]"
+            active={activeFilters.has('failed')}
+            onClick={() => toggle('failed')}
+            {...FILTER_STYLES.failed.sp}
           />
         </div>
 
@@ -299,13 +334,17 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
               タスクの取得に失敗しました
             </p>
           </div>
-        ) : tasks.length === 0 ? (
+        ) : filteredTasks.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
-            <p className="text-sm text-muted-foreground">タスクがまだないよ〜</p>
+            <p className="text-sm text-muted-foreground">
+              {activeFilters.size === 0
+                ? 'フィルターを選択してね〜'
+                : 'タスクがまだないよ〜'}
+            </p>
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
-            {tasks.map((task) => (
+            {filteredTasks.map((task) => (
               <Link key={task.id} to={`/tasks/${task.id}`} className="block">
                 <SPTaskCard
                   title={task.title}

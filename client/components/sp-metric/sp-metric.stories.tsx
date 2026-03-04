@@ -20,31 +20,54 @@ export const Default: Story = {
   args: { value: 5, label: 'Pending' },
 }
 
+export const ActivePending: Story = {
+  args: {
+    value: 5,
+    label: 'Pending',
+    active: true,
+    activeTextColor: 'text-[#374151]',
+    activeBgColor: 'bg-[#f9fafb]',
+    activeBorderColor: 'border-[#6b7280]',
+  },
+}
+
+export const Inactive: Story = {
+  args: {
+    value: 12,
+    label: 'Done',
+    active: false,
+  },
+}
+
+// ダッシュボード風（フィルター状態あり）
 export const AllStatuses: Story = {
   args: { value: 5, label: 'Pending' },
   render: () => (
     <div style={{ display: 'flex', gap: 8, width: '100%' }}>
-      <SPMetric value={5} label="Pending" />
+      <SPMetric
+        value={5}
+        label="Pending"
+        active
+        activeTextColor="text-[#374151]"
+        activeBgColor="bg-[#f9fafb]"
+        activeBorderColor="border-[#6b7280]"
+      />
       <SPMetric
         value={1}
         label="Exec"
-        textColor="text-[#2563eb]"
-        bgColor="bg-[#eff6ff]"
-        borderColor="border-[#2563eb30]"
+        active
+        activeTextColor="text-[#2563eb]"
+        activeBgColor="bg-[#eff6ff]"
+        activeBorderColor="border-[#2563eb]"
       />
-      <SPMetric
-        value={12}
-        label="Done"
-        textColor="text-[#16a34a]"
-        bgColor="bg-[#f0fdf4]"
-        borderColor="border-[#16a34a30]"
-      />
+      <SPMetric value={12} label="Done" />
       <SPMetric
         value={2}
         label="Stop"
-        textColor="text-[#dc2626]"
-        bgColor="bg-[#fef2f2]"
-        borderColor="border-[#dc262630]"
+        active
+        activeTextColor="text-[#dc2626]"
+        activeBgColor="bg-[#fef2f2]"
+        activeBorderColor="border-[#dc2626]"
       />
     </div>
   ),
