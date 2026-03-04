@@ -40,7 +40,7 @@ export function Sidebar({ activeItem = 'タスク', onItemClick, className }: Si
       {/* ヘッダー: ブランドロゴ + 折りたたみアイコン */}
       <div className="flex items-center justify-between rounded-md p-2">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-green-500">
+          <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-blue-500">
             <Wine className="h-4 w-4 text-sidebar-primary-foreground" />
           </div>
           <div className="flex flex-col">
