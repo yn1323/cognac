@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PriorityRadioGroup } from '@/components/ui/priority-radio-group'
 import { Textarea } from '@/components/ui/textarea'
+import { useToast } from '@/components/toast'
 import { useUpdateTask } from '@/hooks/use-tasks'
 import { PRIORITY_MAP, PRIORITY_REVERSE, PC_PRIORITIES, SP_PRIORITIES } from '@/lib/constants'
 
@@ -227,6 +228,7 @@ function SPEditModal({
 // --- エクスポート ---
 
 export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
+  const { toast } = useToast()
   const updateTask = useUpdateTask()
 
   const [title, setTitle] = useState('')
@@ -282,8 +284,10 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
         },
       })
       onClose()
+      toast('タスクを更新しました', 'success')
     } catch (err) {
       console.error('タスク更新に失敗:', err)
+      toast('タスクの更新に失敗しました', 'error')
       setIsSubmitting(false)
     }
   }

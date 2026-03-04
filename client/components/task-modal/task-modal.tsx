@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PriorityRadioGroup } from '@/components/ui/priority-radio-group'
 import { Textarea } from '@/components/ui/textarea'
+import { useToast } from '@/components/toast'
 import { useCreateTask, useUploadTaskImages } from '@/hooks/use-tasks'
 import { PRIORITY_MAP, PC_PRIORITIES, SP_PRIORITIES } from '@/lib/constants'
 import { cn } from '@/lib/utils'
@@ -388,6 +389,7 @@ export function TaskModal() {
   const navigate = useNavigate()
   const isOpen = searchParams.get('new-task') === 'true'
 
+  const { toast } = useToast()
   const createTask = useCreateTask()
   const uploadImages = useUploadTaskImages()
 
@@ -462,8 +464,10 @@ export function TaskModal() {
       }
 
       handleClose()
+      toast('タスクを作成しました', 'success')
     } catch (err) {
       console.error('タスク作成に失敗:', err)
+      toast('タスクの作成に失敗しました', 'error')
       setIsSubmitting(false)
     }
   }

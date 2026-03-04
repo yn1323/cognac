@@ -14,6 +14,8 @@ import {
 } from 'lucide-react'
 import type { Task, TaskStatus } from '@cognac/shared'
 import { EditTaskModal } from '@/components/edit-task-modal'
+import { useToast } from '@/components/toast'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Sidebar } from '@/components/sidebar'
 import { SPDetailHeader } from '@/components/sp-detail-header'
 import { DetailTabs, type Tab } from '@/components/detail-tabs'
@@ -294,7 +296,10 @@ export function TaskPage() {
   const { data: task, isLoading, error } = useTask(taskId)
   const [activeTab, setActiveTab] = useState<Tab>('Overview')
   const [editOpen, setEditOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
   const navigate = useNavigate()
+  const { toast } = useToast()
 
   const deleteTask = useDeleteTask()
   const cancelTask = useCancelTask()
@@ -323,16 +328,34 @@ export function TaskPage() {
 
   const canDelete = DELETABLE_STATUSES.includes(task.status)
 
-  const handleDelete = () => {
-    if (!confirm(`「${task.title}」を削除しますか？`)) return
+  const handleDelete = () => setDeleteDialogOpen(true)
+
+  const handleConfirmDelete = () => {
     deleteTask.mutate(task.id, {
-      onSuccess: () => navigate('/'),
+      onSuccess: () => {
+        toast('タスクを削除しました', 'success')
+        navigate('/')
+      },
+      onError: () => {
+        toast('タスクの削除に失敗しました', 'error')
+        setDeleteDialogOpen(false)
+      },
     })
   }
 
-  const handleCancel = () => {
-    if (!confirm(`「${task.title}」の実行をキャンセルしますか？`)) return
-    cancelTask.mutate(task.id)
+  const handleCancel = () => setCancelDialogOpen(true)
+
+  const handleConfirmCancel = () => {
+    cancelTask.mutate(task.id, {
+      onSuccess: () => {
+        toast('タスクの実行をキャンセルしました', 'success')
+        setCancelDialogOpen(false)
+      },
+      onError: () => {
+        toast('タスクのキャンセルに失敗しました', 'error')
+        setCancelDialogOpen(false)
+      },
+    })
   }
 
   const actions: TaskActions = {
@@ -372,6 +395,30 @@ export function TaskPage() {
         task={task}
         open={editOpen}
         onClose={() => setEditOpen(false)}
+      />
+
+      {/* 削除確認ダイアログ */}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteDialogOpen(false)}
+        title="タスクを削除"
+        description={`「${task.title}」を削除しますか？この操作は取り消せません。`}
+        confirmLabel="削除する"
+        variant="destructive"
+        isLoading={deleteTask.isPending}
+      />
+
+      {/* キャンセル確認ダイアログ */}
+      <ConfirmDialog
+        open={cancelDialogOpen}
+        onConfirm={handleConfirmCancel}
+        onCancel={() => setCancelDialogOpen(false)}
+        title="実行をキャンセル"
+        description={`「${task.title}」の実行をキャンセルしますか？`}
+        confirmLabel="キャンセルする"
+        variant="destructive"
+        isLoading={cancelTask.isPending}
       />
     </>
   )

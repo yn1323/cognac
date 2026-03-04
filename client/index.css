@@ -176,3 +176,26 @@ body {
   color: var(--foreground);
   font-family: 'Noto Sans Variable', 'Noto Sans JP Variable', sans-serif;
 }
+
+/* Toast アニメーション */
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-fade-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(50%);
+  }
+}
