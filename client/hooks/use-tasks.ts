@@ -60,6 +60,14 @@ export function useCancelTask() {
   })
 }
 
+export function useRetryTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => api.tasks.retry(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
+  })
+}
+
 export function useTaskImages(taskId: number) {
   return useQuery({
     queryKey: ['tasks', taskId, 'images'],

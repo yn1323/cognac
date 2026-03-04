@@ -28,11 +28,12 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { TaskModal } from '@/components/task-modal'
 import { formatRelativeTime } from '@/lib/format'
-import { STATUS_CONFIG } from '@/lib/status-config'
+import { RETRYABLE_STATUSES, STATUS_CONFIG } from '@/lib/status-config'
 import { NAV_MAP } from '@/lib/constants'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCallback, useMemo, useState } from 'react'
-import { useTasks } from '@/hooks/use-tasks'
+import { useToast } from '@/components/toast'
+import { useTasks, useRetryTask } from '@/hooks/use-tasks'
 
 // --- フィルター定義 ---
 
@@ -142,11 +143,12 @@ interface DashboardProps {
   error: Error | null
   onNewTask: () => void
   onNavigate: (path: string) => void
+  onRetry: (taskId: number) => void
 }
 
 // --- PC版 ---
 
-function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: DashboardProps) {
+function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry }: DashboardProps) {
   const { activeFilters, metrics, filteredTasks, toggle } = useDashboardFilters(tasks)
 
   return (
@@ -263,7 +265,7 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
           ) : (
             <div className="flex flex-col gap-2">
               {filteredTasks.map((task) => (
-                <TaskCard key={task.id} task={task} />
+                <TaskCard key={task.id} task={task} onRetry={onRetry} />
               ))}
             </div>
           )}
@@ -275,7 +277,7 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
 
 // --- SP版 ---
 
-function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: DashboardProps) {
+function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry }: DashboardProps) {
   const { activeFilters, metrics, filteredTasks, toggle } = useDashboardFilters(tasks)
 
   return (
@@ -353,11 +355,15 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate }: Dashboa
                   badge={<StatusBadge status={task.status} />}
                   borderColor={getSPBorderColor(task)}
                   actions={
-                    task.status === 'stopped' ? (
+                    RETRYABLE_STATUSES.has(task.status) ? (
                       <Button
                         variant="outline"
                         size="sm"
                         className="h-auto px-2.5 py-1 text-xs"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          onRetry(task.id)
+                        }}
                       >
                         リトライ
                       </Button>
@@ -392,6 +398,14 @@ export function DashboardPage() {
   const navigate = useNavigate()
   const handleNewTask = useCallback(() => navigate('?new-task=true'), [navigate])
   const { data: tasks = [], isLoading, error } = useTasks()
+  const retryTask = useRetryTask()
+  const { toast } = useToast()
+  const handleRetry = (taskId: number) => {
+    retryTask.mutate(taskId, {
+      onSuccess: () => toast('タスクをリトライキューに戻しました', 'success'),
+      onError: () => toast('リトライに失敗しました', 'error'),
+    })
+  }
 
   return (
     <>
@@ -404,6 +418,7 @@ export function DashboardPage() {
           error={error}
           onNewTask={handleNewTask}
           onNavigate={navigate}
+          onRetry={handleRetry}
         />
       </div>
       {/* SP版: md未満で表示 */}
@@ -414,6 +429,7 @@ export function DashboardPage() {
           error={error}
           onNewTask={handleNewTask}
           onNavigate={navigate}
+          onRetry={handleRetry}
         />
       </div>
     </>

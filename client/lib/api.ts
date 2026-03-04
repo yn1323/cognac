@@ -33,6 +33,8 @@ export const api = {
       fetchJson<{ ok: boolean }>(`/tasks/${id}`, { method: 'DELETE' }),
     cancel: (id: number) =>
       fetchJson<Task>(`/tasks/${id}/cancel`, { method: 'POST' }),
+    retry: (id: number) =>
+      fetchJson<Task>(`/tasks/${id}/retry`, { method: 'POST' }),
     getImages: (taskId: number) =>
       fetchJson<TaskImage[]>(`/tasks/${taskId}/images`),
     deleteImage: (taskId: number, imageId: number) =>

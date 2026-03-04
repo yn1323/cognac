@@ -9,6 +9,7 @@ import {
   EllipsisVertical,
   Loader2,
   Pencil,
+  RefreshCw,
   Trash2,
   XCircle,
 } from 'lucide-react'
@@ -22,9 +23,9 @@ import { DetailTabs, type Tab } from '@/components/detail-tabs'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu'
-import { useTask, useDeleteTask, useCancelTask } from '@/hooks/use-tasks'
+import { useTask, useDeleteTask, useCancelTask, useRetryTask } from '@/hooks/use-tasks'
 import { formatRelativeTime } from '@/lib/format'
-import { DELETABLE_STATUSES, STATUS_CONFIG, STATUS_PHASE_MAP } from '@/lib/status-config'
+import { DELETABLE_STATUSES, RETRYABLE_STATUSES, STATUS_CONFIG, STATUS_PHASE_MAP } from '@/lib/status-config'
 import { NAV_MAP } from '@/lib/constants'
 import { PCOverviewTab, SPOverviewTab } from '@/pages/task-detail/overview-tab'
 import {
@@ -41,9 +42,11 @@ interface TaskActions {
   onEditOpen: () => void
   onDelete: () => void
   onCancel: () => void
+  onRetry: () => void
   canDelete: boolean
   isDeleting: boolean
   isCancelling: boolean
+  isRetrying: boolean
 }
 
 // --- PC版タブボディ ---
@@ -154,6 +157,17 @@ function PCTaskDetail({
                 </Button>
               ) : (
                 <>
+                  {(RETRYABLE_STATUSES.has(task.status)) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={actions.onRetry}
+                      disabled={actions.isRetrying}
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      リトライ
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
@@ -240,6 +254,18 @@ function SPTaskDetail({
               </DropdownMenuItem>
             ) : (
               <>
+                {(RETRYABLE_STATUSES.has(task.status)) && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setMenuOpen(false)
+                      actions.onRetry()
+                    }}
+                    icon={RefreshCw}
+                    disabled={actions.isRetrying}
+                  >
+                    リトライ
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   onClick={() => {
                     setMenuOpen(false)
@@ -295,6 +321,7 @@ export function TaskPage() {
 
   const deleteTask = useDeleteTask()
   const cancelTask = useCancelTask()
+  const retryTask = useRetryTask()
 
   if (isLoading) {
     return (
@@ -350,13 +377,26 @@ export function TaskPage() {
     })
   }
 
+  const handleRetry = () => {
+    retryTask.mutate(task.id, {
+      onSuccess: () => {
+        toast('タスクをリトライキューに戻しました', 'success')
+      },
+      onError: () => {
+        toast('リトライに失敗しました', 'error')
+      },
+    })
+  }
+
   const actions: TaskActions = {
     onEditOpen: () => setEditOpen(true),
     onDelete: handleDelete,
     onCancel: handleCancel,
+    onRetry: handleRetry,
     canDelete,
     isDeleting: deleteTask.isPending,
     isCancelling: cancelTask.isPending,
+    isRetrying: retryTask.isPending,
   }
 
   return (

@@ -61,10 +61,10 @@ export function updateTask(
     branch_name: string
     retry_count: number
     process_retry_count: number
-    paused_reason: string
-    paused_phase: string
-    started_at: string
-    completed_at: string
+    paused_reason: string | null
+    paused_phase: string | null
+    started_at: string | null
+    completed_at: string | null
   }>,
 ): Task | undefined {
   // 更新するカラムだけ動的にSET句を組み立てる

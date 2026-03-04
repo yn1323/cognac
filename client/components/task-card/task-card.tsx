@@ -7,7 +7,7 @@ import type { Task } from '@cognac/shared'
 import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { formatRelativeTime } from '@/lib/format'
-import { STATUS_CONFIG } from '@/lib/status-config'
+import { RETRYABLE_STATUSES, STATUS_CONFIG } from '@/lib/status-config'
 import { cn } from '@/lib/utils'
 
 // フェーズ表示テキスト
@@ -76,8 +76,8 @@ export function TaskCard({ task, onRetry }: TaskCardProps) {
           </div>
         </div>
 
-        {/* Stopped状態ではリトライボタンを表示 */}
-        {task.status === 'stopped' && (
+        {/* stopped/paused状態ではリトライボタンを表示 */}
+        {RETRYABLE_STATUSES.has(task.status) && (
           <Button
             variant="outline"
             size="sm"

@@ -174,6 +174,28 @@ export function tasksRouter(db: Database.Database) {
     return c.json(updated)
   })
 
+  // タスクリトライ（stopped/pausedのタスクをpendingに戻す）
+  app.post('/:id/retry', (c) => {
+    const id = Number(c.req.param('id'))
+    const task = taskQueries.getTask(db, id)
+    if (!task) {
+      return c.json({ error: 'タスクが見つからない' }, 404)
+    }
+    if (!['stopped', 'paused'].includes(task.status)) {
+      return c.json({ error: 'リトライできないステータス' }, 400)
+    }
+    const updated = taskQueries.updateTask(db, id, {
+      status: 'pending',
+      retry_count: 0,
+      process_retry_count: 0,
+      paused_reason: null,
+      paused_phase: null,
+      started_at: null,
+      completed_at: null,
+    })
+    return c.json(updated)
+  })
+
   // タスク削除（pending/stopped/completedのみ）
   app.delete('/:id', (c) => {
     const id = Number(c.req.param('id'))

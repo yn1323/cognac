@@ -7,6 +7,9 @@ import type { LucideIcon } from 'lucide-react'
 
 // 削除可能なステータス
 export const DELETABLE_STATUSES = new Set<TaskStatus>(['pending', 'stopped', 'completed'])
+
+// リトライ可能なステータス
+export const RETRYABLE_STATUSES = new Set<TaskStatus>(['stopped', 'paused'])
 import {
   Loader,
   MessageCircle,
