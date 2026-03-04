@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { CiStep, CognacConfig, TaskEvent } from '@cognac/shared'
-import { hashFiles } from '@cognac/shared'
+import { hashFiles } from '@cognac/shared/utils/hash'
 import * as ciCacheQueries from '../db/queries/ci-cache.js'
 import type Database from 'better-sqlite3'
 

@@ -23,4 +23,5 @@ export type {
 // ランタイム
 export { defineConfig } from './types/config.js'
 export { slugify } from './utils/slugify.js'
-export { hashFiles } from './utils/hash.js'
+// hashFiles は Node 専用のため index からはエクスポートしない
+// サーバーからは '@cognac/shared/utils/hash' で直接インポートする
