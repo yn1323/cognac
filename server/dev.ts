@@ -19,7 +19,7 @@ const runner = new TaskRunner(db, eventBus, config)
 // publicDir なし（Vite dev server がフロントを配信する）
 const app = createApp({ db, eventBus, runner })
 
-serve({ fetch: app.fetch, port: config.port }, (info) => {
+serve({ fetch: app.fetch, hostname: config.host, port: config.port }, (info) => {
   console.log(`🚀 Cognac Dev Server: http://localhost:${info.port}`)
 })
 
