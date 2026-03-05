@@ -68,7 +68,7 @@ function ConsensusMarker({ size = 'md' }: { size?: 'md' | 'sm' }) {
       <div className="flex items-center gap-1.5">
         <CheckCircle2 className={size === 'sm' ? 'h-3.5 w-3.5 text-[#16a34a]' : 'h-4 w-4 text-[#16a34a]'} />
         <span className={`font-medium text-[#16a34a] ${size === 'sm' ? 'text-xs' : 'text-[13px]'}`}>
-          合意形成
+          合意形成完了
         </span>
       </div>
       <div className="h-px flex-1 bg-[#16a34a]/30" />
