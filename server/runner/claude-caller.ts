@@ -184,6 +184,7 @@ export async function callClaude(
     return await new Promise<ClaudeResponse>((resolve, reject) => {
       const child = spawn('claude', args, {
         stdio: ['pipe', 'pipe', 'pipe'],
+        shell: true,
       })
 
       console.log(`[callClaude] プロセス起動 PID=${child.pid}`)
@@ -281,6 +282,7 @@ export async function callClaudePrint(
     return await new Promise<ClaudeResponse>((resolve, reject) => {
       const child = spawn('claude', args, {
         stdio: ['pipe', 'pipe', 'pipe'],
+        shell: true,
       })
 
       console.log(`[callClaudePrint] プロセス起動 PID=${child.pid}`)
