@@ -87,10 +87,11 @@ export function runCi(
     onEvent?.({ type: 'ci_start', step: step.name, command: step.command })
 
     const startTime = Date.now()
-    const result = spawnSync('sh', ['-c', step.command], {
+    const result = spawnSync(step.command, {
       cwd,
       encoding: 'utf8',
       timeout: 120000, // 2分/ステップ
+      shell: true,
     })
     const durationMs = Date.now() - startTime
 
