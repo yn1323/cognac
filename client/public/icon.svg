@@ -1,10 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="brand-gradient" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#E8A84C"/>
-      <stop offset="50%" stop-color="#C8742E"/>
-      <stop offset="100%" stop-color="#9B5A1A"/>
-    </linearGradient>
-  </defs>
-  <path d="M376 96c-28.8-35.2-72-56-120-56C150.4 40 64 126.4 64 232s86.4 192 192 192c48 0 91.2-20.8 120-56" fill="none" stroke="url(#brand-gradient)" stroke-width="64" stroke-linecap="round"/>
+  <!-- アンバーのC -->
+  <path d="M376 96c-28.8-35.2-72-56-120-56C150.4 40 64 126.4 64 232s86.4 192 192 192c48 0 91.2-20.8 120-56" fill="none" stroke="#B56B1F" stroke-width="64" stroke-linecap="round"/>
+  <!-- 蒸留のしずく -->
+  <path d="M388 120c0 0-16 28-16 42 0 11.2 7.2 20 16 20s16-8.8 16-20c0-14-16-42-16-42z" fill="#D4943A"/>
 </svg>

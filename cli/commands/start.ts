@@ -51,7 +51,7 @@ export async function runStart(): Promise<void> {
   const publicDir = resolve(__dirname, 'public')
 
   // Honoアプリ作成
-  const app = createApp({ db, eventBus, runner, publicDir })
+  const app = createApp({ db, eventBus, runner, publicDir, cwd })
 
   // サーバー起動
   const server = serve(

@@ -7,18 +7,21 @@ import type Database from 'better-sqlite3'
 import { tasksRouter } from './api/tasks.js'
 import { streamRouter } from './api/stream.js'
 import { systemRouter, type RunnerStatus } from './api/system.js'
+import { settingsRouter, type ConfigAccessor } from './api/settings.js'
 import { EventBus } from './sse/event-bus.js'
 
 export interface CreateAppOptions {
   db: Database.Database
   eventBus: EventBus
-  runner: RunnerStatus
+  runner: RunnerStatus & ConfigAccessor
   // ビルド済みクライアントの静的ファイルディレクトリ（パッケージモード用）
   publicDir?: string
+  // 設定ファイル書き込み先（デフォルト: process.cwd()）
+  cwd?: string
 }
 
 // Honoアプリを構築する
-export function createApp({ db, eventBus, runner, publicDir }: CreateAppOptions) {
+export function createApp({ db, eventBus, runner, publicDir, cwd = process.cwd() }: CreateAppOptions) {
   const app = new Hono()
 
   // ミドルウェア
@@ -28,6 +31,7 @@ export function createApp({ db, eventBus, runner, publicDir }: CreateAppOptions)
   app.route('/api/tasks', tasksRouter(db))
   app.route('/api/tasks', streamRouter(eventBus))
   app.route('/api', systemRouter(runner, db))
+  app.route('/api/settings', settingsRouter(runner, cwd))
 
   // アップロード画像の静的配信
   app.use('/uploads/*', serveStatic({ root: '.cognac/' }))
@@ -62,3 +66,4 @@ export { EventBus } from './sse/event-bus.js'
 export { openDb } from './db/connection.js'
 export { TaskRunner } from './runner/task-runner.js'
 export type { RunnerStatus } from './api/system.js'
+export type { ConfigAccessor } from './api/settings.js'

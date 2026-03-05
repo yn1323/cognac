@@ -157,7 +157,7 @@ export function PCDiscussionTab({ task }: { task: Task }) {
                     </span>
                   )}
                   <div className="rounded-2xl bg-secondary px-3 py-2">
-                    <p className="text-sm leading-[1.5] text-foreground">{d.content}</p>
+                    <p className="whitespace-pre-wrap text-sm leading-[1.5] text-foreground">{d.content}</p>
                   </div>
                 </div>
               </div>
@@ -246,7 +246,7 @@ export function SPDiscussionTab({ task }: { task: Task }) {
                     </span>
                   )}
                   <div className="rounded-2xl bg-secondary px-2.5 py-1.5">
-                    <p className="text-[13px] leading-[1.5] text-foreground">
+                    <p className="whitespace-pre-wrap text-[13px] leading-[1.5] text-foreground">
                       {d.content}
                     </p>
                   </div>

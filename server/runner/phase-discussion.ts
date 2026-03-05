@@ -41,7 +41,9 @@ ${formatPersonas(personas)}
 - 各メンバーは自分の専門領域の視点から発言する
 - 意見が割れるところは遠慮なく突っ込む（ただし建設的に）
 - 各メンバーのtoneに設定されたキャラクター性を発言に反映する
-- 絵文字は控えめに使ってOK（👍 🤔 💡 程度）
+- 社内Slackみたいなノリで、絵文字をどんどん使ってOK！（😊🎉💡🤔👍🔥✨😅💪 など）
+- 発言の最初にリアクション絵文字を置いたり、文末に添えたり、自然に散りばめる
+- 長めの発言（2文以上）は途中で改行（\\n）を入れて読みやすくする
 - 1ラウンドで合計8〜15メッセージ程度のやり取りをする
 
 必ず以下のJSONフォーマットだけを返して。余計な説明はいらない。
@@ -50,9 +52,9 @@ ${formatPersonas(personas)}
 {
   "round": 1,
   "messages": [
-    { "personaId": "frontend-engineer", "content": "この機能、コンポーネントどう分けるか考えたいんだけど" },
-    { "personaId": "backend-engineer", "content": "APIの方から先に決めない？エンドポイント設計が固まらないとフロントも動けないでしょ" },
-    { "personaId": "frontend-engineer", "content": "たしかに。じゃあまずAPI仕様からいこう" }
+    { "personaId": "frontend-engineer", "content": "この機能、コンポーネントどう分けるか考えたいんだけど🤔" },
+    { "personaId": "backend-engineer", "content": "💡 APIの方から先に決めない？\\nエンドポイント設計が固まらないとフロントも動けないでしょ" },
+    { "personaId": "frontend-engineer", "content": "たしかに！じゃあまずAPI仕様からいこう👍" }
   ],
   "shouldContinue": true,
   "reason": "まだテスト戦略について議論が必要"

@@ -18,6 +18,7 @@ export type {
   CiConfig,
   DiscussionConfig,
   ClaudeConfig,
+  SettingsPayload,
 } from './types/config.js'
 
 // ランタイム

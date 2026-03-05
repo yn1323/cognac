@@ -147,10 +147,9 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   /* ブランドカラー */
-  --color-brand-gold: #E8A84C;
-  --color-brand-amber: #C8742E;
-  --color-brand-deep: #9B5A1A;
-  --color-brand-bg: #1A1207;
+  --color-cognac: #B56B1F;
+  --color-cognac-light: #D4943A;
+  --color-cognac-dark: #1A2744;
 
   /* ステータス */
   --color-status-executing: var(--status-executing);

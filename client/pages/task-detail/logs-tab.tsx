@@ -52,7 +52,7 @@ function LogEntry({ log }: { log: ExecutionLog }) {
 // SSEイベントまたはDB履歴からイベントを統合表示するフック
 function useAllEvents(task: Task, sseEvents: TaskEvent[]) {
   const isActive = ACTIVE_STATUSES.has(task.status)
-  const { data: logs, isLoading } = useTaskLogs(task.id, isActive)
+  const { data: logs, isLoading } = useTaskLogs(task.id)
 
   const historyEvents = useMemo(() => {
     if (!logs) return []

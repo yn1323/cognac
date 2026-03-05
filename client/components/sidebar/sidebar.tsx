@@ -3,14 +3,11 @@
 
 import type { LucideIcon } from 'lucide-react'
 import {
-  Wine,
-  LayoutDashboard,
   ListChecks,
-  Terminal,
   Settings,
-  PanelLeftClose,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { BrandLogo } from '@/components/brand-logo'
 
 interface NavItem {
   icon: LucideIcon
@@ -37,11 +34,11 @@ export function Sidebar({ activeItem = 'タスク', onItemClick, className }: Si
         className,
       )}
     >
-      {/* ヘッダー: ブランドロゴ + 折りたたみアイコン */}
+      {/* ヘッダー: ブランドロゴ */}
       <div className="flex items-center justify-between rounded-md p-2">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-gradient-to-b from-amber-600 to-amber-800">
-            <Wine className="h-4 w-4 text-sidebar-primary-foreground" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-cognac-dark">
+            <BrandLogo size={18} />
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold leading-[1.4] text-sidebar-foreground">

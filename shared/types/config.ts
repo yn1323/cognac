@@ -1,5 +1,13 @@
 import type { CiStep } from './events.js'
 
+// 設定更新ペイロード（API用）
+export interface SettingsPayload {
+  ci: {
+    maxRetries: number
+    steps: CiStep[] // 空配列 = 自動検出モード
+  }
+}
+
 // Git設定
 export interface GitConfig {
   defaultBranch: string

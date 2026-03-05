@@ -1,5 +1,5 @@
 import type Database from 'better-sqlite3'
-import type { CognacConfig, TaskEvent, Task, Phase } from '@cognac/shared'
+import type { CognacConfig, TaskEvent, Task, Phase, CiStep } from '@cognac/shared'
 import type { EventBus } from '../sse/event-bus.js'
 import type { RunnerStatus } from '../api/system.js'
 import * as taskQueries from '../db/queries/tasks.js'
@@ -33,6 +33,19 @@ export class TaskRunner implements RunnerStatus {
     if (this.paused) return 'paused'
     if (this.currentTaskId !== null) return 'running'
     return 'idle'
+  }
+
+  // 現在の設定を返す（設定APIから参照される）
+  getConfig(): CognacConfig {
+    return this.config
+  }
+
+  // CI設定をメモリ上でホットリロード（設定保存時に呼ばれる）
+  updateConfig(patch: { ci: { maxRetries: number; steps?: CiStep[] } }): void {
+    this.config = {
+      ...this.config,
+      ci: { ...this.config.ci, ...patch.ci },
+    }
   }
 
   start(): void {
