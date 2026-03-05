@@ -1,34 +1,18 @@
 // タスク詳細ページ — ログタブ
 // アクティブ: SSEイベントをリアルタイム表示（親コンポーネントからprops経由）
-// 非アクティブ: DB履歴ログを表示
+// 非アクティブ: SSEイベントが残っていればそれを表示、なければDB履歴ログを表示
 // デザイン design.pen PC=ndNzU, SP=cZcuS に準拠
 
-import { useState, useMemo } from 'react'
-import type { Task, TaskEvent, ExecutionLog, Phase } from '@cognac/shared'
+import { useMemo } from 'react'
+import type { Task, TaskEvent, ExecutionLog } from '@cognac/shared'
 import { useTaskLogs } from '@/hooks/use-tasks'
 import { LogView } from '@/components/log-view'
-import { ACTIVE_STATUSES, PHASE_LABELS } from '@/lib/status-config'
+import { ACTIVE_STATUSES } from '@/lib/status-config'
 
 interface LogsTabProps {
   task: Task
   events: TaskEvent[]
   connected: boolean
-}
-
-// phase_start〜phase_endの範囲内のイベントだけ抽出する
-function filterByPhase(events: TaskEvent[], targetPhase: Phase): TaskEvent[] {
-  let inPhase = false
-  return events.filter((e) => {
-    if (e.type === 'phase_start' && e.phase === targetPhase) {
-      inPhase = true
-      return true
-    }
-    if (e.type === 'phase_end' && e.phase === targetPhase) {
-      inPhase = false
-      return true
-    }
-    return inPhase
-  })
 }
 
 // DB履歴ログの1行表示
@@ -65,131 +49,62 @@ function LogEntry({ log }: { log: ExecutionLog }) {
   )
 }
 
-// DB履歴ログの表示（output_rawがあればLogViewで、なければサマリー表示）
-function HistoryLogView({ taskId }: { taskId: number }) {
-  const { data: logs, isLoading } = useTaskLogs(taskId)
+// SSEイベントまたはDB履歴からイベントを統合表示するフック
+function useAllEvents(task: Task, sseEvents: TaskEvent[]) {
+  const isActive = ACTIVE_STATUSES.has(task.status)
+  const { data: logs, isLoading } = useTaskLogs(task.id, isActive)
 
-  // output_rawにSSEイベントJSONが保存されていればリッチ表示
-  const allEvents = useMemo(() => {
+  const historyEvents = useMemo(() => {
     if (!logs) return []
-    const events: TaskEvent[] = []
+    const evts: TaskEvent[] = []
     for (const log of logs) {
       if (log.output_raw) {
         try {
-          const parsed = JSON.parse(log.output_raw) as TaskEvent[]
-          events.push(...parsed)
-        } catch {
-          // パース失敗はスキップ
-        }
+          evts.push(...(JSON.parse(log.output_raw) as TaskEvent[]))
+        } catch { /* skip */ }
       }
     }
-    return events
+    return evts
   }, [logs])
 
-  if (isLoading) {
-    return (
-      <div className="py-8 text-center text-sm text-muted-foreground">
-        ログを読み込み中...
-      </div>
-    )
-  }
+  // SSEで受信済みのイベントがあればそちらを優先、なければDB履歴
+  const allEvents = sseEvents.length > 0 ? sseEvents : historyEvents
 
-  if (!logs || logs.length === 0) {
-    return (
-      <div className="py-8 text-center text-sm text-muted-foreground">
-        実行ログがまだないよ
-      </div>
-    )
-  }
-
-  if (allEvents.length > 0) {
-    return <LogView events={allEvents} />
-  }
-
-  // output_rawがなければサマリー表示にフォールバック
-  return (
-    <div className="space-y-0">
-      {logs.map((log) => (
-        <LogEntry key={log.id} log={log} />
-      ))}
-    </div>
-  )
+  return { allEvents, logs, isLoading, isActive }
 }
 
 // --- PC版 ---
 
 export function PCLogsTab({ task, events, connected }: LogsTabProps) {
-  const isActive = ACTIVE_STATUSES.has(task.status)
-  const [phaseFilter, setPhaseFilter] = useState<Phase | 'all' | 'debug'>('all')
-  const [search, setSearch] = useState('')
-
-  const filtered = useMemo(() => {
-    let result = events
-    if (phaseFilter === 'debug') {
-      result = result.filter((e) => e.type === 'debug_log')
-    } else if (phaseFilter !== 'all') {
-      result = filterByPhase(result, phaseFilter)
-    }
-    if (search) {
-      const lower = search.toLowerCase()
-      result = result.filter((e) => {
-        if (e.type === 'claude_output') return e.content.toLowerCase().includes(lower)
-        if (e.type === 'file_changed') return e.path.toLowerCase().includes(lower)
-        if (e.type === 'command_executed') return e.command.toLowerCase().includes(lower)
-        if (e.type === 'tool_invoked') return e.toolName.toLowerCase().includes(lower)
-        if (e.type === 'error') return e.message.toLowerCase().includes(lower)
-        if (e.type === 'ci_result') return e.step.toLowerCase().includes(lower)
-        if (e.type === 'debug_log') return e.message.toLowerCase().includes(lower)
-        return false
-      })
-    }
-    return result
-  }, [events, phaseFilter, search])
+  const { allEvents, logs, isActive } = useAllEvents(task, events)
 
   return (
     <div className="flex h-full flex-col gap-4">
       {/* ツールバー */}
-      <div className="flex items-center gap-2">
-        {/* 接続インジケーター */}
-        {isActive && (
+      {isActive && (
+        <div className="flex items-center gap-2">
           <div
             className={`h-2 w-2 rounded-full ${connected ? 'bg-green-500' : 'bg-muted-foreground'}`}
             title={connected ? 'リアルタイム接続中' : '未接続'}
           />
-        )}
-        {/* フェーズ選択（リアルタイム時のみ） */}
-        {isActive && (
-          <select
-            value={phaseFilter}
-            onChange={(e) => setPhaseFilter(e.target.value as Phase | 'all' | 'debug')}
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
-          >
-            <option value="all">全フェーズ</option>
-            {(Object.entries(PHASE_LABELS) as [Phase, string][]).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-            <option value="debug">デバッグ</option>
-          </select>
-        )}
-        {/* 検索（リアルタイム時のみ） */}
-        {isActive && (
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="ログを検索..."
-            className="h-9 w-60 rounded-md border border-input bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground"
-          />
-        )}
-      </div>
+        </div>
+      )}
 
       {/* ログビュー */}
       <div className="min-h-0 flex-1 overflow-hidden rounded-lg border bg-card">
         <div className="flex h-full flex-col overflow-y-auto px-4 py-3">
-          {isActive ? (
-            <LogView events={filtered} />
+          {allEvents.length > 0 ? (
+            <LogView events={allEvents} />
+          ) : !isActive && logs && logs.length > 0 ? (
+            <div className="space-y-0">
+              {logs.map((log) => (
+                <LogEntry key={log.id} log={log} />
+              ))}
+            </div>
           ) : (
-            <HistoryLogView taskId={task.id} />
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              {isActive ? 'イベントを待ってるよ...' : '実行ログがまだないよ'}
+            </div>
           )}
         </div>
       </div>
@@ -200,7 +115,7 @@ export function PCLogsTab({ task, events, connected }: LogsTabProps) {
 // --- SP版 ---
 
 export function SPLogsTab({ task, events, connected }: LogsTabProps) {
-  const isActive = ACTIVE_STATUSES.has(task.status)
+  const { allEvents, logs, isActive } = useAllEvents(task, events)
 
   return (
     <div className="flex flex-1 flex-col">
@@ -218,10 +133,18 @@ export function SPLogsTab({ task, events, connected }: LogsTabProps) {
 
       {/* ログビュー */}
       <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border bg-card px-4 py-3">
-        {isActive ? (
-          <LogView events={events} />
+        {allEvents.length > 0 ? (
+          <LogView events={allEvents} />
+        ) : !isActive && logs && logs.length > 0 ? (
+          <div className="space-y-0">
+            {logs.map((log) => (
+              <LogEntry key={log.id} log={log} />
+            ))}
+          </div>
         ) : (
-          <HistoryLogView taskId={task.id} />
+          <div className="py-8 text-center text-sm text-muted-foreground">
+            {isActive ? 'イベントを待ってるよ...' : '実行ログがまだないよ'}
+          </div>
         )}
       </div>
     </div>

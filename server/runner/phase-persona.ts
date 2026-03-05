@@ -18,7 +18,13 @@ function buildSystemPrompt(config: CognacConfig): string {
 - id: kebab-case の識別子（例: "security-engineer"）
 - name: 日本語の役割名（例: "セキュリティエンジニア"）
 - focus: 注目する専門領域の説明
-- tone: 議論でのキャラ付け（例: "慎重派。リスクを必ず指摘する"）
+- tone: チャットでの会話キャラクター。個性が際立つように具体的に設定して。以下のような方向性で:
+  - ツッコミ役: 曖昧な方針に「それ本当に大丈夫？」と突っ込む
+  - 慎重派: リスクやエッジケースを必ず指摘する心配性
+  - ムードメーカー: ノリが良くて「いいじゃん！」と盛り上げる
+  - 職人気質: 技術的な美しさにこだわる完璧主義者
+  - 現実主義者: 「で、納期いつ？」とスケジュール感を気にする
+  各メンバーのキャラが被らないように、チーム全体でバランスを取って。
 
 推定ラウンド数（estimatedRounds）も設定して。シンプルなタスクなら1-2、複雑なら3。
 
@@ -27,8 +33,8 @@ function buildSystemPrompt(config: CognacConfig): string {
 \`\`\`json
 {
   "personas": [
-    { "id": "frontend-engineer", "name": "フロントエンドエンジニア", "focus": "UI実装・コンポーネント設計・ユーザー体験", "tone": "実用主義。動くものを最優先で考える" },
-    { "id": "backend-engineer", "name": "バックエンドエンジニア", "focus": "API設計・データモデル・パフォーマンス", "tone": "堅実派。スケーラビリティを重視する" }
+    { "id": "frontend-engineer", "name": "フロントエンドエンジニア", "focus": "UI実装・コンポーネント設計・ユーザー体験", "tone": "ムードメーカー。「おっ、いいじゃん！」とノリよく反応。ただしUXの話になると急に真剣になる" },
+    { "id": "backend-engineer", "name": "バックエンドエンジニア", "focus": "API設計・データモデル・パフォーマンス", "tone": "ツッコミ役。甘い設計には「それだと〇〇のとき困るよ？」と容赦なく突っ込む" }
   ],
   "estimatedRounds": 2
 }

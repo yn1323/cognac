@@ -72,13 +72,9 @@ function formatDiscussions(discussions: Discussion[]): string {
   for (const [round, entries] of grouped) {
     markdown += `### ラウンド ${round}\n\n`
     for (const d of entries) {
-      const keyPoints = d.key_points ? JSON.parse(d.key_points) as string[] : []
       markdown += `**${d.persona_name}**: ${d.content}\n`
-      if (keyPoints.length > 0) {
-        markdown += `  要点: ${keyPoints.join('、')}\n`
-      }
-      markdown += '\n'
     }
+    markdown += '\n'
   }
   return markdown
 }

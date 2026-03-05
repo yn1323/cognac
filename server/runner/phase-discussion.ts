@@ -29,29 +29,30 @@ function formatPersonas(personas: Persona[]): string {
 
 // ディスカッションのシステムプロンプトを構築
 function buildSystemPrompt(personas: Persona[]): string {
-  return `あなたは以下の専門家チーム全員をロールプレイする。
-各ペルソナの視点から、タスクについて建設的に議論してくれ。
+  return `あなたは以下の専門家チーム全員をロールプレイして、チャットアプリでの会話を再現してくれ。
 
 ## チームメンバー
 ${formatPersonas(personas)}
 
 ## ルール
-- 各メンバーは自分の専門領域から発言する
-- 他のメンバーの意見に建設的な反論・補足をする
-- 気心の知れた開発チームの仲間として、カジュアルに議論する
-- 技術的な正確さは維持しつつ、噛み砕いた表現を使う
+- チャットアプリでの会話のように、短い発言（1〜3文）でテンポよくやり取りする
+- 1人が長々と話すのではなく、相手の発言にリアクションしながら会話を進める
+- 「それいいね」「なるほど〜」「ちょっと待って、それだと〜」のような自然な相槌・反応を入れる
+- 各メンバーは自分の専門領域の視点から発言する
+- 意見が割れるところは遠慮なく突っ込む（ただし建設的に）
+- 各メンバーのtoneに設定されたキャラクター性を発言に反映する
+- 絵文字は控えめに使ってOK（👍 🤔 💡 程度）
+- 1ラウンドで合計8〜15メッセージ程度のやり取りをする
 
 必ず以下のJSONフォーマットだけを返して。余計な説明はいらない。
 
 \`\`\`json
 {
   "round": 1,
-  "statements": [
-    {
-      "personaId": "frontend-engineer",
-      "content": "この機能の実装だけど、コンポーネント分割は...",
-      "keyPoints": ["コンポーネント分割の方針", "状態管理の選択"]
-    }
+  "messages": [
+    { "personaId": "frontend-engineer", "content": "この機能、コンポーネントどう分けるか考えたいんだけど" },
+    { "personaId": "backend-engineer", "content": "APIの方から先に決めない？エンドポイント設計が固まらないとフロントも動けないでしょ" },
+    { "personaId": "frontend-engineer", "content": "たしかに。じゃあまずAPI仕様からいこう" }
   ],
   "shouldContinue": true,
   "reason": "まだテスト戦略について議論が必要"
@@ -86,23 +87,21 @@ ${repoStructure}
 `
 
   if (round === 1) {
-    prompt += '\nタスクについて各メンバーの初期意見を聞かせて。'
+    prompt += '\nタスクについてチャットで話し合って。各メンバーの初見の反応から始めて。'
   } else {
-    // 前ラウンドの発言を含める
-    prompt += '\n### 前ラウンドまでの議論\n\n'
+    // 前ラウンドの会話をチャットログ形式で含める
+    prompt += '\n### これまでの会話\n\n'
     const grouped = groupDiscussionsByRound(previousRounds)
-    for (const [r, discussions] of grouped) {
-      prompt += `#### ラウンド ${r}\n`
+    for (const [, discussions] of grouped) {
       for (const d of discussions) {
-        prompt += `- **${d.persona_name}**: ${d.content}\n`
+        prompt += `**${d.persona_name}**: ${d.content}\n`
       }
-      prompt += '\n'
     }
-    prompt += '前ラウンドを踏まえて、反論・補足・合意形成をしてくれ。'
+    prompt += '\nこの会話の続きをしてくれ。前の話を踏まえて、まだ決まっていない点を議論して。'
   }
 
   if (isLastRound) {
-    prompt += '\n\n**注意: これが最終ラウンドだ。shouldContinueは必ずfalseにして、結論をまとめてくれ。**'
+    prompt += '\n\n**注意: これが最終ラウンドだ。shouldContinueはfalseにして、結論を短くまとめるメッセージで締めてくれ。**'
   }
 
   return prompt
@@ -158,7 +157,7 @@ export async function executePhaseDiscussion(
 
       try {
         discussionRound = extractJson<DiscussionRound>(response.result)
-        if (discussionRound.statements && discussionRound.statements.length > 0) {
+        if (discussionRound.messages && discussionRound.messages.length > 0) {
           // ログ用に最後の成功セッションIDを記録
           if (response.sessionId) {
             sessionId = response.sessionId
@@ -196,11 +195,11 @@ export async function executePhaseDiscussion(
     }
 
     // DB保存
-    const statements = discussionRound.statements.map((s) => ({
-      persona_id: s.personaId,
-      persona_name: personaNameMap.get(s.personaId) ?? s.personaId,
-      content: s.content,
-      key_points: s.keyPoints ?? null,
+    const statements = discussionRound.messages.map((m) => ({
+      persona_id: m.personaId,
+      persona_name: personaNameMap.get(m.personaId) ?? m.personaId,
+      content: m.content,
+      key_points: null,
       should_continue: discussionRound.shouldContinue,
       continue_reason: discussionRound.reason ?? null,
     }))
@@ -210,15 +209,14 @@ export async function executePhaseDiscussion(
     )
     allDiscussions.push(...savedDiscussions)
 
-    // SSEイベント: 各ペルソナの発言
-    for (const s of discussionRound.statements) {
+    // SSEイベント: 各メッセージ（チャット順を保持）
+    for (const m of discussionRound.messages) {
       onEvent?.({
         type: 'discussion_statement',
         round,
-        personaId: s.personaId,
-        personaName: personaNameMap.get(s.personaId) ?? s.personaId,
-        content: s.content,
-        keyPoints: s.keyPoints ?? [],
+        personaId: m.personaId,
+        personaName: personaNameMap.get(m.personaId) ?? m.personaId,
+        content: m.content,
       })
     }
 
@@ -238,7 +236,7 @@ export async function executePhaseDiscussion(
       token_input: response.usage.inputTokens,
       token_output: response.usage.outputTokens,
       duration_ms: response.durationMs,
-      output_summary: `ラウンド${round}: ${discussionRound.statements.length}名が発言、継続=${discussionRound.shouldContinue}`,
+      output_summary: `ラウンド${round}: ${discussionRound.messages.length}メッセージ、継続=${discussionRound.shouldContinue}`,
     })
 
     // 早期終了判定

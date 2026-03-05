@@ -15,10 +15,9 @@ export interface Discussion {
 // 1ラウンド分のディスカッション結果（Claude Codeからの出力）
 export interface DiscussionRound {
   round: number
-  statements: {
+  messages: {
     personaId: string
     content: string
-    keyPoints: string[]
   }[]
   shouldContinue: boolean
   reason: string

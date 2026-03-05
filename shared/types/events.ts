@@ -21,7 +21,6 @@ export type TaskEvent =
       personaId: string
       personaName: string
       content: string
-      keyPoints: string[]
     }
   | { type: 'discussion_round_end'; round: number; shouldContinue: boolean; reason: string }
   // Phase 2-C: プラン

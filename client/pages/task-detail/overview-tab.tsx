@@ -2,15 +2,13 @@
 // デザイン design.pen PC=9d5bz, SP=lNPXJ に準拠
 
 import { useState } from 'react'
-import { User } from 'lucide-react'
 import type { Task, TaskImage } from '@cognac/shared'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { formatDateTime } from '@/lib/format'
 import { STATUS_CONFIG } from '@/lib/status-config'
-import { useTaskImages, useTaskPersonas } from '@/hooks/use-tasks'
-import { getPersonaColor } from '@/lib/persona-colors'
+import { useTaskImages } from '@/hooks/use-tasks'
 
 // --- 画像セクション ---
 
@@ -68,9 +66,6 @@ function TaskImagesSection({ taskId, size = 'md' }: { taskId: number; size?: 'md
 // --- PC版 ---
 
 export function PCOverviewTab({ task }: { task: Task }) {
-  const { data: personas } = useTaskPersonas(task.id)
-  const personaList = personas ?? []
-
   return (
     <div className="flex flex-col gap-6">
       {/* Task Information カード */}
@@ -116,42 +111,6 @@ export function PCOverviewTab({ task }: { task: Task }) {
 
       {/* Attached Images */}
       <TaskImagesSection taskId={task.id} />
-
-      {/* Selected Personas */}
-      <div className="flex flex-col gap-4">
-        <h2 className="text-base font-semibold text-foreground">
-          選択されたペルソナ
-        </h2>
-        {personaList.length > 0 ? (
-          <div className="grid grid-cols-3 gap-4">
-            {personaList.map((persona, i) => (
-              <Card key={persona.id} className="p-4">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-                    style={{ backgroundColor: getPersonaColor(i) }}
-                  >
-                    <User className="h-4 w-4 text-white" />
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-semibold text-foreground">
-                      {persona.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {persona.focus}
-                    </span>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            タスクの実行待ち
-          </p>
-        )}
-      </div>
-
     </div>
   )
 }
@@ -159,9 +118,6 @@ export function PCOverviewTab({ task }: { task: Task }) {
 // --- SP版 ---
 
 export function SPOverviewTab({ task }: { task: Task }) {
-  const { data: personas } = useTaskPersonas(task.id)
-  const personaList = personas ?? []
-
   return (
     <div className="flex flex-col gap-4">
       {/* Task Information */}
@@ -199,35 +155,6 @@ export function SPOverviewTab({ task }: { task: Task }) {
 
       {/* Attached Images */}
       <TaskImagesSection taskId={task.id} size="sm" />
-
-      {/* Personas */}
-      <Card className="p-4">
-        <h3 className="mb-3 text-[15px] font-semibold text-foreground">
-          ペルソナ
-        </h3>
-        {personaList.length > 0 ? (
-          <div className="flex flex-col gap-3">
-            {personaList.map((persona, i) => (
-              <div key={persona.id} className="flex items-center gap-2.5">
-                <div
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-                  style={{ backgroundColor: getPersonaColor(i) }}
-                >
-                  <User className="h-3.5 w-3.5 text-white" />
-                </div>
-                <span className="text-[13px] font-medium text-foreground">
-                  {persona.name}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            タスクの実行待ち
-          </p>
-        )}
-      </Card>
-
     </div>
   )
 }
