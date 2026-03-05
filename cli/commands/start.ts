@@ -57,6 +57,7 @@ export async function runStart(): Promise<void> {
   const server = serve(
     {
       fetch: app.fetch,
+      hostname: config.host,
       port: config.port,
     },
     (info) => {

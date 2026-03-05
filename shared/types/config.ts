@@ -38,6 +38,7 @@ export interface ClaudeConfig {
 // 全体設定
 export interface CognacConfig {
   port: number
+  host: string
   git: GitConfig
   ci: CiConfig
   discussion: DiscussionConfig
@@ -47,6 +48,7 @@ export interface CognacConfig {
 // デフォルト設定値
 const defaultConfig: CognacConfig = {
   port: 4000,
+  host: '0.0.0.0',
   git: {
     defaultBranch: 'main',
   },
