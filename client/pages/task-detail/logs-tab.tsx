@@ -120,12 +120,14 @@ function HistoryLogView({ taskId }: { taskId: number }) {
 
 export function PCLogsTab({ task, events, connected }: LogsTabProps) {
   const isActive = ACTIVE_STATUSES.has(task.status)
-  const [phaseFilter, setPhaseFilter] = useState<Phase | 'all'>('all')
+  const [phaseFilter, setPhaseFilter] = useState<Phase | 'all' | 'debug'>('all')
   const [search, setSearch] = useState('')
 
   const filtered = useMemo(() => {
     let result = events
-    if (phaseFilter !== 'all') {
+    if (phaseFilter === 'debug') {
+      result = result.filter((e) => e.type === 'debug_log')
+    } else if (phaseFilter !== 'all') {
       result = filterByPhase(result, phaseFilter)
     }
     if (search) {
@@ -134,8 +136,10 @@ export function PCLogsTab({ task, events, connected }: LogsTabProps) {
         if (e.type === 'claude_output') return e.content.toLowerCase().includes(lower)
         if (e.type === 'file_changed') return e.path.toLowerCase().includes(lower)
         if (e.type === 'command_executed') return e.command.toLowerCase().includes(lower)
+        if (e.type === 'tool_invoked') return e.toolName.toLowerCase().includes(lower)
         if (e.type === 'error') return e.message.toLowerCase().includes(lower)
         if (e.type === 'ci_result') return e.step.toLowerCase().includes(lower)
+        if (e.type === 'debug_log') return e.message.toLowerCase().includes(lower)
         return false
       })
     }
@@ -157,13 +161,14 @@ export function PCLogsTab({ task, events, connected }: LogsTabProps) {
         {isActive && (
           <select
             value={phaseFilter}
-            onChange={(e) => setPhaseFilter(e.target.value as Phase | 'all')}
+            onChange={(e) => setPhaseFilter(e.target.value as Phase | 'all' | 'debug')}
             className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
           >
             <option value="all">全フェーズ</option>
             {(Object.entries(PHASE_LABELS) as [Phase, string][]).map(([value, label]) => (
               <option key={value} value={value}>{label}</option>
             ))}
+            <option value="debug">デバッグ</option>
           </select>
         )}
         {/* 検索（リアルタイム時のみ） */}

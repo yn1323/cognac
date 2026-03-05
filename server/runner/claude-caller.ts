@@ -179,7 +179,10 @@ export async function callClaude(
         // StreamParser が内部で保持した result 情報を使う
         const parserResult = parser.getResult()
         if (parserResult) {
-          result = parserResult.result
+          // ResultChunk.result が空文字列でも上書きしないように明示チェック
+          if (parserResult.result !== '') {
+            result = parserResult.result
+          }
           sessionId = parserResult.sessionId
           usage = parserResult.usage
         }
@@ -198,7 +201,9 @@ export async function callClaude(
         // パーサーから最終結果を取得
         const finalResult = parser.getResult()
         if (finalResult) {
-          result = finalResult.result
+          if (finalResult.result !== '') {
+            result = finalResult.result
+          }
           sessionId = finalResult.sessionId
           usage = finalResult.usage
         }

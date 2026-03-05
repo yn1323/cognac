@@ -41,7 +41,7 @@ interface SystemChunk {
   [key: string]: unknown
 }
 
-type ContentBlock = TextBlock | ToolUseBlock | ToolResultBlock
+type ContentBlock = TextBlock | ToolUseBlock | ToolResultBlock | ThinkingBlock
 
 interface TextBlock {
   type: 'text'
@@ -58,6 +58,11 @@ interface ToolResultBlock {
   type: 'tool_result'
   content: string
   is_error?: boolean
+}
+
+interface ThinkingBlock {
+  type: 'thinking'
+  thinking: string
 }
 
 // ── パーサー結果の内部バッファ ──
@@ -103,7 +108,8 @@ export class StreamParser {
 
       case 'user':
       case 'system':
-        // user / system メッセージは表示不要
+      case 'rate_limit_event':
+        // user / system / rate_limit_event は表示不要
         return null
 
       default:
@@ -148,6 +154,10 @@ export class StreamParser {
         // tool_result は単体ではイベント化しない（呼び出し元のツール結果として統合）
         return null
 
+      case 'thinking':
+        // Extended Thinking の思考ブロックはイベント化不要
+        return null
+
       default:
         console.warn(`[StreamParser] 不明なブロックタイプ: ${(block as Record<string, unknown>).type}`)
         return null
@@ -179,10 +189,11 @@ export class StreamParser {
       }
     }
 
-    // その他のツール（Read, Glob, Grep など）は claude_output として扱う
+    // その他のツール（Read, Glob, Grep など）は tool_invoked として扱う
+    // claude_output にすると result 文字列にマーカーが混入してJSON抽出を妨げるため分離
     return {
-      type: 'claude_output',
-      content: `[Tool: ${name}]`,
+      type: 'tool_invoked',
+      toolName: name,
     }
   }
 

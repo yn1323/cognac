@@ -4,7 +4,7 @@ import type { EventBus } from '../sse/event-bus.js'
 import type { RunnerStatus } from '../api/system.js'
 import * as taskQueries from '../db/queries/tasks.js'
 import * as logQueries from '../db/queries/execution-logs.js'
-import { buildBranchName, createTaskBranch, resetTaskBranch, mergeTaskBranch } from './git-ops.js'
+import { buildBranchName /* createTaskBranch, resetTaskBranch, mergeTaskBranch */ } from './git-ops.js'
 import { executePhase3 } from './phase-execute.js'
 import { executePhasePersona } from './phase-persona.js'
 import { executePhaseDiscussion } from './phase-discussion.js'
@@ -154,20 +154,21 @@ export class TaskRunner implements RunnerStatus {
         this.emit(id, { type: 'phase_end', phase: 'plan', timestamp: new Date().toISOString(), durationMs: planResult.durationMs })
         taskQueries.updateTask(this.db, id, { status: 'planned' })
 
-        // Gitブランチ作成
-        currentPhase = 'git'
-        const branchName = createTaskBranch(id, task.title, this.config.git.defaultBranch)
+        // Gitブランチ作成（一時コメントアウト: 不具合調査のノイズ除去）
+        // currentPhase = 'git'
+        // const branchName = createTaskBranch(id, task.title, this.config.git.defaultBranch)
+        const branchName = buildBranchName(id, task.title)
         taskQueries.updateTask(this.db, id, { status: 'executing', branch_name: branchName })
-        this.emit(id, { type: 'git_operation', operation: 'checkout', detail: `ブランチ作成: ${branchName}` })
+        // this.emit(id, { type: 'git_operation', operation: 'checkout', detail: `ブランチ作成: ${branchName}` })
 
         // Phase 3 + CI リトライループ（executionPromptを渡す）
         currentPhase = 'execute'
         await this.executeWithRetry(task, branchName, planResult.plan.execution_prompt)
 
-        // 完了: Gitマージ + push
-        currentPhase = 'git'
-        mergeTaskBranch(branchName, this.config.git.defaultBranch)
-        this.emit(id, { type: 'git_operation', operation: 'merge', detail: `${branchName} → ${this.config.git.defaultBranch}` })
+        // 完了: Gitマージ + push（一時コメントアウト: 不具合調査のノイズ除去）
+        // currentPhase = 'git'
+        // mergeTaskBranch(branchName, this.config.git.defaultBranch)
+        // this.emit(id, { type: 'git_operation', operation: 'merge', detail: `${branchName} → ${this.config.git.defaultBranch}` })
 
         // コンテキストキャッシュ無効化
         invalidateContextCache()
@@ -312,11 +313,11 @@ export class TaskRunner implements RunnerStatus {
             maxRetries,
             reason: `CI失敗（${failedStep?.step.name}）、リトライ ${attempt + 1}/${maxRetries}`,
           })
-          // ブランチリセットしてPhase 3からやり直し
-          if (isFullPipeline) {
-            resetTaskBranch(id, task.title, this.config.git.defaultBranch)
-            this.emit(id, { type: 'git_operation', operation: 'checkout', detail: `ブランチリセット: ${branchName}` })
-          }
+          // ブランチリセットしてPhase 3からやり直し（一時コメントアウト: 不具合調査のノイズ除去）
+          // if (isFullPipeline) {
+          //   resetTaskBranch(id, task.title, this.config.git.defaultBranch)
+          //   this.emit(id, { type: 'git_operation', operation: 'checkout', detail: `ブランチリセット: ${branchName}` })
+          // }
         }
       } catch (err) {
         if (err instanceof ProcessTimeoutError) {
@@ -343,11 +344,11 @@ export class TaskRunner implements RunnerStatus {
             maxRetries: this.config.claude.processMaxRetries,
             reason: 'プロセスタイムアウト',
           })
-          // ブランチリセットしてリトライ
-          if (isFullPipeline) {
-            resetTaskBranch(id, task.title, this.config.git.defaultBranch)
-            this.emit(id, { type: 'git_operation', operation: 'checkout', detail: `ブランチリセット: ${branchName}` })
-          }
+          // ブランチリセットしてリトライ（一時コメントアウト: 不具合調査のノイズ除去）
+          // if (isFullPipeline) {
+          //   resetTaskBranch(id, task.title, this.config.git.defaultBranch)
+          //   this.emit(id, { type: 'git_operation', operation: 'checkout', detail: `ブランチリセット: ${branchName}` })
+          // }
           continue
         }
 

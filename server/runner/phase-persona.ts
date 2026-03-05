@@ -111,16 +111,21 @@ export async function executePhasePersona(
         break
       }
       personaSelection = null
-    } catch {
-      if (attempt === 0) {
-        console.warn('ペルソナ選定のJSON抽出に失敗、リトライする')
-      }
+    } catch (err) {
+      const msg = `ペルソナ選定のJSON抽出に失敗 (attempt=${attempt}): ${(err as Error).message}`
+      console.warn(msg)
+      onEvent?.({ type: 'debug_log', message: msg, level: 'warn' })
+      const fullDump = `[DEBUG] response.result 全文 (${response.result.length}文字):\n${response.result}`
+      console.warn(fullDump)
+      onEvent?.({ type: 'debug_log', message: fullDump, level: 'warn' })
     }
   }
 
   // フォールバック
   if (!personaSelection) {
-    console.warn('ペルソナ選定のJSON抽出に2回失敗、ジェネリックペルソナで続行')
+    const msg2 = 'ペルソナ選定のJSON抽出に2回失敗、ジェネリックペルソナで続行'
+    console.warn(msg2)
+    onEvent?.({ type: 'debug_log', message: msg2, level: 'error' })
     personaSelection = getGenericPersonas()
   }
 

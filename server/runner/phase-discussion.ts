@@ -149,7 +149,8 @@ export async function executePhaseDiscussion(
         {
           prompt: userPrompt,
           systemPrompt,
-          sessionId: sessionId || undefined,
+          // セッション再利用しない（プロンプトに前ラウンドの内容を含めているため不要。
+          // 再利用するとセッションロック競合で "Session ID already in use" エラーになる）
           maxTurns: config.claude.maxTurnsDiscussion,
         },
         config,
@@ -158,23 +159,29 @@ export async function executePhaseDiscussion(
       try {
         discussionRound = extractJson<DiscussionRound>(response.result)
         if (discussionRound.statements && discussionRound.statements.length > 0) {
-          // 成功時のみセッションIDを取得（リトライ成功時も対応）
-          if (!sessionId && response.sessionId) {
+          // ログ用に最後の成功セッションIDを記録
+          if (response.sessionId) {
             sessionId = response.sessionId
           }
           break
         }
         discussionRound = null
-      } catch {
-        if (attempt === 0) {
-          console.warn(`ディスカッション ラウンド${round} のJSON抽出に失敗、リトライする`)
-        }
+      } catch (err) {
+        const msg = `ディスカッション ラウンド${round} のJSON抽出に失敗 (attempt=${attempt}): ${(err as Error).message}`
+        console.warn(msg)
+        onEvent?.({ type: 'debug_log', message: msg, level: 'warn' })
+        // デバッグ用: response.result の全文をログ出力
+        const fullDump = `[DEBUG] response.result 全文 (${response.result.length}文字):\n${response.result}`
+        console.warn(fullDump)
+        onEvent?.({ type: 'debug_log', message: fullDump, level: 'warn' })
       }
     }
 
     // JSON抽出に2回失敗したらこのラウンドをスキップして終了
     if (!discussionRound) {
-      console.warn(`ディスカッション ラウンド${round} のJSON抽出に2回失敗、ディスカッション終了`)
+      const msg2 = `ディスカッション ラウンド${round} のJSON抽出に2回失敗、ディスカッション終了`
+      console.warn(msg2)
+      onEvent?.({ type: 'debug_log', message: msg2, level: 'error' })
       break
     }
 

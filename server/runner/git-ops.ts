@@ -18,11 +18,27 @@ export function buildBranchName(taskId: number, title: string): string {
 
 // タスク用ブランチを作成する
 // defaultBranchからpullして新しいブランチをチェックアウト
+// 未コミット変更がある場合はstashで退避して復元する
 export function createTaskBranch(taskId: number, title: string, defaultBranch: string): string {
   const branchName = buildBranchName(taskId, title)
-  git(`checkout ${defaultBranch}`)
-  git('pull --no-rebase')
-  git(`checkout -b ${branchName}`)
+  const needsStash = git('status --porcelain').length > 0
+  if (needsStash) {
+    git('stash --include-untracked')
+  }
+  try {
+    git(`checkout ${defaultBranch}`)
+    git('pull --no-rebase')
+    git(`checkout -b ${branchName}`)
+  } finally {
+    if (needsStash) {
+      try {
+        git('stash pop')
+      } catch {
+        // stash popのコンフリクトは警告だけ出す（ブランチ作成は成功させる）
+        console.warn('[git-ops] stash pop でコンフリクト発生、手動解決が必要')
+      }
+    }
+  }
   return branchName
 }
 
@@ -47,9 +63,23 @@ export function deleteTaskBranch(branchName: string): void {
 export function resetTaskBranch(taskId: number, title: string, defaultBranch: string): string {
   const branchName = buildBranchName(taskId, title)
   deleteTaskBranch(branchName)
-  git(`checkout ${defaultBranch}`)
-  git('pull --no-rebase')
-  git(`checkout -b ${branchName}`)
+  const needsStash = git('status --porcelain').length > 0
+  if (needsStash) {
+    git('stash --include-untracked')
+  }
+  try {
+    git(`checkout ${defaultBranch}`)
+    git('pull --no-rebase')
+    git(`checkout -b ${branchName}`)
+  } finally {
+    if (needsStash) {
+      try {
+        git('stash pop')
+      } catch {
+        console.warn('[git-ops] stash pop でコンフリクト発生、手動解決が必要')
+      }
+    }
+  }
   return branchName
 }
 
