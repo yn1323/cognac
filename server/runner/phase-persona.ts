@@ -3,7 +3,7 @@
 
 import type Database from 'better-sqlite3'
 import type { Task, CognacConfig, TaskEvent, Persona, PersonaSelection } from '@cognac/shared'
-import { callClaude } from './claude-caller.js'
+import { callClaudePrint } from './claude-caller.js'
 import { extractJson } from './json-parser.js'
 import { getRepoStructure, getTaskHistory } from './context-cache.js'
 import * as personaQueries from '../db/queries/personas.js'
@@ -95,11 +95,10 @@ export async function executePhasePersona(
 
   // 最大2回トライ（初回 + 1回リトライ）
   for (let attempt = 0; attempt < 2; attempt++) {
-    response = await callClaude(
+    response = await callClaudePrint(
       {
         prompt: userPrompt,
         systemPrompt,
-        maxTurns: 1,
       },
       config,
     )

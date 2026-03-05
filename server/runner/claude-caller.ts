@@ -1,17 +1,17 @@
 /**
  * B-06: Claude Code CLIの呼び出しヘルパー
  *
- * claude -p --output-format stream-json でClaude Codeを起動し、
- * ストリーム出力を逐次パースして返す。
- * タイムアウト管理、tmpファイルの後始末もここで面倒を見る。
+ * 2つのモードを提供:
+ * - callClaude(): stream-json モード（Phase 3 実行用、リアルタイムストリーミング）
+ * - callClaudePrint(): --print モード（Phase 2 用、プレーンテキスト出力）
  */
 
 import { spawn, type ChildProcess } from 'node:child_process'
 import { createReadStream, writeFileSync, unlinkSync, mkdirSync } from 'node:fs'
 import { createInterface } from 'node:readline'
 import path from 'node:path'
-import type { CognacConfig } from '@cognac/shared'
-import { StreamParser, type StreamChunk } from './stream-parser.js'
+import type { CognacConfig, TaskEvent } from '@cognac/shared'
+import { StreamParser } from './stream-parser.js'
 
 // ── 共通トーンルール（全プロンプトに自動注入） ──
 const TONE_RULES = `
@@ -30,8 +30,13 @@ export interface CallClaudeOptions {
   maxTurns?: number
   allowedTools?: string[]
   dangerouslySkipPermissions?: boolean
-  onStream?: (chunk: StreamChunk) => void
+  onStream?: (event: TaskEvent) => void
 }
+
+export type CallClaudePrintOptions = Omit<
+  CallClaudeOptions,
+  'allowedTools' | 'dangerouslySkipPermissions' | 'onStream' | 'maxTurns'
+>
 
 export interface ClaudeResponse {
   result: string
@@ -51,42 +56,109 @@ export class ProcessTimeoutError extends Error {
   }
 }
 
-// ── tmpディレクトリ ──
+// ── tmpファイル管理 ──
 
 const TMP_DIR = path.resolve('.cognac', 'tmp')
 
-function ensureTmpDir(): void {
-  mkdirSync(TMP_DIR, { recursive: true })
+interface TmpFiles {
+  promptFile: string
+  systemFile: string | null
 }
 
-// ── メイン関数 ──
+function writeTmpFiles(prompt: string, systemPrompt?: string): TmpFiles {
+  mkdirSync(TMP_DIR, { recursive: true })
+  const now = Date.now()
+  const promptFile = path.join(TMP_DIR, `prompt-${now}.md`)
+  const systemFile = systemPrompt
+    ? path.join(TMP_DIR, `system-${now}.md`)
+    : null
+
+  writeFileSync(promptFile, prompt, 'utf8')
+  if (systemFile && systemPrompt) {
+    writeFileSync(systemFile, `${systemPrompt}\n\n${TONE_RULES}`, 'utf8')
+  }
+  return { promptFile, systemFile }
+}
+
+function cleanupTmpFiles({ promptFile, systemFile }: TmpFiles): void {
+  try { unlinkSync(promptFile) } catch { /* ok */ }
+  if (systemFile) {
+    try { unlinkSync(systemFile) } catch { /* ok */ }
+  }
+}
+
+// ── プロセス共通ヘルパー ──
+
+interface SpawnHelpers {
+  resetTimeout: () => void
+  clearTimer: () => void
+  getStderr: () => string
+}
+
+function setupProcess(
+  child: ChildProcess,
+  promptFile: string,
+  timeoutMs: number,
+  reject: (reason: unknown) => void,
+): SpawnHelpers {
+  // stdin にプロンプトファイルを流し込む
+  const promptStream = createReadStream(promptFile, 'utf8')
+  promptStream.pipe(child.stdin!).on('error', (err: NodeJS.ErrnoException) => {
+    // EPIPE はプロセスが先に閉じた場合に発生する。無視して OK
+    if (err.code !== 'EPIPE') reject(err)
+  })
+
+  // stdout タイムアウト監視
+  let timeoutTimer: ReturnType<typeof setTimeout> | null = null
+
+  const resetTimeout = (): void => {
+    if (timeoutTimer) clearTimeout(timeoutTimer)
+    timeoutTimer = setTimeout(() => {
+      if (child.exitCode === null) {
+        child.kill('SIGTERM')
+        setTimeout(() => {
+          if (child.exitCode === null) child.kill('SIGKILL')
+        }, 5000)
+      }
+      reject(new ProcessTimeoutError(timeoutMs))
+    }, timeoutMs)
+  }
+
+  // stderr バッファ
+  let stderrBuf = ''
+  child.stderr?.on('data', (chunk: Buffer) => {
+    stderrBuf += chunk.toString()
+  })
+
+  // エラーハンドリング
+  child.on('error', (err: Error) => {
+    if (timeoutTimer) clearTimeout(timeoutTimer)
+    reject(err)
+  })
+
+  // 初回タイマー開始
+  resetTimeout()
+
+  return {
+    resetTimeout,
+    clearTimer: () => { if (timeoutTimer) clearTimeout(timeoutTimer) },
+    getStderr: () => stderrBuf,
+  }
+}
+
+// ── callClaude: stream-json モード（Phase 3 実行用） ──
 
 export async function callClaude(
   options: CallClaudeOptions,
   config: CognacConfig,
 ): Promise<ClaudeResponse> {
-  ensureTmpDir()
-
-  const now = Date.now()
-  const promptFile = path.join(TMP_DIR, `prompt-${now}.md`)
-  const systemFile = options.systemPrompt
-    ? path.join(TMP_DIR, `system-${now}.md`)
-    : null
-
-  // tmpファイル書き出し
-  writeFileSync(promptFile, options.prompt, 'utf8')
-
-  // システムプロンプトにトーンルールを自動注入
-  if (systemFile) {
-    const fullSystem = `${options.systemPrompt}\n\n${TONE_RULES}`
-    writeFileSync(systemFile, fullSystem, 'utf8')
-  }
+  const tmpFiles = writeTmpFiles(options.prompt, options.systemPrompt)
 
   // CLI引数を組み立て
   const args = ['-p', '--output-format', 'stream-json', '--verbose']
 
-  if (systemFile) {
-    args.push('--append-system-prompt-file', systemFile)
+  if (tmpFiles.systemFile) {
+    args.push('--append-system-prompt-file', tmpFiles.systemFile)
   }
   if (options.sessionId) {
     args.push('--session-id', options.sessionId)
@@ -104,149 +176,154 @@ export async function callClaude(
   }
 
   const startTime = Date.now()
-  let child: ChildProcess | null = null
+  console.log(`[callClaude] 起動: claude ${args.join(' ')}`)
+  console.log(`[callClaude] プロンプトファイル: ${tmpFiles.promptFile}`)
+  if (tmpFiles.systemFile) console.log(`[callClaude] システムファイル: ${tmpFiles.systemFile}`)
 
   try {
-    const response = await new Promise<ClaudeResponse>((resolve, reject) => {
-      // プロセス起動
-      child = spawn('claude', args, {
+    return await new Promise<ClaudeResponse>((resolve, reject) => {
+      const child = spawn('claude', args, {
         stdio: ['pipe', 'pipe', 'pipe'],
       })
 
+      console.log(`[callClaude] プロセス起動 PID=${child.pid}`)
+
+      const { resetTimeout, clearTimer, getStderr } = setupProcess(
+        child, tmpFiles.promptFile, config.claude.stdoutTimeoutMs, reject,
+      )
+
       const parser = new StreamParser()
       let result = ''
-      let sessionId = ''
-      let usage = { inputTokens: 0, outputTokens: 0 }
-
-      // stdin にプロンプトファイルを流し込む
-      const promptStream = createReadStream(promptFile, 'utf8')
-      promptStream.pipe(child.stdin!).on('error', (err: NodeJS.ErrnoException) => {
-        // EPIPE はプロセスが先に閉じた場合に発生する。無視して OK
-        if (err.code !== 'EPIPE') {
-          reject(err)
-        }
-      })
-
-      // stdout タイムアウト監視
-      const timeoutMs = config.claude.stdoutTimeoutMs
-      let timeoutTimer: ReturnType<typeof setTimeout> | null = null
-
-      const resetTimeout = (): void => {
-        if (timeoutTimer) clearTimeout(timeoutTimer)
-        timeoutTimer = setTimeout(() => {
-          // タイムアウト発火 → SIGTERM → 5秒後に SIGKILL
-          if (child && child.exitCode === null) {
-            child.kill('SIGTERM')
-            setTimeout(() => {
-              if (child && child.exitCode === null) {
-                child.kill('SIGKILL')
-              }
-            }, 5000)
-          }
-          reject(new ProcessTimeoutError(timeoutMs))
-        }, timeoutMs)
-      }
-
-      // 初回タイマー開始
-      resetTimeout()
+      let lineCount = 0
 
       // stdout を行単位でパース
       const rl = createInterface({ input: child.stdout! })
 
       rl.on('line', (line: string) => {
-        // 行が来るたびタイマーリセット
+        lineCount++
         resetTimeout()
 
         const parsed = parser.parse(line)
         if (!parsed) return
 
-        // ストリームコールバック
-        if (options.onStream) {
-          // StreamChunk として渡すために生のJSONパース結果も渡す
-          try {
-            const raw = JSON.parse(line) as StreamChunk
-            options.onStream(raw)
-          } catch {
-            // パース失敗は無視
-          }
-        }
+        // ストリームコールバック（TaskEvent を直接渡す）
+        options.onStream?.(parsed)
 
-        // result イベントからレスポンスを抽出
+        // claude_output テキストをフォールバック用に蓄積
         if (parsed.type === 'claude_output') {
           result += parsed.content
         }
-
-        // StreamParser が内部で保持した result 情報を使う
-        const parserResult = parser.getResult()
-        if (parserResult) {
-          // ResultChunk.result が空文字列でも上書きしないように明示チェック
-          if (parserResult.result !== '') {
-            result = parserResult.result
-          }
-          sessionId = parserResult.sessionId
-          usage = parserResult.usage
-        }
-      })
-
-      // stderr はログに出す
-      let stderrBuf = ''
-      child.stderr?.on('data', (chunk: Buffer) => {
-        stderrBuf += chunk.toString()
       })
 
       // プロセス終了
       child.on('close', (code: number | null) => {
-        if (timeoutTimer) clearTimeout(timeoutTimer)
+        clearTimer()
 
         // パーサーから最終結果を取得
         const finalResult = parser.getResult()
-        if (finalResult) {
-          if (finalResult.result !== '') {
-            result = finalResult.result
-          }
-          sessionId = finalResult.sessionId
-          usage = finalResult.usage
+        const sessionId = finalResult?.sessionId ?? ''
+        const usage = finalResult?.usage ?? { inputTokens: 0, outputTokens: 0 }
+        if (finalResult?.result) {
+          result = finalResult.result
         }
 
         const durationMs = Date.now() - startTime
+        const stderr = getStderr()
+
+        console.log(`[callClaude] プロセス終了 code=${code} lines=${lineCount} result=${result.length}文字 duration=${durationMs}ms`)
+        if (stderr) console.log(`[callClaude] stderr:\n${stderr}`)
 
         if (code !== 0 && !result) {
-          reject(
-            new Error(
-              `Claude プロセスが exit code ${code} で終了した: ${stderrBuf.slice(0, 500)}`,
-            ),
-          )
+          reject(new Error(
+            `Claude プロセスが exit code ${code} で終了した: ${stderr.slice(0, 500)}`,
+          ))
+          return
+        }
+
+        resolve({ result, sessionId, usage, durationMs })
+      })
+    })
+  } finally {
+    cleanupTmpFiles(tmpFiles)
+  }
+}
+
+// ── callClaudePrint: --print モード（Phase 2 用） ──
+
+/**
+ * claude --print でプレーンテキスト出力を取得する。
+ * Phase 2（ペルソナ選定・ディスカッション・プラン策定）向け。
+ * stream-json を使わないのでJSONパースエラーが発生しない。
+ */
+export async function callClaudePrint(
+  options: CallClaudePrintOptions,
+  config: CognacConfig,
+): Promise<ClaudeResponse> {
+  const tmpFiles = writeTmpFiles(options.prompt, options.systemPrompt)
+
+  const args = ['--print']
+
+  if (tmpFiles.systemFile) {
+    args.push('--append-system-prompt-file', tmpFiles.systemFile)
+  }
+  if (options.sessionId) {
+    args.push('--session-id', options.sessionId)
+  }
+  // --print モードでは --max-turns を渡さない
+  // Claude が必要なだけツール（Read, Grep等）を使って最終回答を返す
+
+  const startTime = Date.now()
+  console.log(`[callClaudePrint] 起動: claude ${args.join(' ')}`)
+  console.log(`[callClaudePrint] プロンプトファイル: ${tmpFiles.promptFile}`)
+  if (tmpFiles.systemFile) console.log(`[callClaudePrint] システムファイル: ${tmpFiles.systemFile}`)
+
+  try {
+    return await new Promise<ClaudeResponse>((resolve, reject) => {
+      const child = spawn('claude', args, {
+        stdio: ['pipe', 'pipe', 'pipe'],
+      })
+
+      console.log(`[callClaudePrint] プロセス起動 PID=${child.pid}`)
+
+      const { resetTimeout, clearTimer, getStderr } = setupProcess(
+        child, tmpFiles.promptFile, config.claude.stdoutTimeoutMs, reject,
+      )
+
+      // stdout をバッファとして蓄積（行単位JSONパース不要）
+      const chunks: Buffer[] = []
+      let totalBytes = 0
+      child.stdout?.on('data', (chunk: Buffer) => {
+        resetTimeout()
+        chunks.push(chunk)
+        totalBytes += chunk.length
+      })
+
+      child.on('close', (code: number | null) => {
+        clearTimer()
+        const stdout = Buffer.concat(chunks).toString('utf8')
+        const durationMs = Date.now() - startTime
+        const stderr = getStderr()
+
+        console.log(`[callClaudePrint] プロセス終了 code=${code} stdout=${totalBytes}bytes duration=${durationMs}ms`)
+        if (stderr) console.log(`[callClaudePrint] stderr:\n${stderr}`)
+        console.log(`[callClaudePrint] stdout全文:\n${stdout}`)
+
+        if (code !== 0 && !stdout.trim()) {
+          reject(new Error(
+            `Claude プロセスが exit code ${code} で終了した: ${stderr.slice(0, 500)}`,
+          ))
           return
         }
 
         resolve({
-          result,
-          sessionId,
-          usage,
+          result: stdout,
+          sessionId: '',
+          usage: { inputTokens: 0, outputTokens: 0 },
           durationMs,
         })
       })
-
-      child.on('error', (err: Error) => {
-        if (timeoutTimer) clearTimeout(timeoutTimer)
-        reject(err)
-      })
     })
-
-    return response
   } finally {
-    // tmpファイルの後始末
-    try {
-      unlinkSync(promptFile)
-    } catch {
-      // 消せなくても問題なし
-    }
-    if (systemFile) {
-      try {
-        unlinkSync(systemFile)
-      } catch {
-        // 消せなくても問題なし
-      }
-    }
+    cleanupTmpFiles(tmpFiles)
   }
 }

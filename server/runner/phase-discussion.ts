@@ -10,7 +10,7 @@ import type {
   Discussion,
   DiscussionRound,
 } from '@cognac/shared'
-import { callClaude } from './claude-caller.js'
+import { callClaudePrint } from './claude-caller.js'
 import { extractJson } from './json-parser.js'
 import { getRepoStructure } from './context-cache.js'
 import * as discussionQueries from '../db/queries/discussions.js'
@@ -131,6 +131,9 @@ export async function executePhaseDiscussion(
   let totalTokenOutput = 0
   let totalDurationMs = 0
 
+  // ペルソナ名の高速ルックアップ用Map（ループ外で1回だけ構築）
+  const personaNameMap = new Map(personas.map((p) => [p.persona_id, p.name]))
+
   for (let round = 1; round <= maxRounds; round++) {
     const isLastRound = round === maxRounds
 
@@ -145,13 +148,10 @@ export async function executePhaseDiscussion(
     let response = { result: '', sessionId: '', usage: { inputTokens: 0, outputTokens: 0 }, durationMs: 0 }
 
     for (let attempt = 0; attempt < 2; attempt++) {
-      response = await callClaude(
+      response = await callClaudePrint(
         {
           prompt: userPrompt,
           systemPrompt,
-          // セッション再利用しない（プロンプトに前ラウンドの内容を含めているため不要。
-          // 再利用するとセッションロック競合で "Session ID already in use" エラーになる）
-          maxTurns: config.claude.maxTurnsDiscussion,
         },
         config,
       )
@@ -194,9 +194,6 @@ export async function executePhaseDiscussion(
     if (isLastRound) {
       discussionRound.shouldContinue = false
     }
-
-    // ペルソナ名の高速ルックアップ用Map
-    const personaNameMap = new Map(personas.map((p) => [p.persona_id, p.name]))
 
     // DB保存
     const statements = discussionRound.statements.map((s) => ({

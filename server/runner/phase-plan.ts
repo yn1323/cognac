@@ -11,7 +11,7 @@ import type {
   Plan,
   PlanResult,
 } from '@cognac/shared'
-import { callClaude } from './claude-caller.js'
+import { callClaudePrint } from './claude-caller.js'
 import { extractJson } from './json-parser.js'
 import { getRepoStructure } from './context-cache.js'
 import * as planQueries from '../db/queries/plans.js'
@@ -142,11 +142,10 @@ export async function executePhasePlan(
 
   // 最大2回トライ（初回 + 1回リトライ）
   for (let attempt = 0; attempt < 2; attempt++) {
-    response = await callClaude(
+    response = await callClaudePrint(
       {
         prompt: userPrompt,
         systemPrompt,
-        maxTurns: 1,
       },
       config,
     )

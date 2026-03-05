@@ -25,8 +25,7 @@ import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTask, useDeleteTask, useCancelTask, useRetryTask } from '@/hooks/use-tasks'
-import { formatRelativeTime } from '@/lib/format'
-import { ACTIVE_STATUSES, DELETABLE_STATUSES, RETRYABLE_STATUSES, STATUS_CONFIG, STATUS_PHASE_MAP } from '@/lib/status-config'
+import { ACTIVE_STATUSES, DELETABLE_STATUSES, RETRYABLE_STATUSES, STATUS_CONFIG } from '@/lib/status-config'
 import { useTaskSSE } from '@/hooks/use-sse'
 import { NAV_MAP } from '@/lib/constants'
 import { PCOverviewTab, SPOverviewTab } from '@/pages/task-detail/overview-tab'
@@ -148,12 +147,6 @@ function PCTaskDetail({
                 <Badge variant={task.status}>
                   {STATUS_CONFIG[task.status].label}
                 </Badge>
-                <span className="text-[13px] text-muted-foreground">
-                  {STATUS_PHASE_MAP[task.status]}
-                </span>
-                <span className="text-[13px] text-muted-foreground">
-                  作成 {formatRelativeTime(task.created_at)}
-                </span>
               </div>
             </div>
 
