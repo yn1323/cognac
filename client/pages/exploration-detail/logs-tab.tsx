@@ -4,37 +4,6 @@
 
 import type { ExplorationSession, ExplorationEvent } from '@cognac/shared'
 
-// --- モックイベントデータ ---
-
-const MOCK_EVENTS: ExplorationEvent[] = [
-  { type: 'phase_start', phase: 'persona', timestamp: '2026-03-07T14:01:00Z' },
-  { type: 'persona_selected', personas: [
-    { id: 1, exploration_session_id: 2, persona_id: 'perf', name: 'Performance Engineer', focus: 'パフォーマンス最適化', tone: 'analytical', created_at: '2026-03-07T14:01:00Z' },
-    { id: 2, exploration_session_id: 2, persona_id: 'fe', name: 'Frontend Engineer', focus: 'フロントエンド設計', tone: 'practical', created_at: '2026-03-07T14:01:00Z' },
-    { id: 3, exploration_session_id: 2, persona_id: 'qa', name: 'QA Engineer', focus: '品質保証・テスト', tone: 'detail-oriented', created_at: '2026-03-07T14:01:00Z' },
-  ] },
-  { type: 'phase_end', phase: 'persona', timestamp: '2026-03-07T14:02:00Z', durationMs: 60000 },
-  { type: 'phase_start', phase: 'discussion', timestamp: '2026-03-07T14:02:00Z' },
-  { type: 'discussion_round_start', round: 1 },
-  { type: 'discussion_statement', round: 1, personaId: 'perf', personaName: 'Performance Engineer', content: 'ダッシュボードの初期表示について調査しました。' },
-  { type: 'discussion_statement', round: 1, personaId: 'fe', personaName: 'Frontend Engineer', content: 'フロント側の問題を補足します。' },
-  { type: 'discussion_statement', round: 1, personaId: 'qa', personaName: 'QA Engineer', content: 'テスト観点から、Lighthouseスコアのベースライン化を推奨します。' },
-  { type: 'discussion_round_end', round: 1, shouldContinue: false, reason: '合意形成' },
-  { type: 'phase_end', phase: 'discussion', timestamp: '2026-03-07T14:10:00Z', durationMs: 480000 },
-  { type: 'phase_start', phase: 'explore', timestamp: '2026-03-07T14:10:00Z' },
-  { type: 'agent_output', content: 'ダッシュボードのパフォーマンスを分析中...' },
-  { type: 'tool_invoked', toolName: 'Bash' },
-  { type: 'command_executed', command: 'npx playwright test', output: 'All tests passed', exitCode: 0 },
-  { type: 'playwright_log', message: 'Navigating to /dashboard' },
-  { type: 'playwright_log', message: 'Screenshot captured: dashboard-initial-load.png' },
-  { type: 'artifact_created', kind: 'finding', title: 'DataTable LCP 1.6s' },
-  { type: 'phase_end', phase: 'explore', timestamp: '2026-03-07T14:30:00Z', durationMs: 1200000 },
-  { type: 'phase_start', phase: 'report', timestamp: '2026-03-07T14:30:00Z' },
-  { type: 'report_created', issueCount: 3 },
-  { type: 'phase_end', phase: 'report', timestamp: '2026-03-07T14:35:00Z', durationMs: 300000 },
-  { type: 'completed', summary: '探索完了: 3件の課題を検出', totalDurationMs: 2040000 },
-]
-
 // --- イベントフォーマッター ---
 
 interface LogLine {
@@ -108,24 +77,31 @@ function ExplorationLogView({ events }: { events: ExplorationEvent[] }) {
   )
 }
 
+// --- 共通props ---
+
+interface LogsTabProps {
+  exploration: ExplorationSession
+  events: ExplorationEvent[]
+  connected: boolean
+}
+
 // --- PC版 ---
 
-export function PCLogsTab({ exploration }: { exploration: ExplorationSession }) {
-  // TODO: サーバー接続時にSSE + DB履歴ログに差し替え
+export function PCLogsTab({ exploration, events, connected }: LogsTabProps) {
   const isActive = exploration.status === 'analyzing'
 
   return (
     <div className="flex h-full flex-col gap-4">
       {isActive && (
         <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-green-500" title="リアルタイム接続中" />
+          <div className={`h-2 w-2 rounded-full ${connected ? 'bg-green-500' : 'bg-muted-foreground'}`} title={connected ? 'リアルタイム接続中' : '接続待ち'} />
         </div>
       )}
 
       <div className="min-h-0 flex-1 overflow-hidden rounded-lg border bg-card">
         <div className="flex h-full flex-col overflow-y-auto px-4 py-3">
-          {MOCK_EVENTS.length > 0 ? (
-            <ExplorationLogView events={MOCK_EVENTS} />
+          {events.length > 0 ? (
+            <ExplorationLogView events={events} />
           ) : (
             <div className="py-8 text-center text-sm text-muted-foreground">
               {isActive ? 'イベントを待ってるよ...' : '実行ログがまだないよ'}
@@ -139,21 +115,23 @@ export function PCLogsTab({ exploration }: { exploration: ExplorationSession }) 
 
 // --- SP版 ---
 
-export function SPLogsTab({ exploration }: { exploration: ExplorationSession }) {
+export function SPLogsTab({ exploration, events, connected }: LogsTabProps) {
   const isActive = exploration.status === 'analyzing'
 
   return (
     <div className="flex flex-1 flex-col">
       {isActive && (
         <div className="flex items-center gap-2 pb-2">
-          <div className="h-2 w-2 rounded-full bg-green-500" />
-          <span className="text-xs text-muted-foreground">リアルタイム接続中</span>
+          <div className={`h-2 w-2 rounded-full ${connected ? 'bg-green-500' : 'bg-muted-foreground'}`} />
+          <span className="text-xs text-muted-foreground">
+            {connected ? 'リアルタイム接続中' : '接続待ち'}
+          </span>
         </div>
       )}
 
       <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border bg-card px-4 py-3">
-        {MOCK_EVENTS.length > 0 ? (
-          <ExplorationLogView events={MOCK_EVENTS} />
+        {events.length > 0 ? (
+          <ExplorationLogView events={events} />
         ) : (
           <div className="py-8 text-center text-sm text-muted-foreground">
             {isActive ? 'イベントを待ってるよ...' : '実行ログがまだないよ'}

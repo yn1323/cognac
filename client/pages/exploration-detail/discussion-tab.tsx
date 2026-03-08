@@ -7,20 +7,7 @@ import { User, CheckCircle2 } from 'lucide-react'
 import type { ExplorationSession, ExplorationPersona, ExplorationDiscussion } from '@cognac/shared'
 import { Card } from '@/components/ui/card'
 import { getPersonaColor } from '@/lib/persona-colors'
-
-// --- モックデータ ---
-
-const MOCK_PERSONAS: ExplorationPersona[] = [
-  { id: 1, exploration_session_id: 2, persona_id: 'perf', name: 'Performance Engineer', focus: 'パフォーマンス最適化', tone: 'analytical', created_at: '2026-03-07T14:01:00Z' },
-  { id: 2, exploration_session_id: 2, persona_id: 'fe', name: 'Frontend Engineer', focus: 'フロントエンド設計', tone: 'practical', created_at: '2026-03-07T14:01:00Z' },
-  { id: 3, exploration_session_id: 2, persona_id: 'qa', name: 'QA Engineer', focus: '品質保証・テスト', tone: 'detail-oriented', created_at: '2026-03-07T14:01:00Z' },
-]
-
-const MOCK_DISCUSSIONS: ExplorationDiscussion[] = [
-  { id: 1, exploration_session_id: 2, round: 1, persona_id: 'perf', persona_name: 'Performance Engineer', content: 'ダッシュボードの初期表示について調査しました。主なボトルネックはAPIレスポンスの遅さです。SQLiteのクエリ最適化を検討すべきです。', key_points: null, should_continue: true, continue_reason: '追加調査が必要', created_at: '2026-03-07T14:05:00Z' },
-  { id: 2, exploration_session_id: 2, round: 1, persona_id: 'fe', persona_name: 'Frontend Engineer', content: 'フロント側の問題を補足します。仮想スクロールの導入で描画コストを削減できます。DataTableコンポーネントが最大のボトルネックです。', key_points: null, should_continue: true, continue_reason: '具体案の検討', created_at: '2026-03-07T14:06:00Z' },
-  { id: 3, exploration_session_id: 2, round: 1, persona_id: 'qa', persona_name: 'QA Engineer', content: 'テスト観点から、Lighthouseスコアのベースライン化を推奨します。現在のスコアを記録し、改善後に比較できるようにしましょう。', key_points: null, should_continue: false, continue_reason: null, created_at: '2026-03-07T14:07:00Z' },
-]
+import { useExplorationPersonas, useExplorationDiscussions } from '@/hooks/use-explorations'
 
 // --- ユーティリティ ---
 
@@ -34,10 +21,9 @@ function groupByRound(discussions: ExplorationDiscussion[]): Map<number, Explora
   return grouped
 }
 
-function useDiscussionData(_explorationId: number) {
-  // TODO: サーバー接続時に useExplorationDiscussions() / useExplorationPersonas() に差し替え
-  const personaList = MOCK_PERSONAS
-  const discussionList = MOCK_DISCUSSIONS
+function useDiscussionData(explorationId: number) {
+  const { data: personaList = [] } = useExplorationPersonas(explorationId)
+  const { data: discussionList = [] } = useExplorationDiscussions(explorationId)
 
   const colorMap = useMemo(() => {
     const map = new Map<string, number>()

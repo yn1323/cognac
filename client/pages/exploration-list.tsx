@@ -27,86 +27,7 @@ import { formatRelativeTime } from '@/lib/format'
 import { EXPLORATION_STATUS_CONFIG } from '@/lib/exploration-status-config'
 import { NAV_MAP } from '@/lib/constants'
 import { cn } from '@/lib/utils'
-
-// --- モックデータ ---
-
-const MOCK_EXPLORATIONS: ExplorationListItem[] = [
-  {
-    id: 1,
-    title: 'ログインフォームの使いやすさを検証',
-    request: 'ログインフォームのUXを検証し、改善ポイントをまとめてほしい。特にモバイル端末での入力しやすさを重視。',
-    status: 'analyzing',
-    final_report_markdown: null,
-    issue_count: 0,
-    paused_reason: null,
-    created_at: '2026-03-08T10:00:00Z',
-    updated_at: '2026-03-08T10:05:00Z',
-    started_at: '2026-03-08T10:01:00Z',
-    completed_at: null,
-    hasFinalReport: false,
-    latestTaskifyStatus: null,
-  },
-  {
-    id: 2,
-    title: 'ダッシュボードのパフォーマンス分析',
-    request: '初期表示が遅い原因を調査し、改善方針をまとめる。',
-    status: 'completed',
-    final_report_markdown: '# レポート\n...',
-    issue_count: 3,
-    paused_reason: null,
-    created_at: '2026-03-07T14:00:00Z',
-    updated_at: '2026-03-07T15:30:00Z',
-    started_at: '2026-03-07T14:01:00Z',
-    completed_at: '2026-03-07T15:30:00Z',
-    hasFinalReport: true,
-    latestTaskifyStatus: 'completed',
-  },
-  {
-    id: 3,
-    title: 'APIエラーハンドリングの現状調査',
-    request: '現在のエラーハンドリングの統一性を確認し、改善が必要な箇所を特定する。',
-    status: 'completed',
-    final_report_markdown: '# レポート\n...',
-    issue_count: 5,
-    paused_reason: null,
-    created_at: '2026-03-06T09:00:00Z',
-    updated_at: '2026-03-06T10:45:00Z',
-    started_at: '2026-03-06T09:02:00Z',
-    completed_at: '2026-03-06T10:45:00Z',
-    hasFinalReport: true,
-    latestTaskifyStatus: null,
-  },
-  {
-    id: 4,
-    title: 'モバイルレスポンシブの確認',
-    request: '各画面のモバイル表示を確認し、崩れている箇所をリストアップする。',
-    status: 'pending',
-    final_report_markdown: null,
-    issue_count: 0,
-    paused_reason: null,
-    created_at: '2026-03-08T11:00:00Z',
-    updated_at: '2026-03-08T11:00:00Z',
-    started_at: null,
-    completed_at: null,
-    hasFinalReport: false,
-    latestTaskifyStatus: null,
-  },
-  {
-    id: 5,
-    title: 'セキュリティヘッダーの設定確認',
-    request: 'レスポンスヘッダーのセキュリティ設定を確認し、不足している項目を洗い出す。',
-    status: 'failed',
-    final_report_markdown: null,
-    issue_count: 0,
-    paused_reason: null,
-    created_at: '2026-03-05T16:00:00Z',
-    updated_at: '2026-03-05T16:20:00Z',
-    started_at: '2026-03-05T16:01:00Z',
-    completed_at: null,
-    hasFinalReport: false,
-    latestTaskifyStatus: null,
-  },
-]
+import { useExplorations } from '@/hooks/use-explorations'
 
 // --- フィルター定義 ---
 
@@ -439,8 +360,7 @@ export function ExplorationListPage() {
   const isModalOpen = searchParams.get('new-exploration') === 'true'
   const handleNew = useCallback(() => navigate('?new-exploration=true'), [navigate])
 
-  // TODO: サーバー接続時に useExplorations() に差し替え
-  const explorations = MOCK_EXPLORATIONS
+  const { data: explorations = [] } = useExplorations()
 
   return (
     <>

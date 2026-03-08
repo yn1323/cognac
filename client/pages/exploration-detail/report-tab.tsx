@@ -2,7 +2,7 @@
 // 5ブロック固定表示 + 証跡画像 + AIでタスク化ボタン
 // Pencilデザイン準拠
 
-import { useState } from 'react'
+import { useMemo } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import {
   Lightbulb,
@@ -13,26 +13,60 @@ import {
   ImageIcon,
   Sparkles,
 } from 'lucide-react'
-import type { ExplorationSession } from '@cognac/shared'
+import type { ExplorationSession, ExplorationArtifact } from '@cognac/shared'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/toast'
+import { useExplorationReport, useTaskifyExploration } from '@/hooks/use-explorations'
 
-// --- モックレポートデータ ---
+// --- レポートmarkdownパーサー ---
 
-const MOCK_REPORT = {
-  conclusion: 'ダッシュボードの初期読み込み性能は良好ですが、DataTableのLCPが1.6秒と基準超過。仮想化リストとメモ化の導入で改善が見込まれます。',
-  investigation: '• PlaywrightでTTI/LCP/FIDを計測\n• DataTableが最大ボトルネック（430ms）\n• 不要な再レンダリングが3回発生\n• APIレスポンスは平均180msで良好',
-  discussionSummary: '3名のペルソナがDataTableの最適化から着手することで合意。仮想化リストとメモ化を推奨。',
-  issues: '• 仮想化のUXトレードオフ\n• メモ化過度のメモリリスク\n• E2Eテスト影響が未評価',
-  nextActions: '1. 仮想化リスト導入\n2. useEffect依存配列修正\n3. 回帰テスト追加\n4. 再計測で効果検証',
+const REPORT_HEADINGS = ['結論', '調査内容', 'ディスカッション要約', '課題', '次アクション'] as const
+
+interface ParsedReport {
+  conclusion: string
+  investigation: string
+  discussionSummary: string
+  issues: string
+  nextActions: string
 }
 
-const MOCK_EVIDENCE_IMAGES = [
-  { id: 1, name: 'dashboard-initial-load.png' },
-  { id: 2, name: 'datatable-render-profile.png' },
-  { id: 3, name: 'lighthouse-score.png' },
-]
+function parseReportMarkdown(markdown: string): ParsedReport {
+  const result: ParsedReport = {
+    conclusion: '',
+    investigation: '',
+    discussionSummary: '',
+    issues: '',
+    nextActions: '',
+  }
+
+  const keys: (keyof ParsedReport)[] = [
+    'conclusion',
+    'investigation',
+    'discussionSummary',
+    'issues',
+    'nextActions',
+  ]
+
+  for (let i = 0; i < REPORT_HEADINGS.length; i++) {
+    const heading = REPORT_HEADINGS[i]
+    const pattern = new RegExp(`^##\\s+${heading}\\s*$`, 'm')
+    const match = markdown.match(pattern)
+    if (!match || match.index === undefined) continue
+
+    const start = match.index + match[0].length
+    // 次の ## heading までの範囲を取得
+    const rest = markdown.slice(start)
+    const nextHeading = rest.match(/^##\s+/m)
+    const content = nextHeading && nextHeading.index !== undefined
+      ? rest.slice(0, nextHeading.index)
+      : rest
+
+    result[keys[i]] = content.trim()
+  }
+
+  return result
+}
 
 // --- レポートブロックコンポーネント ---
 
@@ -51,7 +85,6 @@ function ReportBlock({
 }) {
   const padding = size === 'sm' ? 'p-4' : 'p-5'
   const titleSize = size === 'sm' ? 'text-[13px]' : 'text-sm'
-  const textSize = size === 'sm' ? 'text-[13px]' : 'text-[13px]'
 
   return (
     <Card className={`${padding} flex flex-col gap-3`}>
@@ -60,7 +93,7 @@ function ReportBlock({
         <span className={`${titleSize} font-semibold text-foreground`}>{title}</span>
       </div>
       <div className="h-px bg-border" />
-      <p className={`whitespace-pre-wrap ${textSize} leading-[1.5] text-foreground`}>
+      <p className="whitespace-pre-wrap text-[13px] leading-normal text-foreground">
         {content}
       </p>
     </Card>
@@ -69,7 +102,15 @@ function ReportBlock({
 
 // --- 証跡画像セクション ---
 
-function EvidenceSection({ size = 'md' }: { size?: 'md' | 'sm' }) {
+function EvidenceSection({
+  images,
+  size = 'md',
+}: {
+  images: ExplorationArtifact[]
+  size?: 'md' | 'sm'
+}) {
+  if (images.length === 0) return null
+
   const thumbW = size === 'sm' ? 'w-[100px]' : 'w-[120px]'
   const thumbH = size === 'sm' ? 'h-[70px]' : 'h-[80px]'
 
@@ -84,15 +125,24 @@ function EvidenceSection({ size = 'md' }: { size?: 'md' | 'sm' }) {
         </div>
         <div className="h-px bg-border" />
         <div className="flex gap-2 overflow-x-auto">
-          {MOCK_EVIDENCE_IMAGES.map((img) => (
-            <div
-              key={img.id}
-              className={`${thumbW} ${thumbH} flex shrink-0 flex-col items-center justify-center gap-1 rounded-md bg-muted`}
-            >
-              <ImageIcon className="h-5 w-5 text-muted-foreground" />
-              <span className="max-w-full truncate px-1 text-[10px] text-muted-foreground">
-                {img.name}
-              </span>
+          {images.map((img) => (
+            <div key={img.id}>
+              {img.file_path ? (
+                <img
+                  src={`/${img.file_path}`}
+                  alt={img.title ?? '証跡画像'}
+                  className={`${thumbW} ${thumbH} shrink-0 rounded-md border border-border object-cover`}
+                />
+              ) : (
+                <div
+                  className={`${thumbW} ${thumbH} flex shrink-0 flex-col items-center justify-center gap-1 rounded-md bg-muted`}
+                >
+                  <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                  <span className="max-w-full truncate px-1 text-[10px] text-muted-foreground">
+                    {img.title ?? '画像'}
+                  </span>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -101,22 +151,39 @@ function EvidenceSection({ size = 'md' }: { size?: 'md' | 'sm' }) {
   )
 }
 
+// --- レポートブロック群 ---
+
+function ReportBlocks({ report, size = 'md' }: { report: ParsedReport; size?: 'md' | 'sm' }) {
+  return (
+    <>
+      <ReportBlock icon={Lightbulb} iconColor="text-blue-600" title="結論" content={report.conclusion} size={size} />
+      <ReportBlock icon={Search} iconColor="text-blue-600" title="調査内容" content={report.investigation} size={size} />
+      <ReportBlock icon={MessageSquare} iconColor="text-blue-600" title="ディスカッション要約" content={report.discussionSummary} size={size} />
+      <ReportBlock icon={TriangleAlert} iconColor="text-amber-500" title="課題" content={report.issues} size={size} />
+      <ReportBlock icon={CircleArrowRight} iconColor="text-green-600" title="次アクション" content={report.nextActions} size={size} />
+    </>
+  )
+}
+
 // --- PC版 ---
 
 export function PCReportTab({ exploration }: { exploration: ExplorationSession }) {
   const { toast } = useToast()
-  const [isTaskifying, setIsTaskifying] = useState(false)
+  const { data: reportData } = useExplorationReport(exploration.id, exploration.status === 'completed')
+  const taskifyMutation = useTaskifyExploration()
 
   const hasReport = exploration.status === 'completed' && exploration.final_report_markdown
 
+  const parsed = useMemo(
+    () => reportData?.markdown ? parseReportMarkdown(reportData.markdown) : null,
+    [reportData?.markdown],
+  )
+
   const handleTaskify = () => {
-    // TODO: サーバー接続時にAPI呼び出しに差し替え
-    setIsTaskifying(true)
-    console.log('AIでタスク化:', exploration.id)
-    setTimeout(() => {
-      toast('タスク化を開始しました', 'success')
-      setIsTaskifying(false)
-    }, 1000)
+    taskifyMutation.mutate(exploration.id, {
+      onSuccess: () => toast('タスク化を開始しました', 'success'),
+      onError: (err) => toast(err.message, 'error'),
+    })
   }
 
   if (!hasReport) {
@@ -135,20 +202,24 @@ export function PCReportTab({ exploration }: { exploration: ExplorationSession }
           variant="primary"
           size="sm"
           onClick={handleTaskify}
-          disabled={isTaskifying}
+          disabled={taskifyMutation.isPending}
         >
           <Sparkles className="mr-2 h-3.5 w-3.5" />
           AIでタスク化
         </Button>
       </div>
 
-      <ReportBlock icon={Lightbulb} iconColor="text-blue-600" title="結論" content={MOCK_REPORT.conclusion} />
-      <ReportBlock icon={Search} iconColor="text-blue-600" title="調査内容" content={MOCK_REPORT.investigation} />
-      <ReportBlock icon={MessageSquare} iconColor="text-blue-600" title="ディスカッション要約" content={MOCK_REPORT.discussionSummary} />
-      <ReportBlock icon={TriangleAlert} iconColor="text-amber-500" title="課題" content={MOCK_REPORT.issues} />
-      <ReportBlock icon={CircleArrowRight} iconColor="text-green-600" title="次アクション" content={MOCK_REPORT.nextActions} />
+      {parsed ? (
+        <ReportBlocks report={parsed} />
+      ) : (
+        <Card className="p-5">
+          <p className="whitespace-pre-wrap text-[13px] leading-normal text-foreground">
+            {reportData?.markdown ?? exploration.final_report_markdown}
+          </p>
+        </Card>
+      )}
 
-      <EvidenceSection />
+      <EvidenceSection images={reportData?.evidenceImages ?? []} />
     </div>
   )
 }
@@ -157,17 +228,21 @@ export function PCReportTab({ exploration }: { exploration: ExplorationSession }
 
 export function SPReportTab({ exploration }: { exploration: ExplorationSession }) {
   const { toast } = useToast()
-  const [isTaskifying, setIsTaskifying] = useState(false)
+  const { data: reportData } = useExplorationReport(exploration.id, exploration.status === 'completed')
+  const taskifyMutation = useTaskifyExploration()
 
   const hasReport = exploration.status === 'completed' && exploration.final_report_markdown
 
+  const parsed = useMemo(
+    () => reportData?.markdown ? parseReportMarkdown(reportData.markdown) : null,
+    [reportData?.markdown],
+  )
+
   const handleTaskify = () => {
-    setIsTaskifying(true)
-    console.log('AIでタスク化:', exploration.id)
-    setTimeout(() => {
-      toast('タスク化を開始しました', 'success')
-      setIsTaskifying(false)
-    }, 1000)
+    taskifyMutation.mutate(exploration.id, {
+      onSuccess: () => toast('タスク化を開始しました', 'success'),
+      onError: (err) => toast(err.message, 'error'),
+    })
   }
 
   if (!hasReport) {
@@ -185,20 +260,24 @@ export function SPReportTab({ exploration }: { exploration: ExplorationSession }
           size="sm"
           className="bg-blue-600 text-white hover:bg-blue-700"
           onClick={handleTaskify}
-          disabled={isTaskifying}
+          disabled={taskifyMutation.isPending}
         >
           <Sparkles className="mr-1 h-3 w-3" />
           AIでタスク化
         </Button>
       </div>
 
-      <ReportBlock icon={Lightbulb} iconColor="text-blue-600" title="結論" content={MOCK_REPORT.conclusion} size="sm" />
-      <ReportBlock icon={Search} iconColor="text-blue-600" title="調査内容" content={MOCK_REPORT.investigation} size="sm" />
-      <ReportBlock icon={MessageSquare} iconColor="text-blue-600" title="ディスカッション要約" content={MOCK_REPORT.discussionSummary} size="sm" />
-      <ReportBlock icon={TriangleAlert} iconColor="text-amber-500" title="課題" content={MOCK_REPORT.issues} size="sm" />
-      <ReportBlock icon={CircleArrowRight} iconColor="text-green-600" title="次アクション" content={MOCK_REPORT.nextActions} size="sm" />
+      {parsed ? (
+        <ReportBlocks report={parsed} size="sm" />
+      ) : (
+        <Card className="p-4">
+          <p className="whitespace-pre-wrap text-[13px] leading-normal text-foreground">
+            {reportData?.markdown ?? exploration.final_report_markdown}
+          </p>
+        </Card>
+      )}
 
-      <EvidenceSection size="sm" />
+      <EvidenceSection images={reportData?.evidenceImages ?? []} size="sm" />
     </div>
   )
 }

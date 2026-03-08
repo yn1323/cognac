@@ -13,6 +13,7 @@ import { ImagePreviewList } from '@/components/ui/image-preview-list'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/toast'
 import { validateTitle } from '@/lib/validation'
+import { useCreateExploration } from '@/hooks/use-explorations'
 
 interface FormProps {
   title: string
@@ -220,13 +221,13 @@ export function ExplorationModal() {
   const isOpen = searchParams.get('new-exploration') === 'true'
 
   const { toast } = useToast()
+  const createMutation = useCreateExploration()
 
   const [title, setTitle] = useState('')
   const [titleError, setTitleError] = useState('')
   const [description, setDescription] = useState('')
   const [descriptionError, setDescriptionError] = useState('')
   const [files, setFiles] = useState<File[]>([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleClose = useCallback(() => {
     navigate('/explorations', { replace: true })
@@ -239,7 +240,6 @@ export function ExplorationModal() {
       setDescription('')
       setDescriptionError('')
       setFiles([])
-      setIsSubmitting(false)
     }
   }, [isOpen])
 
@@ -277,12 +277,18 @@ export function ExplorationModal() {
       setDescriptionError('説明を入力してください')
       return
     }
-    setIsSubmitting(true)
-
-    // TODO: サーバー接続時に実際のAPI呼び出しに差し替え
-    console.log('探索作成:', { title, description, files })
-    toast('探索を作成しました', 'success')
-    handleClose()
+    createMutation.mutate(
+      { data: { title, request: description.trim() }, files },
+      {
+        onSuccess: () => {
+          toast('探索を作成しました', 'success')
+          handleClose()
+        },
+        onError: (err) => {
+          toast(err.message, 'error')
+        },
+      },
+    )
   }
 
   const formProps: FormProps = {
@@ -297,7 +303,7 @@ export function ExplorationModal() {
     onFileRemove,
     handleClose,
     handleSubmit,
-    isSubmitting,
+    isSubmitting: createMutation.isPending,
   }
 
   return (

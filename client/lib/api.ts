@@ -7,6 +7,9 @@ import type {
   GitCommitResponse, GitMergeResponse, GitPushResponse, GitExplainResponse,
   ConsoleCommandListItem, ConsoleCommand, ConsoleRun, ConsoleLogResponse,
   CreateConsoleCommandInput, UpdateConsoleCommandInput,
+  ExplorationListItem, ExplorationSession, ExplorationImage, ExplorationPersona,
+  ExplorationDiscussion, ExplorationLog, ExplorationArtifact, ExplorationTaskifyJob,
+  CreateExplorationInput,
 } from '@cognac/shared'
 
 const BASE = '/api'
@@ -97,6 +100,45 @@ export const api = {
       fetchJson<ConsoleRun[]>(`/console/commands/${commandId}/runs`),
     getRunLog: (runId: number) =>
       fetchJson<ConsoleLogResponse>(`/console/runs/${runId}/log`),
+  },
+  explorations: {
+    list: () => fetchJson<ExplorationListItem[]>('/explorations'),
+    get: (id: number) =>
+      fetchJson<ExplorationSession & { latestTaskifyJob: ExplorationTaskifyJob | null }>(`/explorations/${id}`),
+    create: (data: CreateExplorationInput) =>
+      fetchJson<ExplorationSession>('/explorations', { method: 'POST', body: JSON.stringify(data) }),
+    createWithImages: async (data: CreateExplorationInput, files: File[]): Promise<ExplorationSession> => {
+      const formData = new FormData()
+      formData.append('title', data.title)
+      formData.append('request', data.request)
+      for (const file of files) {
+        formData.append('images', file)
+      }
+      const res = await fetch(`${BASE}/explorations`, {
+        method: 'POST',
+        body: formData,
+      })
+      await throwIfNotOk(res)
+      return res.json() as Promise<ExplorationSession>
+    },
+    getImages: (id: number) =>
+      fetchJson<ExplorationImage[]>(`/explorations/${id}/images`),
+    getPersonas: (id: number) =>
+      fetchJson<ExplorationPersona[]>(`/explorations/${id}/personas`),
+    getDiscussions: (id: number) =>
+      fetchJson<ExplorationDiscussion[]>(`/explorations/${id}/discussions`),
+    getLogs: (id: number) =>
+      fetchJson<ExplorationLog[]>(`/explorations/${id}/logs`),
+    getArtifacts: (id: number) =>
+      fetchJson<ExplorationArtifact[]>(`/explorations/${id}/artifacts`),
+    getReport: (id: number) =>
+      fetchJson<{ markdown: string | null; issueCount: number; evidenceImages: ExplorationArtifact[] }>(`/explorations/${id}/report`),
+    retry: (id: number) =>
+      fetchJson<ExplorationSession>(`/explorations/${id}/retry`, { method: 'POST' }),
+    taskify: (id: number) =>
+      fetchJson<ExplorationTaskifyJob>(`/explorations/${id}/taskify`, { method: 'POST' }),
+    deleteImage: (id: number, imageId: number) =>
+      fetchJson<{ ok: boolean }>(`/explorations/${id}/images/${imageId}`, { method: 'DELETE' }),
   },
   git: {
     status: () => fetchJson<GitStatusResponse>('/git/status'),

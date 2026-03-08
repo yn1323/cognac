@@ -3,15 +3,17 @@
 // PC: サイドバー + メインコンテンツ / SP: SPDetailHeader + ボディ
 // タスク詳細（task-page.tsx）と同じパターン
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   AlertCircle,
   EllipsisVertical,
+  Loader,
   RefreshCw,
   Trash2,
 } from 'lucide-react'
-import type { ExplorationSession } from '@cognac/shared'
+import type { ExplorationSession, ExplorationEvent } from '@cognac/shared'
 import { useToast } from '@/components/toast'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Sidebar } from '@/components/sidebar'
@@ -28,104 +30,56 @@ import {
   EXPLORATION_DELETABLE_STATUSES,
   EXPLORATION_RETRYABLE_STATUSES,
 } from '@/lib/exploration-status-config'
+import { useExploration, useRetryExploration } from '@/hooks/use-explorations'
+import { useExplorationSSE } from '@/hooks/use-exploration-sse'
 import { PCOverviewTab, SPOverviewTab } from '@/pages/exploration-detail/overview-tab'
 import { PCDiscussionTab, SPDiscussionTab } from '@/pages/exploration-detail/discussion-tab'
 import { PCLogsTab, SPLogsTab } from '@/pages/exploration-detail/logs-tab'
 import { PCReportTab, SPReportTab } from '@/pages/exploration-detail/report-tab'
 
-// --- モックデータ ---
-
-const MOCK_EXPLORATIONS: Record<number, ExplorationSession> = {
-  1: {
-    id: 1,
-    title: 'ログインフォームの使いやすさを検証',
-    request: 'ログインフォームのUXを検証し、改善ポイントをまとめてほしい。特にモバイル端末での入力しやすさを重視。',
-    status: 'analyzing',
-    final_report_markdown: null,
-    issue_count: 0,
-    paused_reason: null,
-    created_at: '2026-03-08T10:00:00Z',
-    updated_at: '2026-03-08T10:05:00Z',
-    started_at: '2026-03-08T10:01:00Z',
-    completed_at: null,
-  },
-  2: {
-    id: 2,
-    title: 'ダッシュボードのパフォーマンス分析',
-    request: '初期表示が遅い原因を調査し、改善方針をまとめる。PlaywrightでLighthouseスコアも取得してほしい。',
-    status: 'completed',
-    final_report_markdown: '# パフォーマンス分析レポート\n...',
-    issue_count: 3,
-    paused_reason: null,
-    created_at: '2026-03-07T14:00:00Z',
-    updated_at: '2026-03-07T15:30:00Z',
-    started_at: '2026-03-07T14:01:00Z',
-    completed_at: '2026-03-07T15:30:00Z',
-  },
-  3: {
-    id: 3,
-    title: 'APIエラーハンドリングの現状調査',
-    request: '現在のエラーハンドリングの統一性を確認し、改善が必要な箇所を特定する。',
-    status: 'completed',
-    final_report_markdown: '# エラーハンドリング調査\n...',
-    issue_count: 5,
-    paused_reason: null,
-    created_at: '2026-03-06T09:00:00Z',
-    updated_at: '2026-03-06T10:45:00Z',
-    started_at: '2026-03-06T09:02:00Z',
-    completed_at: '2026-03-06T10:45:00Z',
-  },
-  4: {
-    id: 4,
-    title: 'モバイルレスポンシブの確認',
-    request: '各画面のモバイル表示を確認し、崩れている箇所をリストアップする。',
-    status: 'pending',
-    final_report_markdown: null,
-    issue_count: 0,
-    paused_reason: null,
-    created_at: '2026-03-08T11:00:00Z',
-    updated_at: '2026-03-08T11:00:00Z',
-    started_at: null,
-    completed_at: null,
-  },
-  5: {
-    id: 5,
-    title: 'セキュリティヘッダーの設定確認',
-    request: 'レスポンスヘッダーのセキュリティ設定を確認し、不足している項目を洗い出す。',
-    status: 'failed',
-    final_report_markdown: null,
-    issue_count: 0,
-    paused_reason: null,
-    created_at: '2026-03-05T16:00:00Z',
-    updated_at: '2026-03-05T16:20:00Z',
-    started_at: '2026-03-05T16:01:00Z',
-    completed_at: null,
-  },
-}
-
 // --- タブボディ ---
 
-function PCTabBody({ activeTab, exploration }: { activeTab: ExplorationTab; exploration: ExplorationSession }) {
+function PCTabBody({
+  activeTab,
+  exploration,
+  events,
+  connected,
+}: {
+  activeTab: ExplorationTab
+  exploration: ExplorationSession
+  events: ExplorationEvent[]
+  connected: boolean
+}) {
   switch (activeTab) {
     case '概要':
       return <PCOverviewTab exploration={exploration} />
     case 'ディスカッション':
       return <PCDiscussionTab exploration={exploration} />
     case 'ログ':
-      return <PCLogsTab exploration={exploration} />
+      return <PCLogsTab exploration={exploration} events={events} connected={connected} />
     case 'レポート':
       return <PCReportTab exploration={exploration} />
   }
 }
 
-function SPTabBody({ activeTab, exploration }: { activeTab: ExplorationTab; exploration: ExplorationSession }) {
+function SPTabBody({
+  activeTab,
+  exploration,
+  events,
+  connected,
+}: {
+  activeTab: ExplorationTab
+  exploration: ExplorationSession
+  events: ExplorationEvent[]
+  connected: boolean
+}) {
   switch (activeTab) {
     case '概要':
       return <SPOverviewTab exploration={exploration} />
     case 'ディスカッション':
       return <SPDiscussionTab exploration={exploration} />
     case 'ログ':
-      return <SPLogsTab exploration={exploration} />
+      return <SPLogsTab exploration={exploration} events={events} connected={connected} />
     case 'レポート':
       return <SPReportTab exploration={exploration} />
   }
@@ -142,6 +96,9 @@ function PCExplorationDetail({
   onRetry,
   canDelete,
   canRetry,
+  isRetrying,
+  events,
+  connected,
 }: {
   exploration: ExplorationSession
   activeTab: ExplorationTab
@@ -151,6 +108,9 @@ function PCExplorationDetail({
   onRetry: () => void
   canDelete: boolean
   canRetry: boolean
+  isRetrying: boolean
+  events: ExplorationEvent[]
+  connected: boolean
 }) {
   const config = EXPLORATION_STATUS_CONFIG[exploration.status]
 
@@ -192,7 +152,7 @@ function PCExplorationDetail({
 
             <div className="flex items-center gap-2">
               {canRetry && (
-                <Button variant="outline" size="sm" onClick={onRetry}>
+                <Button variant="outline" size="sm" onClick={onRetry} disabled={isRetrying}>
                   <RefreshCw className="mr-2 h-4 w-4" />
                   リトライ
                 </Button>
@@ -209,7 +169,7 @@ function PCExplorationDetail({
         <ExplorationTabs activeTab={activeTab} onTabChange={onTabChange} variant="pc" />
 
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <PCTabBody activeTab={activeTab} exploration={exploration} />
+          <PCTabBody activeTab={activeTab} exploration={exploration} events={events} connected={connected} />
         </div>
       </main>
     </div>
@@ -227,6 +187,9 @@ function SPExplorationDetail({
   onRetry,
   canDelete,
   canRetry,
+  isRetrying,
+  events,
+  connected,
 }: {
   exploration: ExplorationSession
   activeTab: ExplorationTab
@@ -236,6 +199,9 @@ function SPExplorationDetail({
   onRetry: () => void
   canDelete: boolean
   canRetry: boolean
+  isRetrying: boolean
+  events: ExplorationEvent[]
+  connected: boolean
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const config = EXPLORATION_STATUS_CONFIG[exploration.status]
@@ -268,6 +234,7 @@ function SPExplorationDetail({
                     onRetry()
                   }}
                   icon={RefreshCw}
+                  disabled={isRetrying}
                 >
                   リトライ
                 </DropdownMenuItem>
@@ -297,7 +264,7 @@ function SPExplorationDetail({
 
       <main className="flex flex-1 flex-col overflow-hidden p-4">
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <SPTabBody activeTab={activeTab} exploration={exploration} />
+          <SPTabBody activeTab={activeTab} exploration={exploration} events={events} connected={connected} />
         </div>
       </main>
     </div>
@@ -311,13 +278,53 @@ export function ExplorationDetailPage() {
   const explorationId = Number(id)
   const navigate = useNavigate()
   const { toast } = useToast()
+  const qc = useQueryClient()
   const [activeTab, setActiveTab] = useState<ExplorationTab>('概要')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
-  // TODO: サーバー接続時に useExploration(explorationId) に差し替え
-  const exploration = MOCK_EXPLORATIONS[explorationId]
+  const { data: exploration, isLoading, isError } = useExploration(explorationId)
+  const retryMutation = useRetryExploration()
 
-  if (!exploration) {
+  // SSE: analyzing状態のときだけ接続
+  const isActive = exploration?.status != null && EXPLORATION_ACTIVE_STATUSES.has(exploration.status)
+  const { events, connected } = useExplorationSSE(isActive ? explorationId : null)
+
+  // SSEイベント → queryキャッシュinvalidation
+  useEffect(() => {
+    if (events.length === 0 || !exploration) return
+    const last = events[events.length - 1]
+
+    if (last.type === 'persona_selected') {
+      qc.invalidateQueries({ queryKey: ['explorations', explorationId, 'personas'] })
+    }
+    if (last.type === 'discussion_statement' || last.type === 'discussion_round_end') {
+      qc.invalidateQueries({ queryKey: ['explorations', explorationId, 'discussions'] })
+    }
+    if (last.type === 'report_created') {
+      qc.invalidateQueries({ queryKey: ['explorations', explorationId, 'report'] })
+      qc.invalidateQueries({ queryKey: ['explorations', explorationId] })
+    }
+    if (last.type === 'artifact_created') {
+      qc.invalidateQueries({ queryKey: ['explorations', explorationId, 'artifacts'] })
+    }
+    if (last.type === 'completed' || last.type === 'paused' || last.type === 'error') {
+      qc.invalidateQueries({ queryKey: ['explorations', explorationId] })
+      qc.invalidateQueries({ queryKey: ['explorations'], exact: true })
+    }
+    if (last.type === 'taskify_started' || last.type === 'taskify_completed' || last.type === 'taskify_failed') {
+      qc.invalidateQueries({ queryKey: ['explorations', explorationId] })
+    }
+  }, [events.length, exploration, explorationId, qc])
+
+  if (isLoading) {
+    return (
+      <div className="flex h-dvh items-center justify-center bg-background">
+        <Loader className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (isError || !exploration) {
     return (
       <div className="flex h-dvh flex-col items-center justify-center gap-3 bg-background">
         <AlertCircle className="h-8 w-8 text-destructive" />
@@ -336,16 +343,16 @@ export function ExplorationDetailPage() {
 
   const handleDelete = () => setDeleteDialogOpen(true)
   const handleConfirmDelete = () => {
-    // TODO: サーバー接続時にAPI呼び出しに差し替え
-    console.log('探索削除:', exploration.id)
-    toast('探索を削除しました', 'success')
-    navigate('/explorations')
+    // TODO: DELETE /api/explorations/:id サーバー実装後に接続
+    toast('削除機能は準備中です', 'warning')
+    setDeleteDialogOpen(false)
   }
 
   const handleRetry = () => {
-    // TODO: サーバー接続時にAPI呼び出しに差し替え
-    console.log('探索リトライ:', exploration.id)
-    toast('探索をリトライキューに戻しました', 'success')
+    retryMutation.mutate(explorationId, {
+      onSuccess: () => toast('探索をリトライキューに戻しました', 'success'),
+      onError: (err) => toast(err.message, 'error'),
+    })
   }
 
   return (
@@ -360,6 +367,9 @@ export function ExplorationDetailPage() {
           onRetry={handleRetry}
           canDelete={canDelete}
           canRetry={canRetry}
+          isRetrying={retryMutation.isPending}
+          events={events}
+          connected={connected}
         />
       </div>
       <div className="md:hidden">
@@ -372,6 +382,9 @@ export function ExplorationDetailPage() {
           onRetry={handleRetry}
           canDelete={canDelete}
           canRetry={canRetry}
+          isRetrying={retryMutation.isPending}
+          events={events}
+          connected={connected}
         />
       </div>
 

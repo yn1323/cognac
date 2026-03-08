@@ -9,20 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { formatDateTime } from '@/lib/format'
 import { EXPLORATION_STATUS_CONFIG } from '@/lib/exploration-status-config'
-
-// --- モック画像データ ---
-
-const MOCK_IMAGES: ExplorationImage[] = [
-  {
-    id: 1,
-    exploration_session_id: 2,
-    source_type: 'user',
-    file_path: 'uploads/exploration/1/screenshot1.png',
-    original_name: 'screenshot1.png',
-    mime_type: 'image/png',
-    created_at: '2026-03-07T14:00:00Z',
-  },
-]
+import { useExplorationImages } from '@/hooks/use-explorations'
 
 // --- 画像セクション ---
 
@@ -90,6 +77,7 @@ function ExplorationImagesSection({
 // --- PC版 ---
 
 export function PCOverviewTab({ exploration }: { exploration: ExplorationSession }) {
+  const { data: images = [] } = useExplorationImages(exploration.id)
   const config = EXPLORATION_STATUS_CONFIG[exploration.status]
 
   return (
@@ -134,8 +122,7 @@ export function PCOverviewTab({ exploration }: { exploration: ExplorationSession
         </div>
       </Card>
 
-      {/* TODO: サーバー接続時にAPI経由で画像を取得 */}
-      <ExplorationImagesSection images={MOCK_IMAGES} />
+      <ExplorationImagesSection images={images} />
     </div>
   )
 }
@@ -143,6 +130,7 @@ export function PCOverviewTab({ exploration }: { exploration: ExplorationSession
 // --- SP版 ---
 
 export function SPOverviewTab({ exploration }: { exploration: ExplorationSession }) {
+  const { data: images = [] } = useExplorationImages(exploration.id)
   const config = EXPLORATION_STATUS_CONFIG[exploration.status]
 
   return (
@@ -179,7 +167,7 @@ export function SPOverviewTab({ exploration }: { exploration: ExplorationSession
         </div>
       </Card>
 
-      <ExplorationImagesSection images={MOCK_IMAGES} size="sm" />
+      <ExplorationImagesSection images={images} size="sm" />
     </div>
   )
 }
