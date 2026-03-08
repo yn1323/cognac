@@ -10,7 +10,9 @@ import { TaskRunner } from './runner/task-runner.js'
 import { defineConfig } from '@cognac/shared'
 
 const cwd = process.cwd()
-const config = defineConfig({})
+const config = defineConfig({
+  ...(process.env.COGNAC_SERVER_PORT ? { port: Number(process.env.COGNAC_SERVER_PORT) } : {}),
+})
 const dbPath = resolve(cwd, '.cognac', 'db.sqlite')
 const db = openDb(dbPath)
 const eventBus = new EventBus()

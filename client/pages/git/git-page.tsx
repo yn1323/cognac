@@ -28,6 +28,7 @@ import { AiCommitProgress } from '@/components/ai-commit-progress'
 import { MergeModal } from '@/components/merge-modal'
 import { NewBranchModal } from '@/components/new-branch-modal'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { useToast } from '@/components/toast'
 import { NAV_MAP } from '@/lib/constants'
 import {
   useGitStatus,
@@ -473,6 +474,8 @@ export function GitPage() {
   const { data: branchData } = useGitBranches()
   const { data: remoteStatus } = useGitRemoteStatus()
 
+  const { toast } = useToast()
+
   // ミューテーションフック
   const discardMutation = useDiscardAll()
   const commitMutation = useAiCommit()
@@ -490,27 +493,58 @@ export function GitPage() {
   const behind = remoteStatus?.behind ?? 0
 
   const handleNavigate = (path: string) => navigate(path)
-  const handleStartCommit = () => commitMutation.mutate()
+  const handleStartCommit = () => commitMutation.mutate(undefined, {
+    onSuccess: () => toast('コミットしました', 'success'),
+    onError: () => toast('コミットに失敗しました', 'error'),
+  })
   const handleToggleMergeModal = () => setShowMergeModal((v) => !v)
   const handleToggleNewBranchModal = () => setShowNewBranchModal((v) => !v)
   const handleToggleDiscardDialog = () => setShowDiscardDialog((v) => !v)
-  const handleCheckout = (branch: string) => checkoutMutation.mutate(branch)
-  const handlePush = () => pushMutation.mutate()
-  const handleFetch = () => fetchMutation.mutate()
+  const handleCheckout = (branch: string) => checkoutMutation.mutate(branch, {
+    onSuccess: () => toast('ブランチを切り替えました', 'success'),
+    onError: () => toast('ブランチの切り替えに失敗しました', 'error'),
+  })
+  const handlePush = () => pushMutation.mutate(undefined, {
+    onSuccess: () => toast('Pushしました', 'success'),
+    onError: () => toast('Pushに失敗しました', 'error'),
+  })
+  const handleFetch = () => fetchMutation.mutate(undefined, {
+    onSuccess: () => toast('Fetchしました', 'success'),
+    onError: () => toast('Fetchに失敗しました', 'error'),
+  })
 
   const handleDiscard = () => {
-    discardMutation.mutate()
-    setShowDiscardDialog(false)
+    discardMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast('変更を破棄しました', 'success')
+        setShowDiscardDialog(false)
+      },
+      onError: () => toast('変更の破棄に失敗しました', 'error'),
+    })
   }
 
   const handleMerge = (from: string, into: string) => {
-    mergeMutation.mutate({ from, into })
-    setShowMergeModal(false)
+    mergeMutation.mutate({ from, into }, {
+      onSuccess: () => {
+        toast('マージしました', 'success')
+        setShowMergeModal(false)
+      },
+      onError: () => {
+        toast('マージに失敗しました', 'error')
+      },
+    })
   }
 
   const handleCreateBranch = (name: string, base?: string) => {
-    createBranchMutation.mutate({ name, base })
-    setShowNewBranchModal(false)
+    createBranchMutation.mutate({ name, base }, {
+      onSuccess: () => {
+        toast('ブランチを作成しました', 'success')
+        setShowNewBranchModal(false)
+      },
+      onError: () => {
+        toast('ブランチの作成に失敗しました', 'error')
+      },
+    })
   }
 
   const viewProps: GitPageViewProps = {
