@@ -69,3 +69,14 @@ export function getExplorationLog(
   `)
   return stmt.get(id) as ExplorationLog | undefined
 }
+
+export function deleteExplorationLogsBySessionId(
+  db: Database.Database,
+  explorationSessionId: number,
+): number {
+  const stmt = db.prepare(`
+    DELETE FROM exploration_logs
+    WHERE exploration_session_id = ?
+  `)
+  return stmt.run(explorationSessionId).changes
+}

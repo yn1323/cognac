@@ -120,3 +120,14 @@ export function markExplorationTaskifyJobFailed(
   if (result.changes === 0) return undefined
   return getExplorationTaskifyJob(db, id)
 }
+
+export function deleteExplorationTaskifyJobsBySessionId(
+  db: Database.Database,
+  explorationSessionId: number,
+): number {
+  const stmt = db.prepare(`
+    DELETE FROM exploration_taskify_jobs
+    WHERE exploration_session_id = ?
+  `)
+  return stmt.run(explorationSessionId).changes
+}

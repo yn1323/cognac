@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import type Database from 'better-sqlite3'
 import type { ActiveExecution } from '../runner/execution-coordinator.js'
+import { initializeSchema } from '../db/schema.js'
 
 export type RunnerState = 'running' | 'paused' | 'idle'
 
@@ -28,7 +29,7 @@ export function systemRouter(statusProvider: SystemStatusProvider, db: Database.
     })
   })
 
-  // データベース全テーブル削除（データのみ。スキーマは残す）
+  // データベース再初期化（全テーブルを作り直して最新スキーマに戻す）
   app.delete('/database', (c) => {
     const tables = db
       .prepare(
@@ -40,9 +41,10 @@ export function systemRouter(statusProvider: SystemStatusProvider, db: Database.
     db.transaction(() => {
       for (const { name } of tables) {
         if (!/^[A-Za-z0-9_]+$/.test(name)) continue
-        db.prepare(`DELETE FROM "${name}"`).run()
+        db.prepare(`DROP TABLE IF EXISTS "${name}"`).run()
       }
     })()
+    initializeSchema(db)
     db.pragma('foreign_keys = ON')
 
     return c.json({ ok: true })

@@ -73,6 +73,32 @@ async function saveExplorationImages(
   explorationImageQueries.createExplorationImages(db, savedImages)
 }
 
+function resetExplorationForRetry(
+  db: Database.Database,
+  explorationId: number,
+) {
+  const resetInTransaction = db.transaction(() => {
+    explorationPersonaQueries.deleteExplorationPersonasBySessionId(db, explorationId)
+    explorationDiscussionQueries.deleteExplorationDiscussionsBySessionId(db, explorationId)
+    explorationArtifactQueries.deleteExplorationArtifactsBySessionId(db, explorationId)
+    explorationLogQueries.deleteExplorationLogsBySessionId(db, explorationId)
+    explorationTaskifyJobQueries.deleteExplorationTaskifyJobsBySessionId(db, explorationId)
+    explorationImageQueries.deleteExplorationImagesBySourceType(db, explorationId, 'playwright')
+
+    return explorationQueries.updateExploration(db, explorationId, {
+      status: 'pending',
+      current_phase: null,
+      final_report_markdown: null,
+      issue_count: 0,
+      paused_reason: null,
+      started_at: null,
+      completed_at: null,
+    })
+  })
+
+  return resetInTransaction()
+}
+
 export function explorationsRouter(
   db: Database.Database,
   eventBus: EventBus<ExplorationEvent>,
@@ -171,7 +197,7 @@ export function explorationsRouter(
     })
   })
 
-  app.post('/:id/retry', (c) => {
+  app.post('/:id/retry', async (c) => {
     const id = Number(c.req.param('id'))
     const exploration = explorationQueries.getExploration(db, id)
     if (!exploration) return c.json({ error: '探索が見つからない' }, 404)
@@ -180,13 +206,9 @@ export function explorationsRouter(
       return c.json({ error: 'リトライできないステータス' }, 400)
     }
 
-    const updated = explorationQueries.updateExploration(db, id, {
-      status: 'pending',
-      current_phase: null,
-      paused_reason: null,
-      started_at: null,
-      completed_at: null,
-    })
+    await rm(getExplorationArtifactDir(id), { recursive: true, force: true })
+
+    const updated = resetExplorationForRetry(db, id)
     return c.json(updated)
   })
 

@@ -60,6 +60,21 @@ export function listExplorationImages(
   return stmt.all(explorationSessionId) as ExplorationImage[]
 }
 
+export function listExplorationImagesBySourceType(
+  db: Database.Database,
+  explorationSessionId: number,
+  sourceType: ExplorationImageSourceType,
+): ExplorationImage[] {
+  const stmt = db.prepare(`
+    SELECT *
+    FROM exploration_images
+    WHERE exploration_session_id = ?
+      AND source_type = ?
+    ORDER BY created_at ASC, id ASC
+  `)
+  return stmt.all(explorationSessionId, sourceType) as ExplorationImage[]
+}
+
 export function getExplorationImagesByIds(
   db: Database.Database,
   explorationSessionId: number,
@@ -103,4 +118,17 @@ export function findExplorationImageBySessionAndPath(
     LIMIT 1
   `)
   return stmt.get(explorationSessionId, filePath) as ExplorationImage | undefined
+}
+
+export function deleteExplorationImagesBySourceType(
+  db: Database.Database,
+  explorationSessionId: number,
+  sourceType: ExplorationImageSourceType,
+): number {
+  const stmt = db.prepare(`
+    DELETE FROM exploration_images
+    WHERE exploration_session_id = ?
+      AND source_type = ?
+  `)
+  return stmt.run(explorationSessionId, sourceType).changes
 }

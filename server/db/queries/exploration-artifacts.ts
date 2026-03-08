@@ -66,6 +66,17 @@ export function listExplorationArtifacts(
   return stmt.all(explorationSessionId) as ExplorationArtifact[]
 }
 
+export function deleteExplorationArtifactsBySessionId(
+  db: Database.Database,
+  explorationSessionId: number,
+): number {
+  const stmt = db.prepare(`
+    DELETE FROM exploration_artifacts
+    WHERE exploration_session_id = ?
+  `)
+  return stmt.run(explorationSessionId).changes
+}
+
 export function countExplorationFindings(
   db: Database.Database,
   explorationSessionId: number,

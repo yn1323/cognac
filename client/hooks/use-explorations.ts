@@ -50,6 +50,12 @@ export function useRetryExploration() {
     onSuccess: (_res, id) => {
       qc.invalidateQueries({ queryKey: ['explorations'], exact: true })
       qc.invalidateQueries({ queryKey: ['explorations', id] })
+      qc.invalidateQueries({ queryKey: ['explorations', id, 'images'] })
+      qc.invalidateQueries({ queryKey: ['explorations', id, 'personas'] })
+      qc.invalidateQueries({ queryKey: ['explorations', id, 'discussions'] })
+      qc.invalidateQueries({ queryKey: ['explorations', id, 'logs'] })
+      qc.invalidateQueries({ queryKey: ['explorations', id, 'artifacts'] })
+      qc.invalidateQueries({ queryKey: ['explorations', id, 'report'] })
     },
   })
 }

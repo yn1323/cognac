@@ -539,9 +539,9 @@ export function SettingsPage() {
         open={showDbDeleteConfirm}
         onConfirm={handleDeleteDatabase}
         onCancel={() => setShowDbDeleteConfirm(false)}
-        title="データベースを削除する？"
-        description="この操作は取り消せません。すべてのタスク・ログ・実行履歴が完全に削除されます。"
-        confirmLabel="削除する"
+        title="データベースを再初期化する？"
+        description="この操作は取り消せません。既存データを削除して、最新スキーマでデータベースを作り直します。"
+        confirmLabel="再初期化する"
         variant="destructive"
         isLoading={deleteDatabase.isPending}
       />

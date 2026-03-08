@@ -371,7 +371,7 @@ export function ExplorationDetailPage() {
 
   const handleRetry = () => {
     retryMutation.mutate(explorationId, {
-      onSuccess: () => toast('探索をリトライキューに戻しました', 'success'),
+      onSuccess: () => toast('探索を最初から再実行する状態に戻しました', 'success'),
       onError: (err) => toast(err.message, 'error'),
     })
   }
