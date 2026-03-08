@@ -223,7 +223,7 @@ export function getRecentLogOneline(cwd: string, count = 10): string {
 export function commitWithMessage(cwd: string, message: string): CommitResult {
   // メッセージ内のシングルクォートをエスケープ
   const escaped = message.replace(/'/g, "'\\''")
-  git(`commit -m '${escaped}'`, cwd)
+  git(`commit --author='Claude <noreply@anthropic.com>' -m '${escaped}'`, cwd)
   const hash = git('rev-parse --short HEAD', cwd)
   // diffstatを取得
   let filesChanged = 0

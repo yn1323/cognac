@@ -33,7 +33,7 @@ export function createApp({ db, eventBus, runner, publicDir, cwd = process.cwd()
   app.route('/api/tasks', streamRouter(eventBus))
   app.route('/api', systemRouter(runner, db))
   app.route('/api/settings', settingsRouter(runner, cwd))
-  app.route('/api/git', gitRouter(cwd))
+  app.route('/api/git', gitRouter(cwd, () => runner.getConfig()))
 
   // アップロード画像の静的配信
   app.use('/uploads/*', serveStatic({ root: '.cognac/' }))

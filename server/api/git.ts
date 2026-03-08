@@ -1,11 +1,9 @@
 // Git GUI APIルーター
 // /api/git/* エンドポイントを提供
-//
-// NOTE: このファイルで使用する execSync は Claude CLI の呼び出しのみ。
-// git コマンドの実行は git-api-ops.ts に委譲しており、
-// すべてのユーザー入力はバリデーション済みのためシェルインジェクションのリスクはない。
 
 import { Hono } from 'hono'
+import type { CognacConfig } from '@cognac/shared'
+import { callClaudePrint } from '../runner/claude-caller.js'
 import { z } from 'zod'
 import {
   getStatus,
@@ -42,7 +40,7 @@ const mergeSchema = z.object({
   into: z.string().min(1, 'マージ先ブランチを指定してください'),
 })
 
-export function gitRouter(cwd: string) {
+export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
   const app = new Hono()
 
   // --- Phase 1: 基本表示 ---
@@ -94,7 +92,7 @@ export function gitRouter(cwd: string) {
       const recentLog = getRecentLogOneline(cwd)
 
       // 3. Claude CLI でコミットメッセージ生成
-      const message = await generateCommitMessage(diff, recentLog, cwd)
+      const message = await generateCommitMessage(diff, recentLog, getConfig)
 
       // 4. コミット実行
       const result = commitWithMessage(cwd, message)
@@ -249,12 +247,8 @@ export function gitRouter(cwd: string) {
 }
 
 // Claude CLI を使ってコミットメッセージを生成する
-// NOTE: execSync を使用しているが、prompt は JSON.stringify で安全にエスケープされており、
-// ユーザー入力は含まれないため安全
-async function generateCommitMessage(diff: string, recentLog: string, cwd: string): Promise<string> {
-  const { execSync } = await import('node:child_process')
-  const { getCleanEnv } = await import('../runner/claude-caller.js')
-
+// callClaudePrint() でtmpファイル + stdinパイプ方式を使い、長いdiffも安全に処理
+async function generateCommitMessage(diff: string, recentLog: string, getConfig: () => CognacConfig): Promise<string> {
   const prompt = `以下のgit diffに対して適切なコミットメッセージを生成してください。
 
 ## コミットスタイル参考（直近のコミットログ）:
@@ -270,14 +264,11 @@ ${diff.substring(0, 8000)}
 - 50文字程度に収めてください`
 
   try {
-    const result = execSync(
-      `claude --print -p ${JSON.stringify(prompt)}`,
-      { cwd, encoding: 'utf8', timeout: 60000, env: getCleanEnv() },
-    ).trim()
-
+    const response = await callClaudePrint({ prompt }, getConfig())
+    const result = response.result.trim()
     return result || 'chore: update files'
-  } catch {
-    // Claude CLI が使えない場合はフォールバック
+  } catch (err) {
+    console.error('[generateCommitMessage] Claude CLI 失敗:', err)
     return 'chore: update files'
   }
 }
