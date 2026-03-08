@@ -14,6 +14,7 @@ export const PRIORITY_LABEL_JA: Record<PriorityLabel, string> = { Low: '低', No
 // サイドバーナビゲーションのラベル→パスマッピング
 export const NAV_MAP: Record<string, string> = {
   タスク: '/',
+  探索: '/explorations',
   Git: '/git',
   コンソール: '/console',
   設定: '/settings',

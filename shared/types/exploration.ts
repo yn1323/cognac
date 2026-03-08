@@ -1,7 +1,6 @@
 export type ExplorationStatus =
-  | 'draft'
+  | 'pending'
   | 'analyzing'
-  | 'reporting'
   | 'completed'
   | 'paused'
   | 'failed'

@@ -114,8 +114,8 @@ CREATE TABLE IF NOT EXISTS exploration_sessions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
   request TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'draft'
-    CHECK (status IN ('draft', 'analyzing', 'reporting', 'completed', 'paused', 'failed')),
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'analyzing', 'completed', 'paused', 'failed')),
   final_report_markdown TEXT,
   issue_count INTEGER NOT NULL DEFAULT 0,
   paused_reason TEXT,

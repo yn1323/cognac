@@ -98,7 +98,7 @@ export function getNextDraftExploration(
   const stmt = db.prepare(`
     SELECT *
     FROM exploration_sessions
-    WHERE status = 'draft'
+    WHERE status = 'pending'
     ORDER BY created_at ASC, id ASC
     LIMIT 1
   `)

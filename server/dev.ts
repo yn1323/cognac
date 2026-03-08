@@ -13,7 +13,7 @@ import { ConsoleManager } from './console/console-manager.js'
 import { cleanupExpiredConsoleRuns, runConsoleStartupRecovery, startConsoleCleanupScheduler } from './console/cleanup.js'
 import { defineConfig, type ExplorationEvent, type TaskEvent } from '@cognac/shared'
 
-const cwd = process.cwd()
+const cwd = resolve(process.cwd(), '..')
 const config = defineConfig({
   ...(process.env.COGNAC_SERVER_PORT ? { port: Number(process.env.COGNAC_SERVER_PORT) } : {}),
 })

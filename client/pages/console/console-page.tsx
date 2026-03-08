@@ -2,8 +2,9 @@
 // PC: サイドバー + コマンドパネル(380px) + ログパネル / SP: リスト ↔ ログ詳細
 // デザイン ConsolePage.pen PC=HmvhY, SP-List=wukk3, SP-Log=3tUlE に準拠
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   Plus,
   Play,
@@ -12,6 +13,8 @@ import {
   Pencil,
   Trash2,
   ArrowLeft,
+  Loader2,
+  Terminal,
 } from 'lucide-react'
 import type { ConsoleCommandListItem } from '@cognac/shared'
 import { Sidebar } from '@/components/sidebar'
@@ -19,9 +22,19 @@ import { AppBottomNav } from '@/components/app-bottom-nav'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { useToast } from '@/components/toast'
 import { NAV_MAP } from '@/lib/constants'
+import {
+  useConsoleCommands,
+  useRunLog,
+  useCreateConsoleCommand,
+  useUpdateConsoleCommand,
+  useDeleteConsoleCommand,
+  useRunConsoleCommand,
+  useStopConsoleCommand,
+} from '@/hooks/use-console'
+import { useConsoleSSE } from '@/hooks/use-console-sse'
 import { CommandModal } from './command-modal'
-import { MOCK_COMMANDS, MOCK_LOG_CONTENT } from './mock-data'
 
 // --- ステータス表示ユーティリティ ---
 
@@ -80,7 +93,9 @@ function StatusDot({ status }: { status: DerivedStatus }) {
 }
 
 function formatTime(isoString: string): string {
-  const d = new Date(isoString)
+  // SQLiteの datetime('now') は UTC だが 'Z' なしで返るため、ローカル扱いされないよう補正
+  const normalized = isoString.endsWith('Z') || isoString.includes('+') ? isoString : `${isoString}Z`
+  const d = new Date(normalized)
   return d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
 }
 
@@ -96,6 +111,9 @@ interface ConsolePageViewProps {
   onOpenCreate: () => void
   onOpenEdit: (cmd: ConsoleCommandListItem) => void
   onOpenDelete: (cmd: ConsoleCommandListItem) => void
+  isLoading: boolean
+  isRunPending: boolean
+  isStopPending: boolean
 }
 
 // --- コマンドカードの三点メニュー ---
@@ -138,6 +156,8 @@ function CommandCard({
   onStop,
   onEdit,
   onDelete,
+  isRunPending,
+  isStopPending,
 }: {
   command: ConsoleCommandListItem
   selected: boolean
@@ -146,6 +166,8 @@ function CommandCard({
   onStop: () => void
   onEdit: () => void
   onDelete: () => void
+  isRunPending: boolean
+  isStopPending: boolean
 }) {
   const cfg = STATUS_CONFIG[command.derived_status]
   const isActive = command.derived_status === 'running' || command.derived_status === 'starting'
@@ -168,11 +190,11 @@ function CommandCard({
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
         <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
           {isActive ? (
-            <button type="button" onClick={onStop} className="rounded p-1 hover:bg-[#f5f5f5]">
+            <button type="button" onClick={onStop} disabled={isStopPending} className="rounded p-1 hover:bg-[#f5f5f5] disabled:opacity-50">
               <Square className="h-4 w-4 text-[#e7000b]" />
             </button>
           ) : (
-            <button type="button" onClick={onRun} className="rounded p-1 hover:bg-[#f5f5f5]">
+            <button type="button" onClick={onRun} disabled={isRunPending} className="rounded p-1 hover:bg-[#f5f5f5] disabled:opacity-50">
               <Play className="h-4 w-4 text-[#737373]" />
             </button>
           )}
@@ -198,11 +220,28 @@ function LogPanel({
   command,
   logContent,
   onStop,
+  isStopPending,
 }: {
   command: ConsoleCommandListItem | null
   logContent: string
   onStop: () => void
+  isStopPending: boolean
 }) {
+  const logRef = useRef<HTMLDivElement>(null)
+  const isNearBottom = useRef(true)
+
+  const handleScroll = () => {
+    const el = logRef.current
+    if (!el) return
+    isNearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 50
+  }
+
+  useEffect(() => {
+    if (isNearBottom.current && logRef.current) {
+      logRef.current.scrollTop = logRef.current.scrollHeight
+    }
+  }, [logContent])
+
   if (!command) {
     return (
       <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
@@ -223,7 +262,7 @@ function LogPanel({
           <StatusBadge status={command.derived_status} />
         </div>
         {isActive && (
-          <button type="button" onClick={onStop} className="rounded p-1.5 hover:bg-[#f5f5f5]">
+          <button type="button" onClick={onStop} disabled={isStopPending} className="rounded p-1.5 hover:bg-[#f5f5f5] disabled:opacity-50">
             <Square className="h-4 w-4 text-[#e7000b]" />
           </button>
         )}
@@ -245,11 +284,41 @@ function LogPanel({
       )}
 
       {/* Log Body */}
-      <div className="flex-1 overflow-y-auto bg-[#fafafa] p-5">
+      <div ref={logRef} onScroll={handleScroll} className="flex-1 overflow-y-auto bg-[#fafafa] p-5">
         <pre className="whitespace-pre-wrap font-mono text-[13px] leading-[1.6] text-foreground">
-          {logContent}
+          {logContent || (run ? '' : 'まだ実行されていません')}
         </pre>
       </div>
+    </div>
+  )
+}
+
+// --- 空状態 ---
+
+function EmptyState({ onOpenCreate }: { onOpenCreate: () => void }) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
+      <div className="rounded-full bg-[#f5f5f5] p-4">
+        <Terminal className="h-8 w-8 text-muted-foreground" />
+      </div>
+      <div className="flex flex-col gap-1">
+        <p className="text-sm font-medium text-foreground">コマンドがありません</p>
+        <p className="text-xs text-muted-foreground">よく使うコマンドを登録して、ワンクリックで実行できます。</p>
+      </div>
+      <Button variant="primary" size="sm" onClick={onOpenCreate}>
+        <Plus className="mr-1 h-4 w-4" />
+        コマンドを登録
+      </Button>
+    </div>
+  )
+}
+
+// --- ローディング ---
+
+function LoadingState() {
+  return (
+    <div className="flex flex-1 items-center justify-center">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
     </div>
   )
 }
@@ -266,6 +335,9 @@ function PCConsolePage({
   onOpenCreate,
   onOpenEdit,
   onOpenDelete,
+  isLoading,
+  isRunPending,
+  isStopPending,
 }: ConsolePageViewProps) {
   const navigate = useNavigate()
 
@@ -292,20 +364,28 @@ function PCConsolePage({
           </div>
 
           {/* Command List */}
-          <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-3">
-            {commands.map((cmd) => (
-              <CommandCard
-                key={cmd.id}
-                command={cmd}
-                selected={cmd.id === selectedCommand?.id}
-                onSelect={() => onSelectCommand(cmd.id)}
-                onRun={() => onRun(cmd.id)}
-                onStop={() => onStop(cmd.id)}
-                onEdit={() => onOpenEdit(cmd)}
-                onDelete={() => onOpenDelete(cmd)}
-              />
-            ))}
-          </div>
+          {isLoading ? (
+            <LoadingState />
+          ) : commands.length === 0 ? (
+            <EmptyState onOpenCreate={onOpenCreate} />
+          ) : (
+            <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-3">
+              {commands.map((cmd) => (
+                <CommandCard
+                  key={cmd.id}
+                  command={cmd}
+                  selected={cmd.id === selectedCommand?.id}
+                  onSelect={() => onSelectCommand(cmd.id)}
+                  onRun={() => onRun(cmd.id)}
+                  onStop={() => onStop(cmd.id)}
+                  onEdit={() => onOpenEdit(cmd)}
+                  onDelete={() => onOpenDelete(cmd)}
+                  isRunPending={isRunPending}
+                  isStopPending={isStopPending}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Log Panel */}
@@ -314,6 +394,7 @@ function PCConsolePage({
             command={selectedCommand}
             logContent={logContent}
             onStop={() => selectedCommand && onStop(selectedCommand.id)}
+            isStopPending={isStopPending}
           />
         </div>
       </div>
@@ -334,6 +415,9 @@ function SPConsolePage({
   onOpenEdit,
   onOpenDelete,
   onBack,
+  isLoading,
+  isRunPending,
+  isStopPending,
 }: ConsolePageViewProps & { onBack: () => void }) {
   // ログ詳細画面
   if (selectedCommand) {
@@ -352,7 +436,7 @@ function SPConsolePage({
             <StatusBadge status={selectedCommand.derived_status} />
           </div>
           {isActive && (
-            <button type="button" onClick={() => onStop(selectedCommand.id)} className="rounded p-1.5 hover:bg-[#f5f5f5]">
+            <button type="button" onClick={() => onStop(selectedCommand.id)} disabled={isStopPending} className="rounded p-1.5 hover:bg-[#f5f5f5] disabled:opacity-50">
               <Square className="h-4 w-4 text-[#e7000b]" />
             </button>
           )}
@@ -376,7 +460,7 @@ function SPConsolePage({
         {/* SP Log Body */}
         <div className="flex-1 overflow-y-auto bg-[#fafafa] p-4 pb-20">
           <pre className="whitespace-pre-wrap font-mono text-xs leading-[1.6] text-foreground">
-            {logContent}
+            {logContent || (run ? '' : 'まだ実行されていません')}
           </pre>
         </div>
 
@@ -397,20 +481,28 @@ function SPConsolePage({
       </div>
 
       {/* SP Command List */}
-      <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-3 pb-20">
-        {commands.map((cmd) => (
-          <CommandCard
-            key={cmd.id}
-            command={cmd}
-            selected={false}
-            onSelect={() => onSelectCommand(cmd.id)}
-            onRun={() => onRun(cmd.id)}
-            onStop={() => onStop(cmd.id)}
-            onEdit={() => onOpenEdit(cmd)}
-            onDelete={() => onOpenDelete(cmd)}
-          />
-        ))}
-      </div>
+      {isLoading ? (
+        <LoadingState />
+      ) : commands.length === 0 ? (
+        <EmptyState onOpenCreate={onOpenCreate} />
+      ) : (
+        <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-3 pb-20">
+          {commands.map((cmd) => (
+            <CommandCard
+              key={cmd.id}
+              command={cmd}
+              selected={false}
+              onSelect={() => onSelectCommand(cmd.id)}
+              onRun={() => onRun(cmd.id)}
+              onStop={() => onStop(cmd.id)}
+              onEdit={() => onOpenEdit(cmd)}
+              onDelete={() => onOpenDelete(cmd)}
+              isRunPending={isRunPending}
+              isStopPending={isStopPending}
+            />
+          ))}
+        </div>
+      )}
 
       <AppBottomNav activeItem="コンソール" />
     </div>
@@ -420,8 +512,19 @@ function SPConsolePage({
 // --- エクスポート ---
 
 export function ConsolePage() {
-  const [commands, setCommands] = useState<ConsoleCommandListItem[]>(MOCK_COMMANDS)
-  const [selectedId, setSelectedId] = useState<number | null>(MOCK_COMMANDS[0]?.id ?? null)
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  // API hooks
+  const { data: commands = [], isLoading } = useConsoleCommands()
+  const createMutation = useCreateConsoleCommand()
+  const updateMutation = useUpdateConsoleCommand()
+  const deleteMutation = useDeleteConsoleCommand()
+  const runMutation = useRunConsoleCommand()
+  const stopMutation = useStopConsoleCommand()
+
+  // UI state
+  const [selectedId, setSelectedId] = useState<number | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editTarget, setEditTarget] = useState<ConsoleCommandListItem | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ConsoleCommandListItem | null>(null)
@@ -436,54 +539,86 @@ export function ConsolePage() {
     [editTarget],
   )
 
-  const logContent = MOCK_LOG_CONTENT
+  // ログ表示: 履歴ログ + SSEリアルタイムログ
+  const activeRunId = selectedCommand?.active_run?.id ?? null
+  const latestRunId = selectedCommand?.latest_run?.id ?? null
+  const viewRunId = activeRunId ?? latestRunId
 
-  const handleRun = useCallback((_id: number) => {
-    // TODO: サーバー接続時に実装
-  }, [])
+  const { data: historicalLog } = useRunLog(viewRunId)
+  const { log: sseLog, runExited, clearLog } = useConsoleSSE(activeRunId)
 
-  const handleStop = useCallback((_id: number) => {
-    // TODO: サーバー接続時に実装
-  }, [])
+  const logContent = activeRunId
+    ? (historicalLog?.content ?? '') + sseLog
+    : (historicalLog?.content ?? '')
+
+  // run終了時にコマンド一覧とログを更新
+  useEffect(() => {
+    if (runExited) {
+      queryClient.invalidateQueries({ queryKey: ['console-commands'] })
+      queryClient.invalidateQueries({ queryKey: ['console-runs'] })
+    }
+  }, [runExited, queryClient])
+
+  // コマンド選択切り替え時にSSEバッファをリセット
+  useEffect(() => {
+    clearLog()
+  }, [selectedId, clearLog])
+
+  // --- ハンドラ ---
+
+  const handleRun = useCallback((id: number) => {
+    runMutation.mutate(id, {
+      onSuccess: () => {
+        setSelectedId(id)
+        queryClient.invalidateQueries({ queryKey: ['console-runs'] })
+      },
+      onError: (err) => toast(`実行に失敗しました: ${err.message}`, 'error'),
+    })
+  }, [runMutation, queryClient, toast])
+
+  const handleStop = useCallback((id: number) => {
+    stopMutation.mutate(id, {
+      onError: (err) => toast(`停止に失敗しました: ${err.message}`, 'error'),
+    })
+  }, [stopMutation, toast])
 
   const handleOpenCreate = useCallback(() => setShowCreateModal(true), [])
 
   const handleCreate = useCallback((data: { name: string; command: string; note: string }) => {
-    const newCmd: ConsoleCommandListItem = {
-      id: Date.now(),
-      name: data.name,
-      command: data.command,
-      note: data.note || null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      latest_run: null,
-      active_run: null,
-      derived_status: 'idle',
-    }
-    setCommands((prev) => [...prev, newCmd])
-    setShowCreateModal(false)
-  }, [])
+    createMutation.mutate(data, {
+      onSuccess: () => {
+        setShowCreateModal(false)
+        toast('コマンドを登録しました', 'success')
+      },
+      onError: (err) => toast(`登録に失敗しました: ${err.message}`, 'error'),
+    })
+  }, [createMutation, toast])
 
   const handleEdit = useCallback((data: { name: string; command: string; note: string }) => {
     if (!editTarget) return
-    setCommands((prev) =>
-      prev.map((c) =>
-        c.id === editTarget.id
-          ? { ...c, name: data.name, command: data.command, note: data.note || null, updated_at: new Date().toISOString() }
-          : c,
-      ),
-    )
-    setEditTarget(null)
-  }, [editTarget])
+    updateMutation.mutate({ id: editTarget.id, data }, {
+      onSuccess: () => {
+        setEditTarget(null)
+        toast('コマンドを更新しました', 'success')
+      },
+      onError: (err) => toast(`更新に失敗しました: ${err.message}`, 'error'),
+    })
+  }, [editTarget, updateMutation, toast])
 
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return
-    setCommands((prev) => prev.filter((c) => c.id !== deleteTarget.id))
-    if (selectedId === deleteTarget.id) {
-      setSelectedId(null)
-    }
-    setDeleteTarget(null)
-  }, [deleteTarget, selectedId])
+    deleteMutation.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        if (selectedId === deleteTarget.id) setSelectedId(null)
+        setDeleteTarget(null)
+        toast('コマンドを削除しました', 'success')
+      },
+      onError: (err) => {
+        setDeleteTarget(null)
+        toast(`削除に失敗しました: ${err.message}`, 'error')
+      },
+    })
+  }, [deleteTarget, selectedId, deleteMutation, toast])
 
   const handleBack = useCallback(() => {
     setSelectedId(null)
@@ -499,6 +634,9 @@ export function ConsolePage() {
     onOpenCreate: handleOpenCreate,
     onOpenEdit: setEditTarget,
     onOpenDelete: setDeleteTarget,
+    isLoading,
+    isRunPending: runMutation.isPending,
+    isStopPending: stopMutation.isPending,
   }
 
   return (

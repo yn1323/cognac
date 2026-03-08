@@ -5,6 +5,8 @@ import type {
   Task, TaskImage, ExecutionLog, CreateTaskInput, UpdateTaskInput, Persona, Discussion, Plan, SettingsPayload,
   GitStatusResponse, GitLogResponse, GitBranchesResponse, GitRemoteStatusResponse,
   GitCommitResponse, GitMergeResponse, GitPushResponse, GitExplainResponse,
+  ConsoleCommandListItem, ConsoleCommand, ConsoleRun, ConsoleLogResponse,
+  CreateConsoleCommandInput, UpdateConsoleCommandInput,
 } from '@cognac/shared'
 
 const BASE = '/api'
@@ -78,6 +80,23 @@ export const api = {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
+  },
+  console: {
+    listCommands: () => fetchJson<ConsoleCommandListItem[]>('/console/commands'),
+    createCommand: (data: CreateConsoleCommandInput) =>
+      fetchJson<ConsoleCommand>('/console/commands', { method: 'POST', body: JSON.stringify(data) }),
+    updateCommand: (id: number, data: UpdateConsoleCommandInput) =>
+      fetchJson<ConsoleCommand>(`/console/commands/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteCommand: (id: number) =>
+      fetchJson<{ ok: boolean }>(`/console/commands/${id}`, { method: 'DELETE' }),
+    runCommand: (id: number) =>
+      fetchJson<{ command: ConsoleCommand; run: ConsoleRun }>(`/console/commands/${id}/run`, { method: 'POST' }),
+    stopCommand: (id: number) =>
+      fetchJson<{ ok: boolean; run: ConsoleRun | null }>(`/console/commands/${id}/stop`, { method: 'POST' }),
+    listRuns: (commandId: number) =>
+      fetchJson<ConsoleRun[]>(`/console/commands/${commandId}/runs`),
+    getRunLog: (runId: number) =>
+      fetchJson<ConsoleLogResponse>(`/console/runs/${runId}/log`),
   },
   git: {
     status: () => fetchJson<GitStatusResponse>('/git/status'),

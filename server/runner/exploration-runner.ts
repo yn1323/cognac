@@ -205,7 +205,7 @@ export class ExplorationRunner implements RunnerStatus {
       this.emit(exploration.id, phaseEnd('discussion', discussionResult.totalDurationMs))
 
       explorationQueries.updateExploration(this.db, exploration.id, {
-        status: 'reporting',
+        status: 'analyzing',
       })
 
       const beforeStatus = serializeGitStatus(this.cwd)

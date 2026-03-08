@@ -4,6 +4,7 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   ListChecks,
+  Compass,
   GitBranch,
   Terminal,
   Settings,
@@ -19,6 +20,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { icon: ListChecks, label: 'タスク', active: true },
+  { icon: Compass, label: '探索' },
   { icon: GitBranch, label: 'Git' },
   { icon: Terminal, label: 'コンソール' },
   { icon: Settings, label: '設定' },
