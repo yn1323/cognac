@@ -78,7 +78,7 @@ pending → discussing → planned → executing → testing → completed
 - **ブランチ命名**: `task/<task-id>-<slugified-title>` (slug部分は最大30文字)
 - **Node.js 22**必須 (CIでNode 22を使用)
 - **`packageManager: pnpm@10.6.2`** — npm/yarnではなくpnpmを使用
-- **画面名とpencil NodeIDの紐づけ** — `doc/spec/pencilDesignId.md`
+- **画面名とpencil NodeIDの紐づけ** — `doc/design/index.md`
 
 ## CI
 
