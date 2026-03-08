@@ -13,6 +13,7 @@ export type {
   CiCache,
 } from './types/events.js'
 export type {
+  CommitMessageLanguage,
   CognacConfig,
   GitConfig,
   CiConfig,

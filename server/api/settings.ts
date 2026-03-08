@@ -4,7 +4,7 @@
 
 import { Hono } from 'hono'
 import { z } from 'zod'
-import type { CognacConfig, CiStep, SettingsPayload } from '@cognac/shared'
+import type { CognacConfig, CiStep, CommitMessageLanguage, SettingsPayload } from '@cognac/shared'
 import { writeConfigFile } from '../runner/config-writer.js'
 
 // TaskRunnerから設定を読み書きするインターフェース
@@ -12,7 +12,7 @@ export interface ConfigAccessor {
   getConfig(): CognacConfig
   updateConfig(patch: {
     ci: { maxRetries: number; steps?: CiStep[] }
-    git: { commitLogLimit: number }
+    git: { commitLogLimit: number; commitMessageLanguage: CommitMessageLanguage }
   }): void
 }
 
@@ -28,6 +28,7 @@ const updateSettingsSchema = z.object({
   }),
   git: z.object({
     commitLogLimit: z.number().int().min(1).max(100),
+    commitMessageLanguage: z.enum(['ja', 'en']),
   }),
 })
 
@@ -44,6 +45,7 @@ export function settingsRouter(accessor: ConfigAccessor, cwd: string) {
       },
       git: {
         commitLogLimit: config.git.commitLogLimit,
+        commitMessageLanguage: config.git.commitMessageLanguage,
       },
     }
     return c.json(payload)

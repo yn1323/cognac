@@ -22,6 +22,7 @@ export default defineConfig({
   port: ${config.port},
   git: {
     defaultBranch: ${JSON.stringify(config.git.defaultBranch)},
+    commitMessageLanguage: ${JSON.stringify(config.git.commitMessageLanguage)},
   },
   ci: {
     maxRetries: ${config.ci.maxRetries},${formatSteps(config.ci.steps)}

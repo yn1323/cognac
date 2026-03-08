@@ -1,5 +1,8 @@
 import type { CiStep } from './events.js'
 
+// コミットメッセージ言語
+export type CommitMessageLanguage = 'ja' | 'en'
+
 // 設定更新ペイロード（API用）
 export interface SettingsPayload {
   ci: {
@@ -8,6 +11,7 @@ export interface SettingsPayload {
   }
   git: {
     commitLogLimit: number
+    commitMessageLanguage: CommitMessageLanguage
   }
 }
 
@@ -15,6 +19,7 @@ export interface SettingsPayload {
 export interface GitConfig {
   defaultBranch: string
   commitLogLimit: number
+  commitMessageLanguage: CommitMessageLanguage
 }
 
 // CI設定
@@ -56,6 +61,7 @@ const defaultConfig: CognacConfig = {
   git: {
     defaultBranch: 'main',
     commitLogLimit: 50,
+    commitMessageLanguage: 'ja',
   },
   ci: {
     maxRetries: 5,

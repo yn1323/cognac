@@ -315,6 +315,11 @@ ${diff.substring(0, 8000)}
 // Claude CLI を使ってコミットメッセージを生成する
 // callClaudePrint() でtmpファイル + stdinパイプ方式を使い、長いdiffも安全に処理
 async function generateCommitMessage(diff: string, recentLog: string, getConfig: () => CognacConfig): Promise<string> {
+  const config = getConfig()
+  const langRule = config.git.commitMessageLanguage === 'ja'
+    ? '- 日本語でコミットメッセージを書いてください'
+    : '- Write the commit message in English'
+
   const prompt = `以下のgit diffに対して適切なコミットメッセージを生成してください。
 
 ## コミットスタイル参考（直近のコミットログ）:
@@ -324,13 +329,13 @@ ${recentLog || '(まだコミットがありません)'}
 ${diff.substring(0, 8000)}
 
 ## ルール:
-- コミットメッセージだけを出力してください（説明は不要）
+- コミットメッセージのsubject（1行目）だけを出力してください（description や本文は不要）
 - 1行目はprefixを付けてください（feat:, fix:, refactor:, docs:, chore: など）
-- 日本語または英語、直近のログスタイルに合わせてください
+${langRule}
 - 50文字程度に収めてください`
 
   try {
-    const response = await callClaudePrint({ prompt }, getConfig())
+    const response = await callClaudePrint({ prompt }, config)
     const result = response.result.trim()
     return result || 'chore: update files'
   } catch (err) {

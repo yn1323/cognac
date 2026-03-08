@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, X, ChevronUp, ChevronDown } from 'lucide-react'
-import type { CiStep } from '@cognac/shared'
+import type { CiStep, CommitMessageLanguage } from '@cognac/shared'
 import { Sidebar } from '@/components/sidebar'
 import { NAV_MAP } from '@/lib/constants'
 import { AppBottomNav } from '@/components/app-bottom-nav'
@@ -111,6 +111,8 @@ interface SettingsPanelProps {
   setMaxRetries: (v: string) => void
   commitLogLimit: string
   setCommitLogLimit: (v: string) => void
+  commitMessageLanguage: CommitMessageLanguage
+  setCommitMessageLanguage: (v: CommitMessageLanguage) => void
   ciSteps: CiStep[]
   setCiSteps: (steps: CiStep[]) => void
   onDeleteDatabase: () => void
@@ -125,6 +127,8 @@ function PCSettings({
   setMaxRetries,
   commitLogLimit,
   setCommitLogLimit,
+  commitMessageLanguage,
+  setCommitMessageLanguage,
   ciSteps,
   setCiSteps,
   onDeleteDatabase,
@@ -196,6 +200,22 @@ function PCSettings({
                 Gitページに表示するコミット履歴の件数
               </p>
             </div>
+            <div>
+              <label className="text-sm font-medium leading-[1.4] text-foreground">
+                コミットメッセージ言語
+              </label>
+              <select
+                className="mt-1.5 flex h-9 w-40 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={commitMessageLanguage}
+                onChange={(e) => setCommitMessageLanguage(e.target.value as CommitMessageLanguage)}
+              >
+                <option value="ja">日本語</option>
+                <option value="en">English</option>
+              </select>
+              <p className="mt-1 text-[12px] text-muted-foreground">
+                AIが自動生成するコミットメッセージの言語
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -261,6 +281,8 @@ function SPSettings({
   setMaxRetries,
   commitLogLimit,
   setCommitLogLimit,
+  commitMessageLanguage,
+  setCommitMessageLanguage,
   ciSteps,
   setCiSteps,
   onDeleteDatabase,
@@ -316,6 +338,22 @@ function SPSettings({
               />
               <p className="mt-1 text-[11px] text-muted-foreground">
                 Gitページに表示するコミット履歴の件数
+              </p>
+            </div>
+            <div>
+              <label className="text-sm font-medium leading-[1.4] text-foreground">
+                コミットメッセージ言語
+              </label>
+              <select
+                className="mt-1.5 flex h-9 w-36 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={commitMessageLanguage}
+                onChange={(e) => setCommitMessageLanguage(e.target.value as CommitMessageLanguage)}
+              >
+                <option value="ja">日本語</option>
+                <option value="en">English</option>
+              </select>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                AIが自動生成するコミットメッセージの言語
               </p>
             </div>
           </CardContent>
@@ -385,6 +423,7 @@ function SPSettings({
 export function SettingsPage() {
   const [maxRetries, setMaxRetries] = useState('5')
   const [commitLogLimit, setCommitLogLimit] = useState('50')
+  const [commitMessageLanguage, setCommitMessageLanguage] = useState<CommitMessageLanguage>('ja')
   const [ciSteps, setCiSteps] = useState<CiStep[]>([])
   const [showDbDeleteConfirm, setShowDbDeleteConfirm] = useState(false)
   const deleteDatabase = useDeleteDatabase()
@@ -398,6 +437,7 @@ export function SettingsPage() {
       initialized.current = true
       setMaxRetries(String(settings.ci.maxRetries))
       setCommitLogLimit(String(settings.git.commitLogLimit))
+      setCommitMessageLanguage(settings.git.commitMessageLanguage)
       setCiSteps(settings.ci.steps)
     }
   }, [settings])
@@ -415,6 +455,7 @@ export function SettingsPage() {
       },
       git: {
         commitLogLimit: commitLogLimitNum,
+        commitMessageLanguage,
       },
     })
   }
@@ -431,6 +472,8 @@ export function SettingsPage() {
     setMaxRetries,
     commitLogLimit,
     setCommitLogLimit,
+    commitMessageLanguage,
+    setCommitMessageLanguage,
     ciSteps,
     setCiSteps,
     onDeleteDatabase: () => setShowDbDeleteConfirm(true),
