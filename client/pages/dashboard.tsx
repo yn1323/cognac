@@ -28,7 +28,7 @@ import { TaskModal } from '@/components/task-modal'
 import { formatRelativeTime } from '@/lib/format'
 import { ACTIVE_STATUSES, RETRYABLE_STATUSES, STATUS_CONFIG } from '@/lib/status-config'
 import { NAV_MAP } from '@/lib/constants'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useCallback, useMemo, useState } from 'react'
 import { useToast } from '@/components/toast'
 import { useTasks, useRetryTask, useStopAllTasks } from '@/hooks/use-tasks'
@@ -140,6 +140,7 @@ interface DashboardProps {
   onNewTask: () => void
   onNavigate: (path: string) => void
   onRetry: (taskId: number) => void
+  isTaskModalOpen?: boolean
 }
 
 interface PCDashboardProps extends DashboardProps {
@@ -280,7 +281,7 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry, 
 
 // --- SP版 ---
 
-function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry }: DashboardProps) {
+function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry, isTaskModalOpen }: DashboardProps) {
   const { activeFilters, metrics, filteredTasks, toggle } = useDashboardFilters(tasks)
 
   return (
@@ -380,7 +381,7 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry }
       </main>
 
       {/* FAB + ボトムナビ */}
-      <Fab icon={Plus} onClick={onNewTask} />
+      {!isTaskModalOpen && <Fab icon={Plus} onClick={onNewTask} />}
       <AppBottomNav activeItem="タスク" />
     </div>
   )
@@ -389,7 +390,9 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry }
 // --- エクスポート ---
 
 export function DashboardPage() {
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const isTaskModalOpen = searchParams.get('new-task') === 'true'
   const handleNewTask = useCallback(() => navigate('?new-task=true'), [navigate])
   const { data: tasks = [], isLoading, error } = useTasks()
   const retryTask = useRetryTask()
@@ -433,6 +436,7 @@ export function DashboardPage() {
           onNewTask={handleNewTask}
           onNavigate={navigate}
           onRetry={handleRetry}
+          isTaskModalOpen={isTaskModalOpen}
         />
       </div>
     </>
