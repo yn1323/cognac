@@ -48,7 +48,7 @@ export function SPBottomNav({ children, className }: SPBottomNavProps) {
   return (
     <nav
       className={cn(
-        'flex items-center justify-around border-t bg-background py-2.5',
+        'fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t bg-background py-2.5',
         className,
       )}
     >

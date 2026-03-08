@@ -280,7 +280,7 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry }
     <div className="flex h-dvh flex-col bg-background">
       <SPHeader />
 
-      <main className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+      <main className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 pb-20">
         {/* タイトル + Running バッジ */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold leading-[1.3] text-foreground">

@@ -279,12 +279,12 @@ function SPGitPage({
   onToggleDiscardDialog,
 }: GitPageViewProps) {
   return (
-    <div className="flex h-screen flex-col bg-[#fafafa]">
+    <div className="flex min-h-screen flex-col bg-[#fafafa]">
       {/* SPヘッダー */}
       <SPHeader />
 
       {/* ボディ */}
-      <main className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+      <main className="flex flex-col gap-4 p-4 pb-20">
         {/* タイトル行 */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold text-foreground">Git</h1>

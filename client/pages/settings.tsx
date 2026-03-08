@@ -276,7 +276,7 @@ function SPSettings({
         <h1 className="text-lg font-semibold text-foreground">設定</h1>
       </header>
 
-      <main className="flex flex-1 flex-col gap-5 overflow-y-auto p-4">
+      <main className="flex flex-1 flex-col gap-5 overflow-y-auto p-4 pb-20">
         {/* 基本設定セクション */}
         <Card>
           <CardHeader className="p-4">
