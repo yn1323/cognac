@@ -7555,5 +7555,8 @@
       "type": "color",
       "value": "#000000"
     }
+  },
+  "imports": {
+    "I": "pencil:shadcn.lib.pen"
   }
 }
