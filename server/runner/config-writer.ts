@@ -20,6 +20,7 @@ export async function writeConfigFile(cwd: string, config: CognacConfig): Promis
 
 export default defineConfig({
   port: ${config.port},
+  provider: ${JSON.stringify(config.provider)},
   git: {
     defaultBranch: ${JSON.stringify(config.git.defaultBranch)},
     commitMessageLanguage: ${JSON.stringify(config.git.commitMessageLanguage)},

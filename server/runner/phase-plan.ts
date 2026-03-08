@@ -11,7 +11,7 @@ import type {
   Plan,
   PlanResult,
 } from '@cognac/shared'
-import { callClaudePrint } from './claude-caller.js'
+import { createProvider } from './providers/index.js'
 import { extractJson } from './json-parser.js'
 import { getRepoStructure } from './context-cache.js'
 import * as planQueries from '../db/queries/plans.js'
@@ -139,7 +139,8 @@ export async function executePhasePlan(
 
   // 最大2回トライ（初回 + 1回リトライ）
   for (let attempt = 0; attempt < 2; attempt++) {
-    response = await callClaudePrint(
+    const provider = createProvider(config.provider)
+    response = await provider.execPrint(
       {
         prompt: userPrompt,
         systemPrompt,

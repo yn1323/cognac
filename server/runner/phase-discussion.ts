@@ -10,7 +10,7 @@ import type {
   Discussion,
   DiscussionRound,
 } from '@cognac/shared'
-import { callClaudePrint } from './claude-caller.js'
+import { createProvider } from './providers/index.js'
 import { extractJson } from './json-parser.js'
 import { getRepoStructure } from './context-cache.js'
 import * as discussionQueries from '../db/queries/discussions.js'
@@ -150,7 +150,8 @@ export async function executePhaseDiscussion(
     let response = { result: '', sessionId: '', usage: { inputTokens: 0, outputTokens: 0 }, durationMs: 0 }
 
     for (let attempt = 0; attempt < 2; attempt++) {
-      response = await callClaudePrint(
+      const provider = createProvider(config.provider)
+      response = await provider.execPrint(
         {
           prompt: userPrompt,
           systemPrompt,

@@ -1,5 +1,5 @@
 import type { Task, CognacConfig, TaskEvent } from '@cognac/shared'
-import { callClaude } from './claude-caller.js'
+import { createProvider } from './providers/index.js'
 
 // ブートストラップ用のPhase 3実行プロンプトを構築する
 // Phase 2はスキップなので、タスク情報から直接プロンプトを組み立てる
@@ -29,7 +29,8 @@ export async function executePhase3(
 ): Promise<{ sessionId: string; tokenInput: number; tokenOutput: number; durationMs: number }> {
   const prompt = executionPrompt ?? buildExecutionPrompt(task)
 
-  const response = await callClaude(
+  const provider = createProvider(config.provider)
+  const response = await provider.execStream(
     {
       prompt,
       maxTurns: config.claude.maxTurnsExecution,
