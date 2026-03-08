@@ -102,7 +102,7 @@ export function PCOverviewTab({ task }: { task: Task }) {
             <span className="text-[13px] font-medium text-muted-foreground">
               説明
             </span>
-            <p className="text-[13px] leading-[1.6] text-foreground">
+            <p className="whitespace-pre-wrap text-[13px] leading-[1.6] text-foreground">
               {task.description ?? '説明なし'}
             </p>
           </div>
@@ -146,7 +146,7 @@ export function SPOverviewTab({ task }: { task: Task }) {
             <span className="text-xs font-medium text-muted-foreground">
               説明
             </span>
-            <p className="text-xs leading-[1.5] text-foreground">
+            <p className="whitespace-pre-wrap text-xs leading-[1.5] text-foreground">
               {task.description ?? '説明なし'}
             </p>
           </div>
