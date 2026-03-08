@@ -11,7 +11,7 @@ import type { GitFile, GitFileStatus, GitBranch, GitCommit, GitRemoteStatus, Com
 // gitコマンドを実行するヘルパー（cwd必須）
 // NOTE: argsはCognac内部のハードコード値 or バリデーション済みの値のみ使用するためexecSyncで安全
 function git(args: string, cwd: string): string {
-  return execSync(`git ${args}`, { cwd, encoding: 'utf8', timeout: 30000 }).trim()
+  return execSync(`git ${args}`, { cwd, encoding: 'utf8', timeout: 30000 }).trimEnd()
 }
 
 // ブランチ名のバリデーション（コマンドインジェクション防止）
