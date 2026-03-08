@@ -41,6 +41,30 @@ pencilでデザイン作成後、コード側で微調整しており、細部�
       - SP：Node ID: wukk3
    1. コンソールログ詳細（SP画面）
       - SP：Node ID: 3tUlE
+   1. コマンド登録モーダル
+      - Node ID: qZfZ7
+   1. コマンド操作ドロップダウン
+      - Node ID: aaQOY
+
+1. 探索画面 `@doc/design/ExplorationPage.pen`
+   1. 探索一覧ページ
+      - PC：Node ID: NiQL4
+      - SP：Node ID: VOMkK
+   1. 探索詳細ページ（概要タブ）
+      - PC：Node ID: 58pKv
+      - SP：Node ID: Kz1kq
+   1. 探索詳細ページ（ディスカッションタブ）
+      - PC：Node ID: adu6X
+      - SP：Node ID: DWe51
+   1. 探索詳細ページ（ログタブ）
+      - PC：Node ID: eVYAj
+      - SP：Node ID: Im7jJ
+   1. 探索詳細ページ（レポートタブ）
+      - PC：Node ID: 9jAxJ
+      - SP：Node ID: UtmEE
+   1. 新規探索作成モーダル
+      - PC：Node ID: MpRnP
+      - SP：Node ID: 05zTt
 
 1. Git画面 `@doc/design/GitPage.pen`
    - PC：Node ID: elYDX
