@@ -39,6 +39,7 @@ export type {
   GitCheckoutRequest,
   GitCreateBranchRequest,
   GitMergeRequest,
+  GitExplainResponse,
 } from './types/git.js'
 
 // ランタイム

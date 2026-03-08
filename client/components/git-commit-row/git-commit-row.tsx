@@ -1,6 +1,7 @@
 // Gitコミット履歴行
 // デザイン design.pen reusable=fkBBE 準拠
 
+import { Bot } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { GitCommit } from '@cognac/shared'
 import { Badge } from '@/components/ui/badge'
@@ -8,9 +9,10 @@ import { Badge } from '@/components/ui/badge'
 interface GitCommitRowProps {
   commit: GitCommit
   isLast?: boolean
+  onExplain?: () => void
 }
 
-export function GitCommitRow({ commit, isLast }: GitCommitRowProps) {
+export function GitCommitRow({ commit, isLast, onExplain }: GitCommitRowProps) {
   return (
     <div
       className={cn(
@@ -53,6 +55,16 @@ export function GitCommitRow({ commit, isLast }: GitCommitRowProps) {
           <span className="font-medium text-[#1d4ed8]">{commit.hash}</span>
           <span>{commit.date}</span>
           <span>{commit.author}</span>
+          {onExplain && (
+            <button
+              type="button"
+              onClick={onExplain}
+              className="ml-auto flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium text-[#2563eb] hover:bg-[#eff6ff]"
+            >
+              <Bot className="h-3 w-3" />
+              AI 解説
+            </button>
+          )}
         </div>
       </div>
     </div>

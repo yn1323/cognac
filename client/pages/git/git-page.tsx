@@ -27,6 +27,7 @@ import { GitCommitRow } from '@/components/git-commit-row'
 import { AiCommitProgress } from '@/components/ai-commit-progress'
 import { MergeModal } from '@/components/merge-modal'
 import { NewBranchModal } from '@/components/new-branch-modal'
+import { CommitExplainModal } from '@/components/commit-explain-modal'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useToast } from '@/components/toast'
 import { NAV_MAP } from '@/lib/constants'
@@ -42,6 +43,8 @@ import {
   useGitFetch,
   useMerge,
   useCreateBranch,
+  useExplainCommit,
+  useExplainWorking,
 } from '@/hooks/use-git'
 // AIコミット実行中に表示するプレースホルダーログ
 const COMMIT_IN_PROGRESS_LOG = [
@@ -173,6 +176,9 @@ interface GitPageViewProps {
   onFetch: () => void
   isPushing: boolean
   isFetching: boolean
+  onExplainCommit: (hash: string, message: string) => void
+  onExplainWorking: () => void
+  isExplainWorkingLoading: boolean
 }
 
 // --- PC版 ---
@@ -195,6 +201,9 @@ function PCGitPage({
   onFetch,
   isPushing,
   isFetching,
+  onExplainCommit,
+  onExplainWorking,
+  isExplainWorkingLoading,
 }: GitPageViewProps) {
   return (
     <div className="flex h-screen bg-[#fafafa]">
@@ -284,16 +293,25 @@ function PCGitPage({
                     ))}
                   </div>
 
-                  {/* AIコミットボタン */}
-                  <div className="flex justify-center p-4">
+                  {/* AIコミット・解説ボタン */}
+                  <div className="flex gap-2 p-4">
                     <Button
                       variant="primary"
-                      className="w-full"
+                      className="flex-1"
                       onClick={onStartCommit}
                       disabled={files.length === 0}
                     >
                       <Bot className="h-4 w-4" />
                       AI コミット
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={onExplainWorking}
+                      disabled={files.length === 0 || isExplainWorkingLoading}
+                    >
+                      <Bot className="h-4 w-4" />
+                      AI 解説
                     </Button>
                   </div>
                 </>
@@ -313,6 +331,7 @@ function PCGitPage({
                     key={commit.hash}
                     commit={commit}
                     isLast={i === commits.length - 1}
+                    onExplain={() => onExplainCommit(commit.hash, commit.message)}
                   />
                 ))}
               </div>
@@ -344,6 +363,9 @@ function SPGitPage({
   onFetch,
   isPushing,
   isFetching,
+  onExplainCommit,
+  onExplainWorking,
+  isExplainWorkingLoading,
 }: GitPageViewProps) {
   return (
     <div className="flex min-h-screen flex-col bg-[#fafafa]">
@@ -421,16 +443,25 @@ function SPGitPage({
                 ))}
               </div>
 
-              {/* AIコミットボタン */}
-              <div className="flex justify-center p-4">
+              {/* AIコミット・解説ボタン */}
+              <div className="flex gap-2 p-4">
                 <Button
                   variant="primary"
-                  className="w-full"
+                  className="flex-1"
                   onClick={onStartCommit}
                   disabled={files.length === 0}
                 >
                   <Bot className="h-4 w-4" />
                   AI コミット
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={onExplainWorking}
+                  disabled={files.length === 0 || isExplainWorkingLoading}
+                >
+                  <Bot className="h-4 w-4" />
+                  AI 解説
                 </Button>
               </div>
             </>
@@ -448,6 +479,7 @@ function SPGitPage({
                 key={commit.hash}
                 commit={commit}
                 isLast={i === commits.length - 1}
+                onExplain={() => onExplainCommit(commit.hash, commit.message)}
               />
             ))}
           </div>
@@ -467,6 +499,11 @@ export function GitPage() {
   const [showMergeModal, setShowMergeModal] = useState(false)
   const [showNewBranchModal, setShowNewBranchModal] = useState(false)
   const [showDiscardDialog, setShowDiscardDialog] = useState(false)
+  const [explainTarget, setExplainTarget] = useState<
+    | { type: 'commit'; hash: string; message: string }
+    | { type: 'working' }
+    | null
+  >(null)
 
   // データ取得フック
   const { data: statusData } = useGitStatus()
@@ -484,6 +521,8 @@ export function GitPage() {
   const fetchMutation = useGitFetch()
   const mergeMutation = useMerge()
   const createBranchMutation = useCreateBranch()
+  const explainMutation = useExplainCommit()
+  const explainWorkingMutation = useExplainWorking()
 
   const files = statusData?.files ?? []
   const commits = logData?.commits ?? []
@@ -535,6 +574,18 @@ export function GitPage() {
     })
   }
 
+  const handleExplainCommit = (hash: string, message: string) => {
+    explainMutation.reset()
+    setExplainTarget({ type: 'commit', hash, message })
+    explainMutation.mutate(hash)
+  }
+
+  const handleExplainWorking = () => {
+    explainWorkingMutation.reset()
+    setExplainTarget({ type: 'working' })
+    explainWorkingMutation.mutate()
+  }
+
   const handleCreateBranch = (name: string, base?: string) => {
     createBranchMutation.mutate({ name, base }, {
       onSuccess: () => {
@@ -565,6 +616,9 @@ export function GitPage() {
     onFetch: handleFetch,
     isPushing: pushMutation.isPending,
     isFetching: fetchMutation.isPending,
+    onExplainCommit: handleExplainCommit,
+    onExplainWorking: handleExplainWorking,
+    isExplainWorkingLoading: explainWorkingMutation.isPending,
   }
 
   return (
@@ -591,6 +645,19 @@ export function GitPage() {
         onClose={handleToggleNewBranchModal}
         branches={branches}
         onCreate={handleCreateBranch}
+      />
+      <CommitExplainModal
+        open={explainTarget !== null}
+        onClose={() => { setExplainTarget(null); explainMutation.reset(); explainWorkingMutation.reset() }}
+        commitHash={explainTarget?.type === 'commit' ? explainTarget.hash : ''}
+        commitMessage={explainTarget?.type === 'commit' ? explainTarget.message : '未コミットの変更'}
+        explanation={
+          explainTarget?.type === 'commit'
+            ? (explainMutation.data?.explanation ?? null)
+            : (explainWorkingMutation.data?.explanation ?? null)
+        }
+        isLoading={explainTarget?.type === 'commit' ? explainMutation.isPending : explainWorkingMutation.isPending}
+        isError={explainTarget?.type === 'commit' ? explainMutation.isError : explainWorkingMutation.isError}
       />
       <ConfirmDialog
         open={showDiscardDialog}

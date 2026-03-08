@@ -23,6 +23,8 @@ import {
   getStagedDiff,
   getRecentLogOneline,
   commitWithMessage,
+  getCommitDiff,
+  getWorkingDiff,
 } from '../runner/git-api-ops.js'
 
 // バリデーションスキーマ
@@ -33,6 +35,10 @@ const checkoutSchema = z.object({
 const createBranchSchema = z.object({
   name: z.string().min(1, 'ブランチ名を指定してください'),
   base: z.string().optional(),
+})
+
+const explainSchema = z.object({
+  hash: z.string().min(1, 'コミットハッシュを指定してください'),
 })
 
 const mergeSchema = z.object({
@@ -243,7 +249,67 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
     }
   })
 
+  // POST /explain — AIによるコミット解説
+  app.post('/explain', async (c) => {
+    const body = await c.req.json()
+    const parsed = explainSchema.safeParse(body)
+    if (!parsed.success) {
+      return c.json({ error: 'バリデーションエラー', details: parsed.error.issues }, 400)
+    }
+
+    try {
+      const diff = getCommitDiff(cwd, parsed.data.hash)
+      if (!diff) {
+        return c.json({ error: 'コミットのdiffが取得できませんでした' }, 400)
+      }
+
+      const explanation = await generateCommitExplanation(diff, parsed.data.hash, getConfig)
+      return c.json({ explanation })
+    } catch (err) {
+      return c.json({ error: 'コミット解説の生成に失敗しました', detail: String(err) }, 500)
+    }
+  })
+
+  // POST /explain-working — 未コミット変更のAI解説
+  app.post('/explain-working', async (c) => {
+    try {
+      const diff = getWorkingDiff(cwd)
+      if (!diff) {
+        return c.json({ error: '変更がありません' }, 400)
+      }
+
+      const explanation = await generateCommitExplanation(diff, '未コミット変更', getConfig)
+      return c.json({ explanation })
+    } catch (err) {
+      return c.json({ error: '変更内容の解説に失敗しました', detail: String(err) }, 500)
+    }
+  })
+
   return app
+}
+
+// Claude CLI を使ってコミットの変更内容を解説する
+async function generateCommitExplanation(diff: string, hash: string, getConfig: () => CognacConfig): Promise<string> {
+  const prompt = `以下のgitコミット (${hash}) の変更内容を日本語で簡潔に解説してください。
+
+## 変更内容 (git show):
+${diff.substring(0, 8000)}
+
+## ルール:
+- まず、この変更全体の目的を1文で要約してください（例: 「○○機能の追加」「○○バグの修正」）
+- 次に、ユーザー視点で何が変わるかを箇条書きで説明してください
+- ファイル名の羅列ではなく、機能・動作の変化を中心に説明してください
+- 技術的な実装詳細はごく簡潔に（必要な場合のみ）
+- 全体で200文字〜400文字程度に収めてください`
+
+  try {
+    const response = await callClaudePrint({ prompt }, getConfig())
+    const result = response.result.trim()
+    return result || 'コミットの解説を生成できませんでした。'
+  } catch (err) {
+    console.error('[generateCommitExplanation] Claude CLI 失敗:', err)
+    return 'コミットの解説を生成できませんでした。'
+  }
 }
 
 // Claude CLI を使ってコミットメッセージを生成する

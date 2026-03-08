@@ -38,6 +38,7 @@ const ALLOWED_MIME_TYPES = [
 // 実行中タスクのキャンセルインターフェース
 export interface TaskCanceller {
   cancelCurrentTask(taskId: number): boolean
+  stopAll(): number
 }
 
 export function tasksRouter(db: Database.Database, canceller?: TaskCanceller) {
@@ -206,6 +207,12 @@ export function tasksRouter(db: Database.Database, canceller?: TaskCanceller) {
       return c.json({ error: 'タスクが見つからない' }, 404)
     }
     return c.json(task)
+  })
+
+  // 全タスク停止（アクティブな全タスクをstoppedにし、ランナーも一時停止）
+  app.post('/stop-all', (c) => {
+    const stoppedCount = canceller?.stopAll() ?? 0
+    return c.json({ ok: true, stoppedCount })
   })
 
   // タスクキャンセル（実行中のタスクをstoppedにし、プロセスも停止する）

@@ -89,6 +89,23 @@ export class TaskRunner implements RunnerStatus {
     return true
   }
 
+  // 全タスクを停止してランナーを一時停止する
+  stopAll(): number {
+    // ランナーを一時停止
+    this.paused = true
+
+    // 実行中タスクがあればabort
+    if (this.currentAbortController) {
+      console.log(`実行中タスク ${this.currentTaskId} のキャンセルシグナルを送信`)
+      this.currentAbortController.abort()
+    }
+
+    // DBの全アクティブタスクをstopped化
+    const stoppedCount = taskQueries.stopAllActiveTasks(this.db)
+    console.log(`全停止: ${stoppedCount}件のタスクを停止`)
+    return stoppedCount
+  }
+
   private scheduleNextPoll(): void {
     if (!this.running) return
     this.timer = setTimeout(() => this.poll(), 1000)
@@ -380,6 +397,11 @@ export class TaskRunner implements RunnerStatus {
         // キャンセルエラーは上位に伝搬
         if (err instanceof TaskCancelledError) {
           throw err
+        }
+
+        // abort済み（全停止など）ならDB上書きせず即終了
+        if (signal?.aborted) {
+          throw new TaskCancelledError()
         }
 
         if (err instanceof ProcessTimeoutError) {

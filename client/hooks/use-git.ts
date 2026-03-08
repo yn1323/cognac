@@ -117,6 +117,18 @@ export function useGitFetch() {
   })
 }
 
+export function useExplainCommit() {
+  return useMutation({
+    mutationFn: (hash: string) => api.git.explain(hash),
+  })
+}
+
+export function useExplainWorking() {
+  return useMutation({
+    mutationFn: () => api.git.explainWorking(),
+  })
+}
+
 export function useMerge() {
   const qc = useQueryClient()
   return useMutation({

@@ -210,6 +210,16 @@ export function getStagedDiff(cwd: string): string {
   return git('diff --staged', cwd)
 }
 
+// 未コミットの全変更（staged + unstaged）のdiffを取得する（AI解説用）
+export function getWorkingDiff(cwd: string): string {
+  try {
+    return git('diff HEAD', cwd)
+  } catch {
+    // 最初のコミット前はHEADが存在しないため、全ファイルをdiffとして返す
+    return git('diff --cached', cwd)
+  }
+}
+
 // 直近のコミットログを取得する（AIコミットのスタイル参考用）
 export function getRecentLogOneline(cwd: string, count = 10): string {
   try {
@@ -217,6 +227,17 @@ export function getRecentLogOneline(cwd: string, count = 10): string {
   } catch {
     return ''
   }
+}
+
+// コミットハッシュのバリデーション（コマンドインジェクション防止）
+export function validateCommitHash(hash: string): boolean {
+  return /^[0-9a-f]{4,40}$/i.test(hash)
+}
+
+// 特定コミットのdiffを取得する（AI解説用）
+export function getCommitDiff(cwd: string, hash: string): string {
+  if (!validateCommitHash(hash)) throw new Error('不正なコミットハッシュです')
+  return git(`show ${hash} --format=""`, cwd)
 }
 
 // コミットを実行してCommitResultを返す

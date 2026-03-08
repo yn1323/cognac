@@ -3,6 +3,7 @@
 
 import type { PriorityLabel } from '@cognac/shared'
 import { cn } from '@/lib/utils'
+import { PRIORITY_LABEL_JA } from '@/lib/constants'
 
 export function PriorityRadioGroup({
   options,
@@ -37,7 +38,7 @@ export function PriorityRadioGroup({
               <div className="h-2.5 w-2.5 rounded-full bg-blue-600" />
             )}
           </div>
-          <span className="text-sm font-medium text-foreground">{option}</span>
+          <span className="text-sm font-medium text-foreground">{PRIORITY_LABEL_JA[option]}</span>
         </label>
       ))}
     </div>

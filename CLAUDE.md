@@ -121,3 +121,20 @@ pushトリガーの4つのGitHub Actionsワークフロー: `build.yml`、`lint.
 - 日本語でデザイン、レイアウトすること
 - デザイン、レイアウトにはこのAIのトーン・文体を適用しないこと
 - pencil MCPは指示されたときのみ参照すること
+
+### デザイントークン
+
+`client/index.css` に全トークンを集約。TailwindCSS v4の`@theme inline`で定義し、Tailwindユーティリティクラスとして利用可能。
+
+- **基本カラー**: `--color-primary`, `--color-secondary`, `--color-muted` 等（shadcn/ui準拠）
+- **ブランドカラー**: `--color-cognac`, `--color-cognac-light`, `--color-cognac-dark`
+- **ステータスカラー**: 8状態×テキスト/背景の2変数（例: `--color-status-executing`, `--color-status-executing-bg`）
+- **サイドバー**: `--color-sidebar` 系
+- **角丸**: `--radius-sm/md/lg/xl`（基準値 `0.625rem`）
+- **フォント**: Noto Sans + Noto Sans JP
+- **ライト/ダークモード**: `:root` と `.dark` でCSS変数を切り替え
+
+### 共通コンポーネント
+
+- **`client/components/ui/`** — プリミティブUIコンポーネント（button, card, input, badge, switch, dropdown-menu, confirm-dialog 等）
+- **`client/components/`** — ドメイン寄り共通コンポーネント（layout, sidebar, page-header, toast, status-badge, metric-card 等）。コロケーションパターン（`component.tsx` + `index.ts` + `component.stories.tsx`）

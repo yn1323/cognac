@@ -119,3 +119,17 @@ export function stopPendingTasks(db: Database.Database): void {
   `)
   stmt.run()
 }
+
+/**
+ * アクティブな全タスクをstoppedにする
+ * ユーザーが「全停止」ボタンを押したときに使うやつ
+ */
+export function stopAllActiveTasks(db: Database.Database): number {
+  const stmt = db.prepare(`
+    UPDATE tasks
+    SET status = 'stopped', paused_reason = 'ユーザーによる全停止'
+    WHERE status IN ('pending', 'discussing', 'planned', 'executing', 'testing')
+  `)
+  const result = stmt.run()
+  return result.changes
+}
