@@ -24,6 +24,7 @@ export type ExplorationCardStatus =
 // 削除可能なステータス
 export const EXPLORATION_DELETABLE_STATUSES = new Set<ExplorationStatus>([
   'pending',
+  'paused',
   'completed',
   'failed',
 ])

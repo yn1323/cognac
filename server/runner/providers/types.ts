@@ -23,6 +23,7 @@ export interface StreamExecOptions {
   systemPrompt?: string
   sessionId?: string
   maxTurns?: number
+  executionMode?: 'write' | 'read-only'
   allowedTools?: string[]
   dangerouslySkipPermissions?: boolean
   onStream?: (event: AgentStreamEvent) => void

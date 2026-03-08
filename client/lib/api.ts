@@ -137,6 +137,8 @@ export const api = {
       fetchJson<ExplorationSession>(`/explorations/${id}/retry`, { method: 'POST' }),
     taskify: (id: number) =>
       fetchJson<ExplorationTaskifyJob>(`/explorations/${id}/taskify`, { method: 'POST' }),
+    delete: (id: number) =>
+      fetchJson<{ ok: boolean }>(`/explorations/${id}`, { method: 'DELETE' }),
     deleteImage: (id: number, imageId: number) =>
       fetchJson<{ ok: boolean }>(`/explorations/${id}/images/${imageId}`, { method: 'DELETE' }),
   },

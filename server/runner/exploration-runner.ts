@@ -18,6 +18,8 @@ import * as explorationDiscussionQueries from '../db/queries/exploration-discuss
 import * as explorationArtifactQueries from '../db/queries/exploration-artifacts.js'
 import * as explorationLogQueries from '../db/queries/exploration-logs.js'
 import * as explorationTaskifyJobQueries from '../db/queries/exploration-taskify-jobs.js'
+import { classifyError } from './error-classifier.js'
+import { ExplorationPhaseError } from './exploration-output.js'
 import { ProcessTimeoutError, TaskCancelledError } from './providers/types.js'
 import { executeExplorationPhasePersona } from './phase-exploration-persona.js'
 import { executeExplorationPhaseDiscussion } from './phase-exploration-discussion.js'
@@ -179,6 +181,7 @@ export class ExplorationRunner implements RunnerStatus {
 
   private async executeExploration(exploration: ExplorationSession): Promise<void> {
     const { signal } = new AbortController()
+    let currentPhase: ExplorationPhase = 'persona'
 
     try {
       const started = new Date().toISOString()
@@ -192,6 +195,7 @@ export class ExplorationRunner implements RunnerStatus {
 
       const inputImages = explorationImageQueries.listExplorationImages(this.db, exploration.id)
 
+      currentPhase = 'persona'
       this.emit(exploration.id, phaseStart('persona'))
       const personaResult = await executeExplorationPhasePersona(
         exploration,
@@ -203,6 +207,7 @@ export class ExplorationRunner implements RunnerStatus {
       this.emit(exploration.id, { type: 'persona_selected', personas: personaResult.personas })
       this.emit(exploration.id, phaseEnd('persona', personaResult.durationMs))
 
+      currentPhase = 'discussion'
       explorationQueries.updateExploration(this.db, exploration.id, {
         current_phase: 'discussion',
       })
@@ -218,6 +223,7 @@ export class ExplorationRunner implements RunnerStatus {
       )
       this.emit(exploration.id, phaseEnd('discussion', discussionResult.totalDurationMs))
 
+      currentPhase = 'explore'
       explorationQueries.updateExploration(this.db, exploration.id, {
         status: 'analyzing',
         current_phase: 'explore',
@@ -263,6 +269,7 @@ export class ExplorationRunner implements RunnerStatus {
         this.emit(exploration.id, { type: 'artifact_created', kind: 'playwright-log', path: image.file_path })
       }
 
+      currentPhase = 'report'
       explorationQueries.updateExploration(this.db, exploration.id, {
         current_phase: 'report',
       })
@@ -303,26 +310,48 @@ export class ExplorationRunner implements RunnerStatus {
       }
 
       const message = error instanceof Error ? error.message : String(error)
+      const phase = error instanceof ExplorationPhaseError ? error.phase : currentPhase
+      const outputRaw = error instanceof ExplorationPhaseError ? error.outputRaw : undefined
       if (error instanceof ProcessTimeoutError) {
         explorationQueries.markExplorationPaused(this.db, exploration.id, message)
         explorationLogQueries.createExplorationLog(this.db, {
           exploration_session_id: exploration.id,
-          phase: 'explore',
+          phase,
           error_type: 'process',
           error_message: message,
+          output_raw: outputRaw,
         })
-        this.emit(exploration.id, { type: 'paused', reason: message, phase: 'explore' })
+        this.emit(exploration.id, { type: 'paused', reason: message, phase })
+        return
+      }
+
+      const rawForClassification = outputRaw ?? message
+      const errorType = error instanceof ExplorationPhaseError
+        ? error.errorType
+        : classifyError(rawForClassification, 1)
+
+      if (errorType === 'infra') {
+        explorationQueries.markExplorationPaused(this.db, exploration.id, message)
+        explorationLogQueries.createExplorationLog(this.db, {
+          exploration_session_id: exploration.id,
+          phase,
+          error_type: 'infra',
+          error_message: message,
+          output_raw: outputRaw,
+        })
+        this.emit(exploration.id, { type: 'paused', reason: message, phase })
         return
       }
 
       explorationQueries.markExplorationFailed(this.db, exploration.id, message)
       explorationLogQueries.createExplorationLog(this.db, {
         exploration_session_id: exploration.id,
-        phase: 'report',
+        phase,
         error_type: 'app',
         error_message: message,
+        output_raw: outputRaw,
       })
-      this.emit(exploration.id, { type: 'error', errorType: 'app', message })
+      this.emit(exploration.id, { type: 'error', errorType: 'app', message, phase })
     }
   }
 

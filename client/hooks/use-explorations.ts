@@ -32,6 +32,17 @@ export function useCreateExploration() {
   })
 }
 
+export function useDeleteExploration() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => api.explorations.delete(id),
+    onSuccess: (_res, id) => {
+      qc.removeQueries({ queryKey: ['explorations', id] })
+      qc.invalidateQueries({ queryKey: ['explorations'], exact: true })
+    },
+  })
+}
+
 export function useRetryExploration() {
   const qc = useQueryClient()
   return useMutation({

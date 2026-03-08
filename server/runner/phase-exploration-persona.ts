@@ -134,6 +134,7 @@ export async function executeExplorationPhasePersona(
     token_input: response.usage.inputTokens,
     token_output: response.usage.outputTokens,
     duration_ms: response.durationMs,
+    output_raw: response.result,
     output_summary: `${personas.length}名の探索ペルソナを選出`,
   })
 

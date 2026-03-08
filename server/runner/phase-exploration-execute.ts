@@ -10,11 +10,11 @@ import type {
   ExplorationSession,
 } from '@cognac/shared'
 import { createProvider } from './providers/index.js'
-import { extractJson } from './json-parser.js'
 import * as artifactQueries from '../db/queries/exploration-artifacts.js'
 import * as imageQueries from '../db/queries/exploration-images.js'
 import * as logQueries from '../db/queries/exploration-logs.js'
 import { formatDiscussions } from './discussion-utils.js'
+import { parseExplorationExecutionResult } from './exploration-output.js'
 import {
   ensureExplorationDirs,
   getExplorationPlaywrightDir,
@@ -84,16 +84,6 @@ ${formatDiscussions(discussions)}`
   return prompt
 }
 
-function getFallbackExecutionResult(raw: string): ExplorationExecutionResult {
-  return {
-    summary: raw.trim() || '探索結果の構造化に失敗したため、原文を要約として扱う',
-    findings: [],
-    nextActions: [],
-    evidenceFiles: [],
-    playwrightUsed: false,
-  }
-}
-
 function isImagePath(filePath: string): boolean {
   return ['.png', '.jpg', '.jpeg', '.gif', '.webp'].includes(extname(filePath).toLowerCase())
 }
@@ -125,18 +115,14 @@ export async function executeExplorationPhaseExplore(
     {
       prompt,
       systemPrompt,
+      executionMode: 'read-only',
       onStream,
       signal,
     },
     config,
   )
 
-  let result: ExplorationExecutionResult
-  try {
-    result = extractJson<ExplorationExecutionResult>(response.result)
-  } catch {
-    result = getFallbackExecutionResult(response.result)
-  }
+  const result = parseExplorationExecutionResult(response.result)
 
   artifactQueries.createExplorationArtifact(db, {
     exploration_session_id: exploration.id,

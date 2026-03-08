@@ -9,10 +9,10 @@ import type {
   ExplorationSession,
 } from '@cognac/shared'
 import { createProvider } from './providers/index.js'
-import { extractJson } from './json-parser.js'
 import { formatDiscussions } from './discussion-utils.js'
 import * as artifactQueries from '../db/queries/exploration-artifacts.js'
 import * as logQueries from '../db/queries/exploration-logs.js'
+import { parseExplorationReportResult } from './exploration-output.js'
 
 function buildSystemPrompt(): string {
   return `あなたは探索結果レポートをまとめる担当だ。
@@ -84,14 +84,6 @@ function appendEvidenceSection(
   return `${markdown.trim()}\n\n### 証跡画像\n${evidenceLines}\n`
 }
 
-function getFallbackReport(markdown: string): ExplorationReportResult {
-  return {
-    reportMarkdown: markdown.trim() || '## 結論\nレポート生成に失敗したため原文を保存した\n\n## 調査内容\nなし\n\n## ディスカッション要約\nなし\n\n## 課題\nなし\n\n## 次アクション\nなし',
-    findings: [],
-    nextActions: [],
-  }
-}
-
 export async function executeExplorationPhaseReport(
   exploration: ExplorationSession,
   personas: ExplorationPersona[],
@@ -122,12 +114,7 @@ export async function executeExplorationPhaseReport(
   )
 
   const response = await provider.execPrint({ prompt, systemPrompt, signal }, config)
-  let report: ExplorationReportResult
-  try {
-    report = extractJson<ExplorationReportResult>(response.result)
-  } catch {
-    report = getFallbackReport(response.result)
-  }
+  const report = parseExplorationReportResult(response.result)
 
   const finalMarkdown = appendEvidenceSection(report.reportMarkdown, evidenceImages)
 
@@ -145,6 +132,7 @@ export async function executeExplorationPhaseReport(
     token_input: response.usage.inputTokens,
     token_output: response.usage.outputTokens,
     duration_ms: response.durationMs,
+    output_raw: response.result,
     output_summary: '最終レポート生成',
   })
 

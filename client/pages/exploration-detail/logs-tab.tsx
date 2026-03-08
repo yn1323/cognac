@@ -1,10 +1,10 @@
 // 探索詳細ページ — ログタブ
-// フィルターなしで全ログ表示（ユーザー指示：コード正）
-// タスクのlogs-tab.tsxと同じパターン
+// DB の永続ログを主表示にして、実行中だけ SSE イベントを補助表示する
 
-import type { ExplorationSession, ExplorationEvent } from '@cognac/shared'
-
-// --- イベントフォーマッター ---
+import { useMemo } from 'react'
+import type { ExplorationSession, ExplorationEvent, ExplorationLog } from '@cognac/shared'
+import { useExplorationLogs } from '@/hooks/use-explorations'
+import { EXPLORATION_ACTIVE_STATUSES } from '@/lib/exploration-status-config'
 
 interface LogLine {
   label: string
@@ -15,27 +15,47 @@ interface LogLine {
 function formatExplorationEvent(event: ExplorationEvent): LogLine {
   switch (event.type) {
     case 'phase_start':
-      return { label: `[${event.phase}]`, detail: `Phase start`, color: 'text-blue-600' }
+      return { label: `[${event.phase}]`, detail: 'Phase start', color: 'text-blue-600' }
     case 'phase_end':
-      return { label: `[${event.phase}]`, detail: `Phase end (${Math.round(event.durationMs / 1000)}s)`, color: 'text-blue-600' }
+      return {
+        label: `[${event.phase}]`,
+        detail: `Phase end (${Math.round(event.durationMs / 1000)}s)`,
+        color: 'text-blue-600',
+      }
     case 'persona_selected':
-      return { label: '[persona]', detail: `Personas: ${event.personas.map(p => p.name).join(', ')}`, color: 'text-purple-600' }
+      return {
+        label: '[persona]',
+        detail: `Personas: ${event.personas.map((persona) => persona.name).join(', ')}`,
+        color: 'text-purple-600',
+      }
     case 'discussion_round_start':
       return { label: '[discuss]', detail: `Round ${event.round} start`, color: 'text-amber-600' }
     case 'discussion_statement':
       return { label: `[${event.personaName}]`, detail: event.content, color: 'text-foreground' }
     case 'discussion_round_end':
-      return { label: '[discuss]', detail: `Round ${event.round} end — ${event.shouldContinue ? 'continue' : 'consensus'}`, color: 'text-amber-600' }
+      return {
+        label: '[discuss]',
+        detail: `Round ${event.round} end — ${event.shouldContinue ? 'continue' : 'consensus'}`,
+        color: 'text-amber-600',
+      }
     case 'agent_output':
       return { label: '[agent]', detail: event.content, color: 'text-foreground' }
     case 'tool_invoked':
       return { label: '[tool]', detail: event.toolName, color: 'text-cyan-600' }
     case 'command_executed':
-      return { label: '[cmd]', detail: `${event.command} → exit ${event.exitCode}`, color: event.exitCode === 0 ? 'text-green-600' : 'text-red-600' }
+      return {
+        label: '[cmd]',
+        detail: `${event.command} → exit ${event.exitCode}`,
+        color: event.exitCode === 0 ? 'text-green-600' : 'text-red-600',
+      }
     case 'playwright_log':
       return { label: '[playwright]', detail: event.message, color: 'text-violet-600' }
     case 'artifact_created':
-      return { label: '[artifact]', detail: `${event.kind}: ${event.title ?? event.path ?? ''}`, color: 'text-emerald-600' }
+      return {
+        label: '[artifact]',
+        detail: `${event.kind}: ${event.title ?? event.path ?? ''}`,
+        color: 'text-emerald-600',
+      }
     case 'report_created':
       return { label: '[report]', detail: `Report created — ${event.issueCount} issues`, color: 'text-blue-600' }
     case 'taskify_started':
@@ -45,25 +65,35 @@ function formatExplorationEvent(event: ExplorationEvent): LogLine {
     case 'taskify_failed':
       return { label: '[taskify]', detail: `Job #${event.jobId} failed: ${event.message}`, color: 'text-red-600' }
     case 'retry':
-      return { label: '[retry]', detail: `${event.errorType} (${event.count}/${event.maxRetries}): ${event.reason}`, color: 'text-amber-600' }
+      return {
+        label: '[retry]',
+        detail: `${event.errorType} (${event.count}/${event.maxRetries}): ${event.reason}`,
+        color: 'text-amber-600',
+      }
     case 'paused':
       return { label: '[paused]', detail: `${event.phase}: ${event.reason}`, color: 'text-orange-600' }
     case 'error':
-      return { label: '[error]', detail: `${event.errorType}: ${event.message}`, color: 'text-red-600' }
+      return {
+        label: '[error]',
+        detail: `${event.phase ?? 'unknown'}: ${event.errorType}: ${event.message}`,
+        color: 'text-red-600',
+      }
     case 'completed':
-      return { label: '[done]', detail: `${event.summary} (${Math.round(event.totalDurationMs / 1000)}s)`, color: 'text-green-600' }
+      return {
+        label: '[done]',
+        detail: `${event.summary} (${Math.round(event.totalDurationMs / 1000)}s)`,
+        color: 'text-green-600',
+      }
   }
 }
-
-// --- 共通ログビュー ---
 
 function ExplorationLogView({ events }: { events: ExplorationEvent[] }) {
   return (
     <div className="space-y-0.5">
-      {events.map((event, i) => {
+      {events.map((event, index) => {
         const line = formatExplorationEvent(event)
         return (
-          <div key={i} className="flex gap-2 py-0.5">
+          <div key={index} className="flex gap-2 py-0.5">
             <span className={`shrink-0 font-mono text-xs font-semibold ${line.color}`}>
               {line.label}
             </span>
@@ -77,7 +107,79 @@ function ExplorationLogView({ events }: { events: ExplorationEvent[] }) {
   )
 }
 
-// --- 共通props ---
+function ExplorationLogEntry({ log }: { log: ExplorationLog }) {
+  const hasError = log.error_type != null
+
+  return (
+    <div className="flex gap-2 border-b border-border/50 py-1">
+      <span className="w-16 shrink-0 font-mono text-xs font-semibold text-blue-600">
+        [{log.phase}]
+      </span>
+      <div className="flex-1 font-mono text-xs">
+        {hasError ? (
+          <span className={log.error_type === 'infra' ? 'text-orange-600' : 'text-red-600'}>
+            {log.error_type}: {log.error_message}
+          </span>
+        ) : (
+          <span className="text-foreground">
+            {log.output_summary ?? '完了'}
+            {log.duration_ms != null && (
+              <span className="ml-2 text-muted-foreground">({log.duration_ms}ms)</span>
+            )}
+            {log.token_input != null && (
+              <span className="ml-2 text-muted-foreground">
+                tokens: {log.token_input}→{log.token_output}
+              </span>
+            )}
+          </span>
+        )}
+      </div>
+      <span className="shrink-0 font-mono text-xs text-muted-foreground">
+        {log.created_at}
+      </span>
+    </div>
+  )
+}
+
+function getLivePhaseEvents(events: ExplorationEvent[], isActive: boolean): ExplorationEvent[] {
+  if (!isActive || events.length === 0) return []
+
+  let lastPhaseStartIndex = -1
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    if (events[index]?.type === 'phase_start') {
+      lastPhaseStartIndex = index
+      break
+    }
+  }
+
+  if (lastPhaseStartIndex === -1) return events
+
+  const lastPhaseStart = events[lastPhaseStartIndex]
+  if (lastPhaseStart.type !== 'phase_start') return events
+
+  const liveEvents = events.slice(lastPhaseStartIndex)
+  const hasPhaseEnd = liveEvents.some(
+    (event) => event.type === 'phase_end' && event.phase === lastPhaseStart.phase,
+  )
+
+  return hasPhaseEnd ? [] : liveEvents
+}
+
+function useExplorationLogState(exploration: ExplorationSession, events: ExplorationEvent[]) {
+  const { data: logs, isLoading } = useExplorationLogs(exploration.id)
+  const isActive = EXPLORATION_ACTIVE_STATUSES.has(exploration.status)
+  const liveEvents = useMemo(
+    () => getLivePhaseEvents(events, isActive),
+    [events, isActive],
+  )
+
+  return {
+    logs: logs ?? [],
+    isLoading,
+    isActive,
+    liveEvents,
+  }
+}
 
 interface LogsTabProps {
   exploration: ExplorationSession
@@ -85,58 +187,78 @@ interface LogsTabProps {
   connected: boolean
 }
 
-// --- PC版 ---
-
-export function PCLogsTab({ exploration, events, connected }: LogsTabProps) {
-  const isActive = exploration.status === 'analyzing'
+function ExplorationLogsBody({
+  exploration,
+  events,
+  connected,
+  compact = false,
+}: LogsTabProps & { compact?: boolean }) {
+  const { logs, isLoading, isActive, liveEvents } = useExplorationLogState(exploration, events)
+  const hasLogs = logs.length > 0
+  const hasLiveEvents = liveEvents.length > 0
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <>
       {isActive && (
-        <div className="flex items-center gap-2">
-          <div className={`h-2 w-2 rounded-full ${connected ? 'bg-green-500' : 'bg-muted-foreground'}`} title={connected ? 'リアルタイム接続中' : '接続待ち'} />
+        <div className={`flex items-center gap-2 ${compact ? 'pb-2' : ''}`}>
+          <div className={`h-2 w-2 rounded-full ${connected ? 'bg-green-500' : 'bg-muted-foreground'}`} />
+          {compact && (
+            <span className="text-xs text-muted-foreground">
+              {connected ? 'リアルタイム接続中' : '接続待ち'}
+            </span>
+          )}
         </div>
       )}
 
+      {hasLogs ? (
+        <div className="space-y-0">
+          {logs.map((log) => (
+            <ExplorationLogEntry key={log.id} log={log} />
+          ))}
+        </div>
+      ) : null}
+
+      {hasLiveEvents ? (
+        <div className={hasLogs ? 'mt-4 border-t border-border/50 pt-4' : ''}>
+          <ExplorationLogView events={liveEvents} />
+        </div>
+      ) : null}
+
+      {!hasLogs && !hasLiveEvents ? (
+        <div className="py-8 text-center text-sm text-muted-foreground">
+          {isLoading ? 'ログを読み込み中...' : isActive ? 'イベントを待ってるよ...' : '実行ログがまだないよ'}
+        </div>
+      ) : null}
+    </>
+  )
+}
+
+export function PCLogsTab({ exploration, events, connected }: LogsTabProps) {
+  return (
+    <div className="flex h-full flex-col gap-4">
       <div className="min-h-0 flex-1 overflow-hidden rounded-lg border bg-card">
         <div className="flex h-full flex-col overflow-y-auto px-4 py-3">
-          {events.length > 0 ? (
-            <ExplorationLogView events={events} />
-          ) : (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              {isActive ? 'イベントを待ってるよ...' : '実行ログがまだないよ'}
-            </div>
-          )}
+          <ExplorationLogsBody
+            exploration={exploration}
+            events={events}
+            connected={connected}
+          />
         </div>
       </div>
     </div>
   )
 }
 
-// --- SP版 ---
-
 export function SPLogsTab({ exploration, events, connected }: LogsTabProps) {
-  const isActive = exploration.status === 'analyzing'
-
   return (
     <div className="flex flex-1 flex-col">
-      {isActive && (
-        <div className="flex items-center gap-2 pb-2">
-          <div className={`h-2 w-2 rounded-full ${connected ? 'bg-green-500' : 'bg-muted-foreground'}`} />
-          <span className="text-xs text-muted-foreground">
-            {connected ? 'リアルタイム接続中' : '接続待ち'}
-          </span>
-        </div>
-      )}
-
       <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border bg-card px-4 py-3">
-        {events.length > 0 ? (
-          <ExplorationLogView events={events} />
-        ) : (
-          <div className="py-8 text-center text-sm text-muted-foreground">
-            {isActive ? 'イベントを待ってるよ...' : '実行ログがまだないよ'}
-          </div>
-        )}
+        <ExplorationLogsBody
+          exploration={exploration}
+          events={events}
+          connected={connected}
+          compact
+        />
       </div>
     </div>
   )

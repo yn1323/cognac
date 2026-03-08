@@ -30,7 +30,7 @@ import {
   EXPLORATION_DELETABLE_STATUSES,
   EXPLORATION_RETRYABLE_STATUSES,
 } from '@/lib/exploration-status-config'
-import { useExploration, useRetryExploration } from '@/hooks/use-explorations'
+import { useDeleteExploration, useExploration, useRetryExploration } from '@/hooks/use-explorations'
 import { useExplorationSSE } from '@/hooks/use-exploration-sse'
 import { PCOverviewTab, SPOverviewTab } from '@/pages/exploration-detail/overview-tab'
 import { PCDiscussionTab, SPDiscussionTab } from '@/pages/exploration-detail/discussion-tab'
@@ -96,6 +96,7 @@ function PCExplorationDetail({
   onRetry,
   canDelete,
   canRetry,
+  isDeleting,
   isRetrying,
   events,
   connected,
@@ -108,6 +109,7 @@ function PCExplorationDetail({
   onRetry: () => void
   canDelete: boolean
   canRetry: boolean
+  isDeleting: boolean
   isRetrying: boolean
   events: ExplorationEvent[]
   connected: boolean
@@ -158,7 +160,7 @@ function PCExplorationDetail({
                 </Button>
               )}
               {canDelete && (
-                <Button variant="destructive" size="sm" onClick={onDelete}>
+                <Button variant="destructive" size="sm" onClick={onDelete} disabled={isDeleting}>
                   削除
                 </Button>
               )}
@@ -187,6 +189,7 @@ function SPExplorationDetail({
   onRetry,
   canDelete,
   canRetry,
+  isDeleting,
   isRetrying,
   events,
   connected,
@@ -199,6 +202,7 @@ function SPExplorationDetail({
   onRetry: () => void
   canDelete: boolean
   canRetry: boolean
+  isDeleting: boolean
   isRetrying: boolean
   events: ExplorationEvent[]
   connected: boolean
@@ -247,6 +251,7 @@ function SPExplorationDetail({
                   }}
                   variant="destructive"
                   icon={Trash2}
+                  disabled={isDeleting}
                 >
                   削除
                 </DropdownMenuItem>
@@ -283,6 +288,7 @@ export function ExplorationDetailPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const { data: exploration, isLoading, isError } = useExploration(explorationId)
+  const deleteMutation = useDeleteExploration()
   const retryMutation = useRetryExploration()
 
   // SSE: analyzing状態のときだけ接続
@@ -300,6 +306,9 @@ export function ExplorationDetailPage() {
     if (last.type === 'discussion_statement' || last.type === 'discussion_round_end') {
       qc.invalidateQueries({ queryKey: ['explorations', explorationId, 'discussions'] })
     }
+    if (last.type === 'phase_end') {
+      qc.invalidateQueries({ queryKey: ['explorations', explorationId, 'logs'] })
+    }
     if (last.type === 'report_created') {
       qc.invalidateQueries({ queryKey: ['explorations', explorationId, 'report'] })
       qc.invalidateQueries({ queryKey: ['explorations', explorationId] })
@@ -309,6 +318,7 @@ export function ExplorationDetailPage() {
     }
     if (last.type === 'completed' || last.type === 'paused' || last.type === 'error') {
       qc.invalidateQueries({ queryKey: ['explorations', explorationId] })
+      qc.invalidateQueries({ queryKey: ['explorations', explorationId, 'logs'] })
       qc.invalidateQueries({ queryKey: ['explorations'], exact: true })
     }
     if (last.type === 'taskify_started' || last.type === 'taskify_completed' || last.type === 'taskify_failed') {
@@ -338,14 +348,25 @@ export function ExplorationDetailPage() {
     )
   }
 
-  const canDelete = EXPLORATION_DELETABLE_STATUSES.has(exploration.status)
+  const hasActiveTaskify =
+    exploration.latestTaskifyJob?.status === 'pending' ||
+    exploration.latestTaskifyJob?.status === 'running'
+  const canDelete =
+    EXPLORATION_DELETABLE_STATUSES.has(exploration.status) &&
+    !hasActiveTaskify
   const canRetry = EXPLORATION_RETRYABLE_STATUSES.has(exploration.status)
 
   const handleDelete = () => setDeleteDialogOpen(true)
   const handleConfirmDelete = () => {
-    // TODO: DELETE /api/explorations/:id サーバー実装後に接続
-    toast('削除機能は準備中です', 'warning')
-    setDeleteDialogOpen(false)
+    deleteMutation.mutate(explorationId, {
+      onSuccess: () => {
+        toast('探索を削除しました', 'success')
+        navigate('/explorations')
+      },
+      onError: (err) => {
+        toast(err.message, 'error')
+      },
+    })
   }
 
   const handleRetry = () => {
@@ -367,6 +388,7 @@ export function ExplorationDetailPage() {
           onRetry={handleRetry}
           canDelete={canDelete}
           canRetry={canRetry}
+          isDeleting={deleteMutation.isPending}
           isRetrying={retryMutation.isPending}
           events={events}
           connected={connected}
@@ -382,6 +404,7 @@ export function ExplorationDetailPage() {
           onRetry={handleRetry}
           canDelete={canDelete}
           canRetry={canRetry}
+          isDeleting={deleteMutation.isPending}
           isRetrying={retryMutation.isPending}
           events={events}
           connected={connected}
@@ -396,6 +419,7 @@ export function ExplorationDetailPage() {
         description={`「${exploration.title}」を削除しますか？この操作は取り消せません。`}
         confirmLabel="削除する"
         variant="destructive"
+        isLoading={deleteMutation.isPending}
       />
     </>
   )

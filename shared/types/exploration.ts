@@ -177,5 +177,5 @@ export type ExplorationEvent =
   | { type: 'taskify_failed'; jobId: number; message: string }
   | { type: 'retry'; errorType: 'app' | 'process'; count: number; maxRetries: number; reason: string }
   | { type: 'paused'; reason: string; phase: ExplorationPhase }
-  | { type: 'error'; errorType: 'app' | 'infra' | 'process'; message: string }
+  | { type: 'error'; errorType: 'app' | 'infra' | 'process'; message: string; phase?: ExplorationPhase }
   | { type: 'completed'; summary: string; totalDurationMs: number }

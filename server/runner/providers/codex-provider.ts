@@ -28,11 +28,14 @@ export class CodexProvider implements CliProviderInterface {
   async execStream(options: StreamExecOptions, config: CognacConfig): Promise<CliResponse> {
     const fullPrompt = buildPromptWithSystem(options.prompt, options.systemPrompt)
     const tmpFiles = writeTmpFiles(fullPrompt)
+    const executionMode = options.executionMode ?? 'write'
 
     // CLI引数を組み立て
     const args = ['exec', '--json', '--ephemeral']
 
-    if (options.dangerouslySkipPermissions) {
+    if (executionMode === 'read-only') {
+      args.push('-s', 'read-only')
+    } else if (options.dangerouslySkipPermissions) {
       args.push('--dangerously-bypass-approvals-and-sandbox')
     } else {
       args.push('--full-auto')

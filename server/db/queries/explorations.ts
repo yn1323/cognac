@@ -107,6 +107,12 @@ export function getNextDraftExploration(
   return stmt.get() as ExplorationSession | undefined
 }
 
+export function deleteExploration(db: Database.Database, id: number): boolean {
+  const stmt = db.prepare(`DELETE FROM exploration_sessions WHERE id = ?`)
+  const result = stmt.run(id)
+  return result.changes > 0
+}
+
 export function markExplorationCompleted(
   db: Database.Database,
   id: number,

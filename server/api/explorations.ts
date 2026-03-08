@@ -1,4 +1,4 @@
-import { mkdir, unlink, writeFile } from 'node:fs/promises'
+import { mkdir, rm, unlink, writeFile } from 'node:fs/promises'
 import { extname, resolve } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { Hono } from 'hono'
@@ -14,7 +14,11 @@ import * as explorationDiscussionQueries from '../db/queries/exploration-discuss
 import * as explorationArtifactQueries from '../db/queries/exploration-artifacts.js'
 import * as explorationLogQueries from '../db/queries/exploration-logs.js'
 import * as explorationTaskifyJobQueries from '../db/queries/exploration-taskify-jobs.js'
-import { getExplorationUploadDir, resolveCognacPath } from '../runner/exploration-paths.js'
+import {
+  getExplorationArtifactDir,
+  getExplorationUploadDir,
+  resolveCognacPath,
+} from '../runner/exploration-paths.js'
 
 const createExplorationSchema = z.object({
   title: z.string().min(2, 'タイトルは2文字以上で入力してね').max(200, 'タイトルは200文字以内にしてね'),
@@ -199,6 +203,26 @@ export function explorationsRouter(
 
     const job = explorationTaskifyJobQueries.createExplorationTaskifyJob(db, id)
     return c.json(job, 202)
+  })
+
+  app.delete('/:id', async (c) => {
+    const id = Number(c.req.param('id'))
+    const exploration = explorationQueries.getExploration(db, id)
+    if (!exploration) return c.json({ error: '探索が見つからない' }, 404)
+    if (exploration.status === 'analyzing') {
+      return c.json({ error: '実行中の探索は削除できない' }, 400)
+    }
+    if (explorationTaskifyJobQueries.hasActiveExplorationTaskifyJob(db, id)) {
+      return c.json({ error: 'taskify 実行中の探索は削除できない' }, 400)
+    }
+
+    await Promise.all([
+      rm(getExplorationUploadDir(id), { recursive: true, force: true }),
+      rm(getExplorationArtifactDir(id), { recursive: true, force: true }),
+    ])
+
+    explorationQueries.deleteExploration(db, id)
+    return c.json({ ok: true })
   })
 
   app.delete('/:id/images/:imageId', async (c) => {
