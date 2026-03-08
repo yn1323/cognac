@@ -5,5 +5,5 @@
     "rootDir": "."
   },
   "include": ["."],
-  "exclude": ["dist", "node_modules"]
+  "exclude": ["dist", "node_modules", "cognac.config.ts"]
 }

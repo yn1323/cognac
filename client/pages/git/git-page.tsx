@@ -2,7 +2,7 @@
 // PC: サイドバー + メインコンテンツ(2カラム) / SP: ヘッダー + ボディ + ボトムナビ
 // デザイン design.pen PC=TySUT, SP=A0mek に準拠
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   GitBranch,
@@ -16,6 +16,7 @@ import {
   ArrowUp,
   ArrowDown,
 } from 'lucide-react'
+import type { GitFile, GitCommit, GitBranch as GitBranchType } from '@cognac/shared'
 import { Sidebar } from '@/components/sidebar'
 import { PageHeader } from '@/components/page-header'
 import { SPHeader } from '@/components/sp-header'
@@ -29,33 +30,50 @@ import { NewBranchModal } from '@/components/new-branch-modal'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { NAV_MAP } from '@/lib/constants'
 import {
-  MOCK_FILES,
-  MOCK_BRANCHES,
-  MOCK_COMMITS,
-  MOCK_REMOTE_STATUS,
-  MOCK_COMMIT_LOG_LINES,
-} from './mock-data'
-
-// モジュールレベルで一度だけ計算
-const LOCAL_BRANCHES = MOCK_BRANCHES.filter((b) => !b.remote)
-const REMOTE_BRANCHES = MOCK_BRANCHES.filter((b) => b.remote)
+  useGitStatus,
+  useGitLog,
+  useGitBranches,
+  useGitRemoteStatus,
+  useDiscardAll,
+  useAiCommit,
+  useCheckout,
+  usePush,
+  useGitFetch,
+  useMerge,
+  useCreateBranch,
+} from '@/hooks/use-git'
+// AIコミット実行中に表示するプレースホルダーログ
+const COMMIT_IN_PROGRESS_LOG = [
+  { text: 'AIコミットを実行中...', bold: true },
+  { text: '' },
+  { text: '$ git add -A' },
+  { text: '$ git diff --staged' },
+  { text: 'analyzing changes...' },
+  { text: 'generating commit message...' },
+]
 
 // --- ブランチセレクター ---
 
 interface BranchSelectorProps {
+  branches: GitBranchType[]
   currentBranch: string
+  onCheckout: (branch: string) => void
+  disabled?: boolean
   className?: string
 }
 
-function BranchSelector({ currentBranch, className }: BranchSelectorProps) {
+function BranchSelector({ branches, currentBranch, onCheckout, disabled, className }: BranchSelectorProps) {
   const [open, setOpen] = useState(false)
+  const localBranches = useMemo(() => branches.filter((b) => !b.remote), [branches])
+  const remoteBranches = useMemo(() => branches.filter((b) => b.remote), [branches])
 
   return (
     <div className={className}>
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 rounded-md border border-[#e5e5e5] bg-[#fafafa] px-3 py-2 text-sm"
+        disabled={disabled}
+        className="flex items-center gap-2 rounded-md border border-[#e5e5e5] bg-[#fafafa] px-3 py-2 text-sm disabled:opacity-50"
       >
         <GitBranch className="h-4 w-4 text-[#1d4ed8]" />
         <span className="font-semibold text-foreground">{currentBranch}</span>
@@ -70,31 +88,41 @@ function BranchSelector({ currentBranch, className }: BranchSelectorProps) {
             <div className="px-3 py-2 text-xs font-semibold text-muted-foreground">
               ローカル
             </div>
-            {LOCAL_BRANCHES.map((b) => (
+            {localBranches.map((b) => (
               <button
                 key={b.name}
                 type="button"
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  if (b.name !== currentBranch) onCheckout(b.name)
+                  setOpen(false)
+                }}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-neutral-50"
               >
-                <span className={b.current ? 'font-semibold text-[#1d4ed8]' : 'text-foreground'}>
+                <span className={b.name === currentBranch ? 'font-semibold text-[#1d4ed8]' : 'text-foreground'}>
                   {b.name}
                 </span>
               </button>
             ))}
-            <div className="border-t border-[#e5e5e5] px-3 py-2 text-xs font-semibold text-muted-foreground">
-              リモート
-            </div>
-            {REMOTE_BRANCHES.map((b) => (
-              <button
-                key={`remote-${b.name}`}
-                type="button"
-                onClick={() => setOpen(false)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-muted-foreground hover:bg-neutral-50"
-              >
-                origin/{b.name}
-              </button>
-            ))}
+            {remoteBranches.length > 0 && (
+              <>
+                <div className="border-t border-[#e5e5e5] px-3 py-2 text-xs font-semibold text-muted-foreground">
+                  リモート
+                </div>
+                {remoteBranches.map((b) => (
+                  <button
+                    key={`remote-${b.name}`}
+                    type="button"
+                    onClick={() => {
+                      onCheckout(b.name)
+                      setOpen(false)
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-muted-foreground hover:bg-neutral-50"
+                  >
+                    {b.name}
+                  </button>
+                ))}
+              </>
+            )}
           </div>
         </>
       )}
@@ -104,8 +132,8 @@ function BranchSelector({ currentBranch, className }: BranchSelectorProps) {
 
 // --- リモートステータスバッジ ---
 
-function RemoteStatusBadge() {
-  const { ahead, behind } = MOCK_REMOTE_STATUS
+function RemoteStatusBadge({ ahead, behind }: { ahead: number; behind: number }) {
+  if (ahead === 0 && behind === 0) return null
   return (
     <div className="flex items-center gap-2 rounded-full bg-[#dbeafe] px-3 py-1.5 text-xs font-medium text-[#1d4ed8]">
       {ahead > 0 && (
@@ -129,10 +157,21 @@ function RemoteStatusBadge() {
 interface GitPageViewProps {
   onNavigate: (path: string) => void
   isCommitting: boolean
+  files: GitFile[]
+  commits: GitCommit[]
+  branches: GitBranchType[]
+  currentBranch: string
+  ahead: number
+  behind: number
   onStartCommit: () => void
   onToggleMergeModal: () => void
   onToggleNewBranchModal: () => void
   onToggleDiscardDialog: () => void
+  onCheckout: (branch: string) => void
+  onPush: () => void
+  onFetch: () => void
+  isPushing: boolean
+  isFetching: boolean
 }
 
 // --- PC版 ---
@@ -140,10 +179,21 @@ interface GitPageViewProps {
 function PCGitPage({
   onNavigate,
   isCommitting,
+  files,
+  commits,
+  branches,
+  currentBranch,
+  ahead,
+  behind,
   onStartCommit,
   onToggleMergeModal,
   onToggleNewBranchModal,
   onToggleDiscardDialog,
+  onCheckout,
+  onPush,
+  onFetch,
+  isPushing,
+  isFetching,
 }: GitPageViewProps) {
   return (
     <div className="flex h-screen bg-[#fafafa]">
@@ -163,15 +213,15 @@ function PCGitPage({
           title="Git"
           subtitle="ブランチ管理、変更の確認、コミット操作"
         >
-          <Button variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4" />
+          <Button variant="outline" size="sm" onClick={onFetch} disabled={isFetching}>
+            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
             Fetch
           </Button>
           <Button variant="outline" size="sm" onClick={onToggleMergeModal}>
             <GitMerge className="h-4 w-4" />
             マージ
           </Button>
-          <Button variant="primary" size="sm">
+          <Button variant="primary" size="sm" onClick={onPush} disabled={isPushing}>
             <Upload className="h-4 w-4" />
             Push
           </Button>
@@ -180,13 +230,17 @@ function PCGitPage({
         {/* ブランチ行 */}
         <div className="flex items-center gap-3">
           <div className="relative">
-            <BranchSelector currentBranch="feat/git" />
+            <BranchSelector
+              branches={branches}
+              currentBranch={currentBranch}
+              onCheckout={onCheckout}
+            />
           </div>
           <Button variant="outline" size="sm" onClick={onToggleNewBranchModal}>
             <GitBranchPlus className="h-4 w-4" />
             新規ブランチ
           </Button>
-          <RemoteStatusBadge />
+          <RemoteStatusBadge ahead={ahead} behind={behind} />
         </div>
 
         {/* 2カラムコンテンツ */}
@@ -196,20 +250,21 @@ function PCGitPage({
             <div className="flex flex-col overflow-hidden rounded-lg border border-[#e5e5e5] bg-[#fafafa] shadow-[0_1px_1.75px_#0000000d]">
               {/* AIコミット中はヘッダーなしでログのみ表示 */}
               {isCommitting ? (
-                <AiCommitProgress logLines={MOCK_COMMIT_LOG_LINES} />
+                <AiCommitProgress logLines={COMMIT_IN_PROGRESS_LOG} />
               ) : (
                 <>
                   {/* ヘッダー */}
                   <div className="flex items-center justify-between border-b border-[#e5e5e5] px-4 py-4">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-foreground">変更ファイル</span>
-                      <span className="text-sm text-muted-foreground">({MOCK_FILES.length})</span>
+                      <span className="text-sm text-muted-foreground">({files.length})</span>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-auto px-2 py-1 text-xs text-[#e7000b]"
                       onClick={onToggleDiscardDialog}
+                      disabled={files.length === 0}
                     >
                       <Trash2 className="h-4 w-4 text-[#e7000b]" />
                       全て破棄
@@ -218,12 +273,12 @@ function PCGitPage({
 
                   {/* ファイルリスト */}
                   <div className="flex flex-col">
-                    {MOCK_FILES.map((file, i) => (
+                    {files.map((file, i) => (
                       <GitFileRow
                         key={file.path}
                         status={file.status}
                         path={file.path}
-                        isLast={i === MOCK_FILES.length - 1}
+                        isLast={i === files.length - 1}
                       />
                     ))}
                   </div>
@@ -234,7 +289,7 @@ function PCGitPage({
                       variant="primary"
                       className="w-full"
                       onClick={onStartCommit}
-                      disabled={MOCK_FILES.length === 0}
+                      disabled={files.length === 0}
                     >
                       <Bot className="h-4 w-4" />
                       AI コミット
@@ -252,11 +307,11 @@ function PCGitPage({
                 <span className="text-sm font-semibold text-foreground">コミット履歴</span>
               </div>
               <div className="flex flex-col">
-                {MOCK_COMMITS.map((commit, i) => (
+                {commits.map((commit, i) => (
                   <GitCommitRow
                     key={commit.hash}
                     commit={commit}
-                    isLast={i === MOCK_COMMITS.length - 1}
+                    isLast={i === commits.length - 1}
                   />
                 ))}
               </div>
@@ -273,10 +328,21 @@ function PCGitPage({
 function SPGitPage({
   onNavigate,
   isCommitting,
+  files,
+  commits,
+  branches,
+  currentBranch,
+  ahead,
+  behind,
   onStartCommit,
   onToggleMergeModal,
   onToggleNewBranchModal,
   onToggleDiscardDialog,
+  onCheckout,
+  onPush,
+  onFetch,
+  isPushing,
+  isFetching,
 }: GitPageViewProps) {
   return (
     <div className="flex min-h-screen flex-col bg-[#fafafa]">
@@ -289,8 +355,8 @@ function SPGitPage({
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold text-foreground">Git</h1>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" className="h-8 w-8">
-              <RefreshCw className="h-4 w-4" />
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={onFetch} disabled={isFetching}>
+              <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
             </Button>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={onToggleNewBranchModal}>
               <GitBranchPlus className="h-4 w-4" />
@@ -298,7 +364,7 @@ function SPGitPage({
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={onToggleMergeModal}>
               <GitMerge className="h-4 w-4" />
             </Button>
-            <Button variant="primary" size="icon" className="h-8 w-8">
+            <Button variant="primary" size="icon" className="h-8 w-8" onClick={onPush} disabled={isPushing}>
               <Upload className="h-4 w-4" />
             </Button>
           </div>
@@ -307,29 +373,35 @@ function SPGitPage({
         {/* ブランチ行 */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <BranchSelector currentBranch="feat/git" className="w-full [&>button]:w-full" />
+            <BranchSelector
+              branches={branches}
+              currentBranch={currentBranch}
+              onCheckout={onCheckout}
+              className="w-full [&>button]:w-full"
+            />
           </div>
-          <RemoteStatusBadge />
+          <RemoteStatusBadge ahead={ahead} behind={behind} />
         </div>
 
         {/* 変更ファイルカード */}
         <div className="flex flex-col overflow-hidden rounded-lg border border-[#e5e5e5] bg-[#fafafa] shadow-[0_1px_1.75px_#0000000d]">
           {/* AIコミット中はヘッダーなしでログのみ表示 */}
           {isCommitting ? (
-            <AiCommitProgress logLines={MOCK_COMMIT_LOG_LINES} />
+            <AiCommitProgress logLines={COMMIT_IN_PROGRESS_LOG} />
           ) : (
             <>
               {/* ヘッダー */}
               <div className="flex items-center justify-between border-b border-[#e5e5e5] px-4 py-4">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-foreground">変更ファイル</span>
-                  <span className="text-sm text-muted-foreground">({MOCK_FILES.length})</span>
+                  <span className="text-sm text-muted-foreground">({files.length})</span>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-auto px-2 py-1 text-xs text-[#e7000b]"
                   onClick={onToggleDiscardDialog}
+                  disabled={files.length === 0}
                 >
                   <Trash2 className="h-4 w-4 text-[#e7000b]" />
                   全て破棄
@@ -338,12 +410,12 @@ function SPGitPage({
 
               {/* ファイルリスト */}
               <div className="flex flex-col">
-                {MOCK_FILES.map((file, i) => (
+                {files.map((file, i) => (
                   <GitFileRow
                     key={file.path}
                     status={file.status}
                     path={file.path}
-                    isLast={i === MOCK_FILES.length - 1}
+                    isLast={i === files.length - 1}
                   />
                 ))}
               </div>
@@ -354,7 +426,7 @@ function SPGitPage({
                   variant="primary"
                   className="w-full"
                   onClick={onStartCommit}
-                  disabled={MOCK_FILES.length === 0}
+                  disabled={files.length === 0}
                 >
                   <Bot className="h-4 w-4" />
                   AI コミット
@@ -370,11 +442,11 @@ function SPGitPage({
             <span className="text-sm font-semibold text-foreground">コミット履歴</span>
           </div>
           <div className="flex flex-col">
-            {MOCK_COMMITS.map((commit, i) => (
+            {commits.map((commit, i) => (
               <GitCommitRow
                 key={commit.hash}
                 commit={commit}
-                isLast={i === MOCK_COMMITS.length - 1}
+                isLast={i === commits.length - 1}
               />
             ))}
           </div>
@@ -391,24 +463,74 @@ function SPGitPage({
 
 export function GitPage() {
   const navigate = useNavigate()
-  const [isCommitting, setIsCommitting] = useState(false)
   const [showMergeModal, setShowMergeModal] = useState(false)
   const [showNewBranchModal, setShowNewBranchModal] = useState(false)
   const [showDiscardDialog, setShowDiscardDialog] = useState(false)
 
+  // データ取得フック
+  const { data: statusData } = useGitStatus()
+  const { data: logData } = useGitLog()
+  const { data: branchData } = useGitBranches()
+  const { data: remoteStatus } = useGitRemoteStatus()
+
+  // ミューテーションフック
+  const discardMutation = useDiscardAll()
+  const commitMutation = useAiCommit()
+  const checkoutMutation = useCheckout()
+  const pushMutation = usePush()
+  const fetchMutation = useGitFetch()
+  const mergeMutation = useMerge()
+  const createBranchMutation = useCreateBranch()
+
+  const files = statusData?.files ?? []
+  const commits = logData?.commits ?? []
+  const branches = branchData?.branches ?? []
+  const currentBranch = statusData?.currentBranch ?? ''
+  const ahead = remoteStatus?.ahead ?? 0
+  const behind = remoteStatus?.behind ?? 0
+
   const handleNavigate = (path: string) => navigate(path)
-  const handleStartCommit = () => setIsCommitting((v) => !v)
+  const handleStartCommit = () => commitMutation.mutate()
   const handleToggleMergeModal = () => setShowMergeModal((v) => !v)
   const handleToggleNewBranchModal = () => setShowNewBranchModal((v) => !v)
   const handleToggleDiscardDialog = () => setShowDiscardDialog((v) => !v)
+  const handleCheckout = (branch: string) => checkoutMutation.mutate(branch)
+  const handlePush = () => pushMutation.mutate()
+  const handleFetch = () => fetchMutation.mutate()
+
+  const handleDiscard = () => {
+    discardMutation.mutate()
+    setShowDiscardDialog(false)
+  }
+
+  const handleMerge = (from: string, into: string) => {
+    mergeMutation.mutate({ from, into })
+    setShowMergeModal(false)
+  }
+
+  const handleCreateBranch = (name: string, base?: string) => {
+    createBranchMutation.mutate({ name, base })
+    setShowNewBranchModal(false)
+  }
 
   const viewProps: GitPageViewProps = {
     onNavigate: handleNavigate,
-    isCommitting,
+    isCommitting: commitMutation.isPending,
+    files,
+    commits,
+    branches,
+    currentBranch,
+    ahead,
+    behind,
     onStartCommit: handleStartCommit,
     onToggleMergeModal: handleToggleMergeModal,
     onToggleNewBranchModal: handleToggleNewBranchModal,
     onToggleDiscardDialog: handleToggleDiscardDialog,
+    onCheckout: handleCheckout,
+    onPush: handlePush,
+    onFetch: handleFetch,
+    isPushing: pushMutation.isPending,
+    isFetching: fetchMutation.isPending,
   }
 
   return (
@@ -423,11 +545,22 @@ export function GitPage() {
       </div>
 
       {/* モーダルは一度だけレンダリング */}
-      <MergeModal open={showMergeModal} onClose={handleToggleMergeModal} />
-      <NewBranchModal open={showNewBranchModal} onClose={handleToggleNewBranchModal} />
+      <MergeModal
+        open={showMergeModal}
+        onClose={handleToggleMergeModal}
+        branches={branches}
+        currentBranch={currentBranch}
+        onMerge={handleMerge}
+      />
+      <NewBranchModal
+        open={showNewBranchModal}
+        onClose={handleToggleNewBranchModal}
+        branches={branches}
+        onCreate={handleCreateBranch}
+      />
       <ConfirmDialog
         open={showDiscardDialog}
-        onConfirm={handleToggleDiscardDialog}
+        onConfirm={handleDiscard}
         onCancel={handleToggleDiscardDialog}
         title="全ての変更を破棄"
         description="全ての未コミットの変更が失われます。この操作は取り消せません。"

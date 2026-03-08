@@ -103,7 +103,7 @@ function cleanupTmpFiles({ promptFile, systemFile }: TmpFiles): void {
 // Claude Code は CLAUDECODE 環境変数をセットするため、
 // 子プロセスで再度 claude を起動すると「ネストされたセッション」と判定されてしまう。
 // spawn 時にこの変数を除外した env を渡す。
-function getCleanEnv(): NodeJS.ProcessEnv {
+export function getCleanEnv(): NodeJS.ProcessEnv {
   const env = Object.fromEntries(
     Object.entries(process.env).filter(
       ([key]) => key !== 'CLAUDECODE' && !key.startsWith('CLAUDE_CODE_'),

@@ -1,21 +1,22 @@
 // 新規ブランチ作成モーダル
 // デザイン: スクリーンショット準拠 (マージモーダルと同スタイル)
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { GitBranchPlus, ChevronDown } from 'lucide-react'
+import type { GitBranch } from '@cognac/shared'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useScrollLock, useEscapeClose } from '@/hooks/use-scroll-lock'
-import { MOCK_BRANCHES } from '@/pages/git/mock-data'
-
-const localBranches = MOCK_BRANCHES.filter((b) => !b.remote)
 
 interface NewBranchModalProps {
   open: boolean
   onClose: () => void
+  branches: GitBranch[]
+  onCreate: (name: string, base?: string) => void
 }
 
-export function NewBranchModal({ open, onClose }: NewBranchModalProps) {
+export function NewBranchModal({ open, onClose, branches, onCreate }: NewBranchModalProps) {
+  const localBranches = useMemo(() => branches.filter((b) => !b.remote), [branches])
   const [branchName, setBranchName] = useState('')
   const [baseBranch, setBaseBranch] = useState('main')
 
@@ -23,8 +24,11 @@ export function NewBranchModal({ open, onClose }: NewBranchModalProps) {
   useEscapeClose(open, onClose)
 
   useEffect(() => {
-    if (open) setBranchName('')
-  }, [open])
+    if (!open) return
+    setBranchName('')
+    const defaultBase = localBranches.find((b) => b.name === 'main')?.name ?? localBranches[0]?.name ?? ''
+    setBaseBranch(defaultBase)
+  }, [open, localBranches])
 
   if (!open) return null
 
@@ -96,7 +100,11 @@ export function NewBranchModal({ open, onClose }: NewBranchModalProps) {
           <Button variant="outline" onClick={onClose}>
             キャンセル
           </Button>
-          <Button variant="primary" onClick={onClose} disabled={!branchName.trim()}>
+          <Button
+            variant="primary"
+            onClick={() => onCreate(branchName.trim(), baseBranch)}
+            disabled={!branchName.trim()}
+          >
             <GitBranchPlus className="h-4 w-4" />
             ブランチを作成
           </Button>

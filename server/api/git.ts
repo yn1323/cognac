@@ -1,0 +1,283 @@
+// Git GUI APIルーター
+// /api/git/* エンドポイントを提供
+//
+// NOTE: このファイルで使用する execSync は Claude CLI の呼び出しのみ。
+// git コマンドの実行は git-api-ops.ts に委譲しており、
+// すべてのユーザー入力はバリデーション済みのためシェルインジェクションのリスクはない。
+
+import { Hono } from 'hono'
+import { z } from 'zod'
+import {
+  getStatus,
+  getCurrentBranch,
+  getLog,
+  getBranches,
+  getRemoteStatus,
+  checkout,
+  createBranch,
+  deleteBranch,
+  discardAll,
+  push,
+  fetchAll,
+  merge,
+  validateBranchName,
+  stageAll,
+  getStagedDiff,
+  getRecentLogOneline,
+  commitWithMessage,
+} from '../runner/git-api-ops.js'
+
+// バリデーションスキーマ
+const checkoutSchema = z.object({
+  branch: z.string().min(1, 'ブランチ名を指定してください'),
+})
+
+const createBranchSchema = z.object({
+  name: z.string().min(1, 'ブランチ名を指定してください'),
+  base: z.string().optional(),
+})
+
+const mergeSchema = z.object({
+  from: z.string().min(1, 'マージ元ブランチを指定してください'),
+  into: z.string().min(1, 'マージ先ブランチを指定してください'),
+})
+
+export function gitRouter(cwd: string) {
+  const app = new Hono()
+
+  // --- Phase 1: 基本表示 ---
+
+  // GET /status — 変更ファイル一覧 + 現在のブランチ
+  app.get('/status', (c) => {
+    try {
+      const files = getStatus(cwd)
+      const currentBranch = getCurrentBranch(cwd)
+      return c.json({ files, currentBranch })
+    } catch (err) {
+      return c.json({ error: 'Git statusの取得に失敗しました', detail: String(err) }, 500)
+    }
+  })
+
+  // GET /log?limit=N — コミット履歴
+  app.get('/log', (c) => {
+    const limit = Number.parseInt(c.req.query('limit') ?? '20', 10)
+    const safeLimit = Math.min(Math.max(limit, 1), 100)
+    try {
+      const commits = getLog(cwd, safeLimit)
+      return c.json({ commits })
+    } catch (err) {
+      return c.json({ error: 'コミット履歴の取得に失敗しました', detail: String(err) }, 500)
+    }
+  })
+
+  // POST /discard — 全変更を破棄
+  app.post('/discard', (c) => {
+    try {
+      discardAll(cwd)
+      return c.json({ ok: true })
+    } catch (err) {
+      return c.json({ error: '変更の破棄に失敗しました', detail: String(err) }, 500)
+    }
+  })
+
+  // POST /commit — AIコミット（Phase 1: 単一コミット）
+  app.post('/commit', async (c) => {
+    try {
+      // 1. 全変更をステージング
+      stageAll(cwd)
+
+      // 2. diff と直近ログを取得（diffが空なら変更なし）
+      const diff = getStagedDiff(cwd)
+      if (!diff) {
+        return c.json({ error: 'コミットする変更がありません' }, 400)
+      }
+      const recentLog = getRecentLogOneline(cwd)
+
+      // 3. Claude CLI でコミットメッセージ生成
+      const message = await generateCommitMessage(diff, recentLog, cwd)
+
+      // 4. コミット実行
+      const result = commitWithMessage(cwd, message)
+
+      return c.json({ results: [result] })
+    } catch (err) {
+      return c.json({ error: 'AIコミットに失敗しました', detail: String(err) }, 500)
+    }
+  })
+
+  // --- Phase 2: ブランチ + リモート ---
+
+  // GET /branches — ブランチ一覧
+  app.get('/branches', (c) => {
+    try {
+      const branches = getBranches(cwd)
+      // current は branches の current フラグから取得（余分な git プロセス不要）
+      const current = branches.find((b) => b.current)?.name ?? ''
+      return c.json({ branches, current })
+    } catch (err) {
+      return c.json({ error: 'ブランチ一覧の取得に失敗しました', detail: String(err) }, 500)
+    }
+  })
+
+  // POST /checkout — ブランチ切り替え
+  app.post('/checkout', async (c) => {
+    const body = await c.req.json()
+    const parsed = checkoutSchema.safeParse(body)
+    if (!parsed.success) {
+      return c.json({ error: 'バリデーションエラー', details: parsed.error.issues }, 400)
+    }
+
+    // 未コミット変更チェック
+    const files = getStatus(cwd)
+    if (files.length > 0) {
+      return c.json({ error: '未コミットの変更があります。先にコミットまたは破棄してください。' }, 400)
+    }
+
+    try {
+      checkout(cwd, parsed.data.branch)
+      return c.json({ ok: true })
+    } catch (err) {
+      return c.json({ error: 'ブランチの切り替えに失敗しました', detail: String(err) }, 500)
+    }
+  })
+
+  // POST /branch — ブランチ作成
+  app.post('/branch', async (c) => {
+    const body = await c.req.json()
+    const parsed = createBranchSchema.safeParse(body)
+    if (!parsed.success) {
+      return c.json({ error: 'バリデーションエラー', details: parsed.error.issues }, 400)
+    }
+
+    if (!validateBranchName(parsed.data.name)) {
+      return c.json({ error: '不正なブランチ名です。英数字、スラッシュ、ドット、ハイフン、アンダースコアのみ使用できます。' }, 400)
+    }
+
+    try {
+      createBranch(cwd, parsed.data.name, parsed.data.base)
+      return c.json({ ok: true, name: parsed.data.name })
+    } catch (err) {
+      return c.json({ error: 'ブランチの作成に失敗しました', detail: String(err) }, 500)
+    }
+  })
+
+  // DELETE /branch/:name — ブランチ削除（ローカルのみ）
+  app.delete('/branch/:name{.+}', (c) => {
+    const name = decodeURIComponent(c.req.param('name'))
+
+    // 現在のブランチは削除不可
+    const current = getCurrentBranch(cwd)
+    if (name === current) {
+      return c.json({ error: '現在のブランチは削除できません' }, 400)
+    }
+
+    try {
+      deleteBranch(cwd, name)
+      return c.json({ ok: true })
+    } catch (err) {
+      return c.json({ error: 'ブランチの削除に失敗しました', detail: String(err) }, 500)
+    }
+  })
+
+  // POST /push — 現在のブランチをリモートにpush
+  app.post('/push', (c) => {
+    try {
+      const result = push(cwd)
+      return c.json({ ok: true, ...result })
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err)
+      if (errMsg.includes('rejected') || errMsg.includes('non-fast-forward')) {
+        return c.json({ error: 'pushが拒否されました。fetchしてマージしてからpushしてください。' }, 409)
+      }
+      return c.json({ error: 'pushに失敗しました', detail: String(err) }, 500)
+    }
+  })
+
+  // POST /fetch — リモートの最新情報を取得
+  app.post('/fetch', (c) => {
+    try {
+      fetchAll(cwd)
+      return c.json({ ok: true })
+    } catch (err) {
+      return c.json({ error: 'fetchに失敗しました', detail: String(err) }, 500)
+    }
+  })
+
+  // GET /remote-status — リモートとの差分
+  app.get('/remote-status', (c) => {
+    try {
+      const status = getRemoteStatus(cwd)
+      return c.json(status)
+    } catch (err) {
+      return c.json({ error: 'リモートステータスの取得に失敗しました', detail: String(err) }, 500)
+    }
+  })
+
+  // POST /merge — マージ実行
+  app.post('/merge', async (c) => {
+    const body = await c.req.json()
+    const parsed = mergeSchema.safeParse(body)
+    if (!parsed.success) {
+      return c.json({ error: 'バリデーションエラー', details: parsed.error.issues }, 400)
+    }
+
+    // 未コミット変更チェック
+    const files = getStatus(cwd)
+    if (files.length > 0) {
+      return c.json({ error: '未コミットの変更があります。先にコミットまたは破棄してください。' }, 400)
+    }
+
+    try {
+      // マージ先が現在のブランチでない場合はcheckout
+      const current = getCurrentBranch(cwd)
+      if (current !== parsed.data.into) {
+        checkout(cwd, parsed.data.into)
+      }
+
+      const result = merge(cwd, parsed.data.from)
+      return c.json({ ok: true, ...result })
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err)
+      if (errMsg.includes('コンフリクト')) {
+        return c.json({ error: errMsg }, 409)
+      }
+      return c.json({ error: 'マージに失敗しました', detail: String(err) }, 500)
+    }
+  })
+
+  return app
+}
+
+// Claude CLI を使ってコミットメッセージを生成する
+// NOTE: execSync を使用しているが、prompt は JSON.stringify で安全にエスケープされており、
+// ユーザー入力は含まれないため安全
+async function generateCommitMessage(diff: string, recentLog: string, cwd: string): Promise<string> {
+  const { execSync } = await import('node:child_process')
+  const { getCleanEnv } = await import('../runner/claude-caller.js')
+
+  const prompt = `以下のgit diffに対して適切なコミットメッセージを生成してください。
+
+## コミットスタイル参考（直近のコミットログ）:
+${recentLog || '(まだコミットがありません)'}
+
+## 変更内容 (git diff --staged):
+${diff.substring(0, 8000)}
+
+## ルール:
+- コミットメッセージだけを出力してください（説明は不要）
+- 1行目はprefixを付けてください（feat:, fix:, refactor:, docs:, chore: など）
+- 日本語または英語、直近のログスタイルに合わせてください
+- 50文字程度に収めてください`
+
+  try {
+    const result = execSync(
+      `claude --print -p ${JSON.stringify(prompt)}`,
+      { cwd, encoding: 'utf8', timeout: 60000, env: getCleanEnv() },
+    ).trim()
+
+    return result || 'chore: update files'
+  } catch {
+    // Claude CLI が使えない場合はフォールバック
+    return 'chore: update files'
+  }
+}

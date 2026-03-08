@@ -1,25 +1,35 @@
 // マージモーダル
 // デザイン design.pen Node=6MUix 準拠
 
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { GitMerge, ArrowDown, ChevronDown } from 'lucide-react'
+import type { GitBranch } from '@cognac/shared'
 import { Button } from '@/components/ui/button'
 import { useScrollLock, useEscapeClose } from '@/hooks/use-scroll-lock'
-import { MOCK_BRANCHES } from '@/pages/git/mock-data'
-
-const localBranches = MOCK_BRANCHES.filter((b) => !b.remote)
 
 interface MergeModalProps {
   open: boolean
   onClose: () => void
+  branches: GitBranch[]
+  currentBranch: string
+  onMerge: (from: string, into: string) => void
 }
 
-export function MergeModal({ open, onClose }: MergeModalProps) {
-  const [fromBranch, setFromBranch] = useState('feat/sse')
-  const [toBranch, setToBranch] = useState('main')
+export function MergeModal({ open, onClose, branches, currentBranch, onMerge }: MergeModalProps) {
+  const localBranches = useMemo(() => branches.filter((b) => !b.remote), [branches])
+  const [fromBranch, setFromBranch] = useState('')
+  const [toBranch, setToBranch] = useState('')
 
   useScrollLock(open)
   useEscapeClose(open, onClose)
+
+  // モーダルが開かれたときにデフォルト値をセット
+  useEffect(() => {
+    if (!open || localBranches.length === 0) return
+    const defaultFrom = localBranches.find((b) => b.name !== currentBranch)?.name ?? localBranches[0].name
+    setFromBranch(defaultFrom)
+    setToBranch(currentBranch || localBranches[0].name)
+  }, [open, localBranches, currentBranch])
 
   if (!open) return null
 
@@ -108,7 +118,11 @@ export function MergeModal({ open, onClose }: MergeModalProps) {
           <Button variant="outline" onClick={onClose}>
             キャンセル
           </Button>
-          <Button variant="primary" onClick={onClose}>
+          <Button
+            variant="primary"
+            onClick={() => onMerge(fromBranch, toBranch)}
+            disabled={fromBranch === toBranch}
+          >
             <GitMerge className="h-4 w-4" />
             マージ実行
           </Button>

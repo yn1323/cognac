@@ -29,6 +29,16 @@ export type {
   CommitStepStatus,
   CommitStep,
   CommitResult,
+  GitStatusResponse,
+  GitLogResponse,
+  GitBranchesResponse,
+  GitRemoteStatusResponse,
+  GitCommitResponse,
+  GitMergeResponse,
+  GitPushResponse,
+  GitCheckoutRequest,
+  GitCreateBranchRequest,
+  GitMergeRequest,
 } from './types/git.js'
 
 // ランタイム
