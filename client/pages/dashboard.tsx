@@ -23,7 +23,6 @@ import { SPMetric } from '@/components/sp-metric'
 import { SPTaskCard } from '@/components/sp-task-card'
 import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { TaskModal } from '@/components/task-modal'
 import { formatRelativeTime } from '@/lib/format'
 import { ACTIVE_STATUSES, RETRYABLE_STATUSES, STATUS_CONFIG } from '@/lib/status-config'
@@ -169,11 +168,6 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry, 
           title="タスク"
           subtitle="AI駆動の開発タスクを管理・監視します"
         >
-          {/* Runner Status */}
-          <div className="flex items-center gap-1.5 rounded-full bg-[#dcfce7] px-3 py-1.5">
-            <span className="h-2 w-2 rounded-full bg-[#22c55e]" />
-            <span className="text-xs font-semibold text-[#166534]">実行中</span>
-          </div>
           <Button variant="outline" onClick={onStopAll} disabled={isStoppingAll}>
             {isStoppingAll
               ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -289,12 +283,11 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry, 
       <SPHeader />
 
       <main className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 pb-20">
-        {/* タイトル + Running バッジ */}
+        {/* タイトル */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold leading-[1.3] text-foreground">
             タスク
           </h1>
-          <Badge className="bg-[#16a34a] text-white">実行中</Badge>
         </div>
 
         {/* メトリクス（フィルター兼用） */}

@@ -2,7 +2,7 @@
 // PC: サイドバー + メインコンテンツ(2カラム) / SP: ヘッダー + ボディ + ボトムナビ
 // デザイン design.pen PC=TySUT, SP=A0mek に準拠
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   GitBranch,
@@ -10,6 +10,8 @@ import {
   GitMerge,
   RefreshCw,
   Upload,
+  Loader2,
+  Check,
   Trash2,
   Bot,
   ChevronDown,
@@ -77,7 +79,7 @@ function BranchSelector({ branches, currentBranch, onCheckout, disabled, classNa
         type="button"
         onClick={() => setOpen(!open)}
         disabled={disabled}
-        className="flex items-center gap-2 rounded-md border border-[#e5e5e5] bg-[#fafafa] px-3 py-2 text-sm disabled:opacity-50"
+        className="flex items-center gap-2 rounded-md border border-[#e5e5e5] bg-[#fafafa] px-3 py-2 text-sm disabled:opacity-50 disabled:pointer-events-none"
       >
         <GitBranch className="h-4 w-4 text-[#1d4ed8]" />
         <span className="font-semibold text-foreground">{currentBranch}</span>
@@ -176,6 +178,7 @@ interface GitPageViewProps {
   onFetch: () => void
   isPushing: boolean
   isFetching: boolean
+  pushPhase: 'idle' | 'pushing' | 'success'
   onExplainCommit: (hash: string, message: string) => void
   onExplainWorking: () => void
   isExplainWorkingLoading: boolean
@@ -201,6 +204,7 @@ function PCGitPage({
   onFetch,
   isPushing,
   isFetching,
+  pushPhase,
   onExplainCommit,
   onExplainWorking,
   isExplainWorkingLoading,
@@ -231,9 +235,21 @@ function PCGitPage({
             <GitMerge className="h-4 w-4" />
             マージ
           </Button>
-          <Button variant="primary" size="sm" onClick={onPush} disabled={isPushing}>
-            <Upload className="h-4 w-4" />
-            Push
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={onPush}
+            disabled={pushPhase !== 'idle'}
+            className={pushPhase === 'success' ? 'bg-green-600 hover:bg-green-600' : ''}
+          >
+            {pushPhase === 'pushing' ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : pushPhase === 'success' ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Upload className="h-4 w-4" />
+            )}
+            {pushPhase === 'pushing' ? 'Pushing...' : pushPhase === 'success' ? 'Pushed!' : 'Push'}
           </Button>
         </PageHeader>
 
@@ -244,6 +260,7 @@ function PCGitPage({
               branches={branches}
               currentBranch={currentBranch}
               onCheckout={onCheckout}
+              disabled={pushPhase !== 'idle'}
             />
           </div>
           <Button variant="outline" size="sm" onClick={onToggleNewBranchModal}>
@@ -299,7 +316,7 @@ function PCGitPage({
                       variant="primary"
                       className="flex-1"
                       onClick={onStartCommit}
-                      disabled={files.length === 0}
+                      disabled={files.length === 0 || pushPhase !== 'idle'}
                     >
                       <Bot className="h-4 w-4" />
                       AI コミット
@@ -363,6 +380,7 @@ function SPGitPage({
   onFetch,
   isPushing,
   isFetching,
+  pushPhase,
   onExplainCommit,
   onExplainWorking,
   isExplainWorkingLoading,
@@ -387,8 +405,20 @@ function SPGitPage({
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={onToggleMergeModal}>
               <GitMerge className="h-4 w-4" />
             </Button>
-            <Button variant="primary" size="icon" className="h-8 w-8" onClick={onPush} disabled={isPushing}>
-              <Upload className="h-4 w-4" />
+            <Button
+              variant="primary"
+              size="icon"
+              className={`h-8 w-8 ${pushPhase === 'success' ? 'bg-green-600 hover:bg-green-600' : ''}`}
+              onClick={onPush}
+              disabled={pushPhase !== 'idle'}
+            >
+              {pushPhase === 'pushing' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : pushPhase === 'success' ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>
@@ -400,6 +430,7 @@ function SPGitPage({
               branches={branches}
               currentBranch={currentBranch}
               onCheckout={onCheckout}
+              disabled={pushPhase !== 'idle'}
               className="w-full [&>button]:w-full"
             />
           </div>
@@ -449,7 +480,7 @@ function SPGitPage({
                   variant="primary"
                   className="flex-1"
                   onClick={onStartCommit}
-                  disabled={files.length === 0}
+                  disabled={files.length === 0 || pushPhase !== 'idle'}
                 >
                   <Bot className="h-4 w-4" />
                   AI コミット
@@ -504,6 +535,14 @@ export function GitPage() {
     | { type: 'working' }
     | null
   >(null)
+  const [pushPhase, setPushPhase] = useState<'idle' | 'pushing' | 'success'>('idle')
+  const pushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (pushTimerRef.current) clearTimeout(pushTimerRef.current)
+    }
+  }, [])
 
   // データ取得フック
   const { data: statusData } = useGitStatus()
@@ -543,10 +582,20 @@ export function GitPage() {
     onSuccess: () => toast('ブランチを切り替えました', 'success'),
     onError: () => toast('ブランチの切り替えに失敗しました', 'error'),
   })
-  const handlePush = () => pushMutation.mutate(undefined, {
-    onSuccess: () => toast('Pushしました', 'success'),
-    onError: () => toast('Pushに失敗しました', 'error'),
-  })
+  const handlePush = () => {
+    setPushPhase('pushing')
+    pushMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast('Pushしました', 'success')
+        setPushPhase('success')
+        pushTimerRef.current = setTimeout(() => setPushPhase('idle'), 1500)
+      },
+      onError: () => {
+        toast('Pushに失敗しました', 'error')
+        setPushPhase('idle')
+      },
+    })
+  }
   const handleFetch = () => fetchMutation.mutate(undefined, {
     onSuccess: () => toast('Fetchしました', 'success'),
     onError: () => toast('Fetchに失敗しました', 'error'),
@@ -616,6 +665,7 @@ export function GitPage() {
     onFetch: handleFetch,
     isPushing: pushMutation.isPending,
     isFetching: fetchMutation.isPending,
+    pushPhase,
     onExplainCommit: handleExplainCommit,
     onExplainWorking: handleExplainWorking,
     isExplainWorkingLoading: explainWorkingMutation.isPending,
