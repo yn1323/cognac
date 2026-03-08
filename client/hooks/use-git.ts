@@ -13,11 +13,13 @@ export function useGitStatus() {
   })
 }
 
-export function useGitLog(limit = 20) {
+export function useGitLog(limit?: number) {
+  const resolvedLimit = limit ?? 20
   return useQuery({
-    queryKey: ['git', 'log', limit],
-    queryFn: () => api.git.log(limit),
+    queryKey: ['git', 'log', resolvedLimit],
+    queryFn: () => api.git.log(resolvedLimit),
     refetchInterval: 5000,
+    enabled: limit !== undefined,
   })
 }
 

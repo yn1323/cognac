@@ -75,7 +75,8 @@
       "mcp__playwright__playwright_evaluate",
       "Bash(python3 -c \":*)",
       "Bash(python3 -m json.tool)",
-      "Bash(python3 -c \"import sys,json; data=json.loads\\(sys.stdin.read\\(\\)\\); print\\(data.get\\(''result'',''no result found''\\)\\)\")"
+      "Bash(python3 -c \"import sys,json; data=json.loads\\(sys.stdin.read\\(\\)\\); print\\(data.get\\(''result'',''no result found''\\)\\)\")",
+      "Bash(codex exec --json --ephemeral -s read-only -)"
     ],
     "deny": [],
     "additionalDirectories": [

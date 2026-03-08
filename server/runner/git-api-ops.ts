@@ -244,6 +244,7 @@ export function getCommitDiff(cwd: string, hash: string): string {
 export function commitWithMessage(cwd: string, message: string): CommitResult {
   // spawnSyncで引数配列として渡し、シェル解釈を回避（Win/Mac両対応）
   const commitResult = spawnSync('git', [
+    '-c', 'i18n.commitEncoding=utf-8',
     'commit',
     '--author=Claude <noreply@anthropic.com>',
     '-m',

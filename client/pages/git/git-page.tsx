@@ -32,6 +32,7 @@ import { NewBranchModal } from '@/components/new-branch-modal'
 import { CommitExplainModal } from '@/components/commit-explain-modal'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useToast } from '@/components/toast'
+import { useSettings } from '@/hooks/use-system'
 import { NAV_MAP } from '@/lib/constants'
 import {
   useGitStatus,
@@ -545,8 +546,9 @@ export function GitPage() {
   }, [])
 
   // データ取得フック
+  const { data: settings } = useSettings()
   const { data: statusData } = useGitStatus()
-  const { data: logData } = useGitLog()
+  const { data: logData } = useGitLog(settings?.git?.commitLogLimit)
   const { data: branchData } = useGitBranches()
   const { data: remoteStatus } = useGitRemoteStatus()
 

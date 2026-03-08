@@ -4,6 +4,7 @@ export default defineConfig({
   port: 4000,
   git: {
     defaultBranch: "main",
+    commitMessageLanguage: "ja",
   },
   ci: {
     maxRetries: 5,
