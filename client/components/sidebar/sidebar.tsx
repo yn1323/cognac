@@ -3,14 +3,11 @@
 
 import type { LucideIcon } from 'lucide-react'
 import {
-  Wine,
-  LayoutDashboard,
   ListChecks,
-  Terminal,
   Settings,
-  PanelLeftClose,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { BrandLogo } from '@/components/brand-logo'
 
 interface NavItem {
   icon: LucideIcon
@@ -19,16 +16,17 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { icon: ListChecks, label: 'Tasks', active: true },
-  { icon: Settings, label: 'Settings' },
+  { icon: ListChecks, label: 'タスク', active: true },
+  { icon: Settings, label: '設定' },
 ]
 
 interface SidebarProps {
   activeItem?: string
+  onItemClick?: (label: string) => void
   className?: string
 }
 
-export function Sidebar({ activeItem = 'Tasks', className }: SidebarProps) {
+export function Sidebar({ activeItem = 'タスク', onItemClick, className }: SidebarProps) {
   return (
     <aside
       className={cn(
@@ -36,11 +34,11 @@ export function Sidebar({ activeItem = 'Tasks', className }: SidebarProps) {
         className,
       )}
     >
-      {/* ヘッダー: ブランドロゴ + 折りたたみアイコン */}
+      {/* ヘッダー: ブランドロゴ */}
       <div className="flex items-center justify-between rounded-md p-2">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-sidebar-primary">
-            <Wine className="h-4 w-4 text-sidebar-primary-foreground" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-cognac-dark">
+            <BrandLogo size={18} />
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold leading-[1.4] text-sidebar-foreground">
@@ -48,24 +46,19 @@ export function Sidebar({ activeItem = 'Tasks', className }: SidebarProps) {
             </span>
           </div>
         </div>
-        <button type="button" className="text-muted-foreground">
-          <PanelLeftClose className="h-4 w-4" />
-        </button>
       </div>
 
       {/* ナビゲーション */}
       <nav className="flex flex-1 flex-col gap-0.5">
-        <span className="px-3 py-1.5 text-xs font-medium text-muted-foreground">
-          Navigation
-        </span>
         {NAV_ITEMS.map((item) => {
           const isActive = item.label === activeItem
           return (
             <button
               key={item.label}
               type="button"
+              onClick={() => onItemClick?.(item.label)}
               className={cn(
-                'flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                'flex cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
                 isActive
                   ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                   : 'text-sidebar-foreground hover:bg-sidebar-accent/50',

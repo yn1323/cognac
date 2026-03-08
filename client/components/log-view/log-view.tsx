@@ -22,6 +22,8 @@ function formatEvent(event: TaskEvent): { label: string; detail: string; color: 
         detail: `${event.command} → exit ${event.exitCode}`,
         color: event.exitCode === 0 ? 'text-green-600' : 'text-red-600',
       }
+    case 'tool_invoked':
+      return { label: 'Tool', detail: event.toolName, color: 'text-muted-foreground' }
     case 'ci_start':
       return { label: 'CI', detail: `${event.step}: ${event.command}`, color: 'text-orange-600' }
     case 'ci_result':
@@ -42,6 +44,12 @@ function formatEvent(event: TaskEvent): { label: string; detail: string; color: 
       return { label: 'Paused', detail: event.reason, color: 'text-red-600' }
     case 'git_operation':
       return { label: 'Git', detail: `${event.operation}: ${event.detail}`, color: 'text-purple-600' }
+    case 'debug_log':
+      return {
+        label: 'Debug',
+        detail: event.message,
+        color: event.level === 'error' ? 'text-red-600' : event.level === 'warn' ? 'text-yellow-600' : 'text-muted-foreground',
+      }
     case 'completed':
       return { label: 'Done', detail: event.summary, color: 'text-green-700' }
     default:

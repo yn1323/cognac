@@ -1,5 +1,13 @@
 import type { CiStep } from './events.js'
 
+// 設定更新ペイロード（API用）
+export interface SettingsPayload {
+  ci: {
+    maxRetries: number
+    steps: CiStep[] // 空配列 = 自動検出モード
+  }
+}
+
 // Git設定
 export interface GitConfig {
   defaultBranch: string
@@ -16,6 +24,7 @@ export interface DiscussionConfig {
   maxRounds: number
   minPersonas: number
   maxPersonas: number
+  skipDiscussion: boolean // true=ブートストラップモード（Phase 2スキップ）
 }
 
 // Claude Code実行設定
@@ -29,6 +38,7 @@ export interface ClaudeConfig {
 // 全体設定
 export interface CognacConfig {
   port: number
+  host: string
   git: GitConfig
   ci: CiConfig
   discussion: DiscussionConfig
@@ -38,6 +48,7 @@ export interface CognacConfig {
 // デフォルト設定値
 const defaultConfig: CognacConfig = {
   port: 4000,
+  host: '0.0.0.0',
   git: {
     defaultBranch: 'main',
   },
@@ -48,6 +59,7 @@ const defaultConfig: CognacConfig = {
     maxRounds: 3,
     minPersonas: 2,
     maxPersonas: 4,
+    skipDiscussion: false,
   },
   claude: {
     maxTurnsExecution: 30,

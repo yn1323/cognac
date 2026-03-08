@@ -21,7 +21,6 @@ export type TaskEvent =
       personaId: string
       personaName: string
       content: string
-      keyPoints: string[]
     }
   | { type: 'discussion_round_end'; round: number; shouldContinue: boolean; reason: string }
   // Phase 2-C: プラン
@@ -30,6 +29,7 @@ export type TaskEvent =
   | { type: 'claude_output'; content: string }
   | { type: 'file_changed'; path: string; toolName: 'Write' | 'Edit' }
   | { type: 'command_executed'; command: string; output: string; exitCode: number }
+  | { type: 'tool_invoked'; toolName: string }
   // CI
   | { type: 'ci_start'; step: string; command: string }
   | { type: 'ci_result'; step: string; success: boolean; output: string; durationMs: number }
@@ -39,6 +39,8 @@ export type TaskEvent =
   | { type: 'paused'; reason: string; phase: Phase }
   // Git
   | { type: 'git_operation'; operation: 'checkout' | 'commit' | 'merge' | 'push'; detail: string }
+  // デバッグ
+  | { type: 'debug_log'; message: string; level: 'info' | 'warn' | 'error' }
   // 完了
   | {
       type: 'completed'

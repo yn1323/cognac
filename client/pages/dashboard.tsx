@@ -2,7 +2,7 @@
 // PC: サイドバー + メインコンテンツ / SP: ヘッダー + ボディ + ボトムナビ
 // デザイン design.pen PC=EUZoe, SP=S77Vv に準拠
 
-import type { Task } from '@cognac/shared'
+import type { Task, TaskStatus } from '@cognac/shared'
 import {
   Clock,
   Play,
@@ -11,12 +11,9 @@ import {
   Pause,
   Plus,
   PlusCircle,
-  LayoutDashboard,
   ListChecks,
-  Terminal,
   Settings,
-  ChevronUp,
-  ChevronDown,
+  Loader2,
 } from 'lucide-react'
 import { Sidebar } from '@/components/sidebar'
 import { PageHeader } from '@/components/page-header'
@@ -26,185 +23,250 @@ import { SPHeader } from '@/components/sp-header'
 import { SPBottomNav, SPNavItem } from '@/components/sp-bottom-nav'
 import { SPMetric } from '@/components/sp-metric'
 import { SPTaskCard } from '@/components/sp-task-card'
+import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { TaskModal } from '@/components/task-modal'
+import { formatRelativeTime } from '@/lib/format'
+import { ACTIVE_STATUSES, RETRYABLE_STATUSES, STATUS_CONFIG } from '@/lib/status-config'
+import { NAV_MAP } from '@/lib/constants'
+import { Link, useNavigate } from 'react-router-dom'
+import { useCallback, useMemo, useState } from 'react'
+import { useToast } from '@/components/toast'
+import { useTasks, useRetryTask } from '@/hooks/use-tasks'
 
-// --- 固定データ ---
+// --- フィルター定義 ---
 
-const MOCK_TASKS: Task[] = [
+type FilterCategory = 'pending' | 'executing' | 'completed' | 'failed'
+
+const FILTER_CATEGORY_STATUSES: Record<FilterCategory, TaskStatus[]> = {
+  pending: ['pending'],
+  executing: ['discussing', 'planned', 'executing', 'testing'],
+  completed: ['completed'],
+  failed: ['paused', 'stopped'],
+}
+
+const INITIAL_FILTERS = new Set<FilterCategory>(['pending', 'executing', 'failed'])
+
+/** カテゴリごとのactive時スタイル（デザイン design.pen PC=KCxvr, SP=DK6dH 準拠） */
+const FILTER_STYLES: Record<
+  FilterCategory,
   {
-    id: 1,
-    title: 'Implement user authentication with JWT',
-    description: 'JWT認証を実装。リフレッシュトークンとCSRF対策も含む',
-    status: 'executing',
-    priority: 1,
-    queue_order: 1,
-    branch_name: 'task/1-implement-jwt-auth',
-    retry_count: 0,
-    process_retry_count: 0,
-    paused_reason: null,
-    paused_phase: null,
-    created_at: '2026-03-03T14:00:00Z',
-    started_at: '2026-03-03T14:30:00Z',
-    completed_at: null,
+    pc: { activeBg: string; activeBorder: string; activeLabelColor: string; activeValueColor: string; activeIconColor: string }
+    sp: { activeTextColor: string; activeBgColor: string; activeBorderColor: string }
+  }
+> = {
+  pending: {
+    pc: { activeBg: 'bg-[#f9fafb]', activeBorder: 'border-[#6b7280]', activeLabelColor: 'text-[#6b7280]', activeValueColor: 'text-[#374151]', activeIconColor: 'text-[#6b7280]' },
+    sp: { activeTextColor: 'text-[#374151]', activeBgColor: 'bg-[#f9fafb]', activeBorderColor: 'border-[#6b7280]' },
   },
-  {
-    id: 2,
-    title: 'Add drag-and-drop task reordering',
-    description: 'キューの並べ替え機能。タッチ対応のD&Dライブラリを使う',
-    status: 'discussing',
-    priority: 2,
-    queue_order: 2,
-    branch_name: null,
-    retry_count: 0,
-    process_retry_count: 0,
-    paused_reason: null,
-    paused_phase: null,
-    created_at: '2026-03-03T14:20:00Z',
-    started_at: '2026-03-03T14:27:00Z',
-    completed_at: null,
+  executing: {
+    pc: { activeBg: 'bg-[#eff6ff]', activeBorder: 'border-[#2563eb]', activeLabelColor: 'text-[#2563eb]', activeValueColor: 'text-[#2563eb]', activeIconColor: 'text-[#2563eb]' },
+    sp: { activeTextColor: 'text-[#2563eb]', activeBgColor: 'bg-[#eff6ff]', activeBorderColor: 'border-[#2563eb]' },
   },
-  {
-    id: 3,
-    title: 'Implement SSE event streaming',
-    description: 'SSEでリアルタイムにタスク実行状況を配信する',
-    status: 'pending',
-    priority: 3,
-    queue_order: 3,
-    branch_name: null,
-    retry_count: 0,
-    process_retry_count: 0,
-    paused_reason: null,
-    paused_phase: null,
-    created_at: '2026-03-03T14:22:00Z',
-    started_at: null,
-    completed_at: null,
+  completed: {
+    pc: { activeBg: 'bg-[#f0fdf4]', activeBorder: 'border-[#16a34a]', activeLabelColor: 'text-[#16a34a]', activeValueColor: 'text-[#16a34a]', activeIconColor: 'text-[#16a34a]' },
+    sp: { activeTextColor: 'text-[#16a34a]', activeBgColor: 'bg-[#f0fdf4]', activeBorderColor: 'border-[#16a34a]' },
   },
-  {
-    id: 4,
-    title: 'Set up Hono backend with SQLite',
-    description: 'HonoサーバーとSQLite DBの初期セットアップ',
-    status: 'completed',
-    priority: 4,
-    queue_order: null,
-    branch_name: 'task/4-setup-hono-sqlite',
-    retry_count: 0,
-    process_retry_count: 0,
-    paused_reason: null,
-    paused_phase: null,
-    created_at: '2026-03-03T13:00:00Z',
-    started_at: '2026-03-03T13:05:00Z',
-    completed_at: '2026-03-03T13:50:00Z',
+  failed: {
+    pc: { activeBg: 'bg-[#fef2f2]', activeBorder: 'border-[#dc2626]', activeLabelColor: 'text-[#dc2626]', activeValueColor: 'text-[#dc2626]', activeIconColor: 'text-[#dc2626]' },
+    sp: { activeTextColor: 'text-[#dc2626]', activeBgColor: 'bg-[#fef2f2]', activeBorderColor: 'border-[#dc2626]' },
   },
-  {
-    id: 5,
-    title: 'Add error classification system',
-    description: 'エラー分類（アプリ/インフラ/プロセス）の実装',
-    status: 'stopped',
-    priority: 5,
-    queue_order: null,
-    branch_name: 'task/5-error-classification',
-    retry_count: 5,
-    process_retry_count: 0,
-    paused_reason: null,
-    paused_phase: null,
-    created_at: '2026-03-03T14:02:00Z',
-    started_at: '2026-03-03T14:02:00Z',
-    completed_at: null,
-  },
-]
+}
+
+function filterTasks(tasks: Task[], activeFilters: Set<FilterCategory>): Task[] {
+  const allowedStatuses = new Set<TaskStatus>()
+  for (const cat of activeFilters) {
+    for (const s of FILTER_CATEGORY_STATUSES[cat]) allowedStatuses.add(s)
+  }
+  return tasks.filter((t) => allowedStatuses.has(t.status))
+}
+
+// --- メトリクス計算 ---
+
+function useMetrics(tasks: Task[]) {
+  return useMemo(
+    () =>
+      tasks.reduce(
+        (acc, t) => {
+          if (t.status === 'pending') acc.pending++
+          else if (ACTIVE_STATUSES.has(t.status)) acc.executing++
+          else if (t.status === 'completed') acc.completed++
+          else if (t.status === 'stopped' || t.status === 'paused') acc.failed++
+          return acc
+        },
+        { pending: 0, executing: 0, completed: 0, failed: 0 },
+      ),
+    [tasks],
+  )
+}
+
+// --- フィルターフック（PC/SP共通） ---
+
+function useDashboardFilters(tasks: Task[]) {
+  const [activeFilters, setActiveFilters] = useState<Set<FilterCategory>>(INITIAL_FILTERS)
+  const metrics = useMetrics(tasks)
+  const filteredTasks = useMemo(() => filterTasks(tasks, activeFilters), [tasks, activeFilters])
+  const toggle = useCallback(
+    (cat: FilterCategory) =>
+      setActiveFilters((prev) => {
+        const next = new Set(prev)
+        if (next.has(cat)) next.delete(cat)
+        else next.add(cat)
+        return next
+      }),
+    [],
+  )
+  return { activeFilters, metrics, filteredTasks, toggle }
+}
+
+// --- SP用ヘルパー ---
+
+function getSPSubtitle(task: Task): string {
+  const time = formatRelativeTime(task.started_at ?? task.created_at)
+  if (task.status === 'stopped' && task.retry_count > 0)
+    return `CI失敗 (${task.retry_count}/5) · ${time}`
+  return time
+}
+
+function getSPBorderColor(task: Task): string {
+  return STATUS_CONFIG[task.status].borderColor || 'border-border'
+}
+
+// --- 共通Props ---
+
+interface DashboardProps {
+  tasks: Task[]
+  isLoading: boolean
+  error: Error | null
+  onNewTask: () => void
+  onNavigate: (path: string) => void
+  onRetry: (taskId: number) => void
+}
 
 // --- PC版 ---
 
-function PCDashboard() {
+function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry }: DashboardProps) {
+  const { activeFilters, metrics, filteredTasks, toggle } = useDashboardFilters(tasks)
+
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar className="h-full shrink-0" />
+    <div className="flex h-dvh bg-background">
+      <Sidebar
+        className="h-full shrink-0"
+        onItemClick={(label) => {
+          const path = NAV_MAP[label]
+          if (path) onNavigate(path)
+        }}
+      />
 
       <main className="flex flex-1 flex-col gap-6 overflow-y-auto p-8">
         {/* ページヘッダー */}
         <PageHeader
-          title="Tasks"
-          subtitle="Manage and monitor your AI-driven development tasks"
+          title="タスク"
+          subtitle="AI駆動の開発タスクを管理・監視します"
         >
           {/* Runner Status */}
           <div className="flex items-center gap-1.5 rounded-full bg-[#dcfce7] px-3 py-1.5">
             <span className="h-2 w-2 rounded-full bg-[#22c55e]" />
-            <span className="text-xs font-semibold text-[#166534]">Running</span>
+            <span className="text-xs font-semibold text-[#166534]">実行中</span>
           </div>
           <Button variant="outline">
             <Pause className="mr-2 h-4 w-4" />
-            Pause All
+            全停止
           </Button>
-          <Button className="bg-blue-600 text-white hover:bg-blue-700">
+          <Button
+            variant="primary"
+            onClick={onNewTask}
+          >
             <Plus className="mr-2 h-4 w-4" />
-            New Task
+            新規タスク
           </Button>
         </PageHeader>
 
-        {/* メトリクスカード */}
+        {/* メトリクスカード（フィルター兼用） */}
         <div className="grid grid-cols-4 gap-4">
-          <MetricCard label="Pending" value={5} icon={Clock} />
+          <MetricCard
+            label="Pending"
+            value={metrics.pending}
+            icon={Clock}
+            active={activeFilters.has('pending')}
+            onClick={() => toggle('pending')}
+            {...FILTER_STYLES.pending.pc}
+          />
           <MetricCard
             label="Executing"
-            value={1}
+            value={metrics.executing}
             icon={Play}
-            className="[&_svg]:text-[#2563eb]"
+            active={activeFilters.has('executing')}
+            onClick={() => toggle('executing')}
+            {...FILTER_STYLES.executing.pc}
           />
           <MetricCard
             label="Completed"
-            value={12}
+            value={metrics.completed}
             icon={CheckCircle}
-            className="[&_svg]:text-[#16a34a]"
+            active={activeFilters.has('completed')}
+            onClick={() => toggle('completed')}
+            {...FILTER_STYLES.completed.pc}
           />
           <MetricCard
             label="Failed"
-            value={2}
+            value={metrics.failed}
             icon={AlertCircle}
-            className="[&_svg]:text-destructive"
+            active={activeFilters.has('failed')}
+            onClick={() => toggle('failed')}
+            {...FILTER_STYLES.failed.pc}
           />
         </div>
 
         {/* タスクリストセクション */}
         <div className="flex flex-col gap-4">
           {/* ヘッダー */}
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold leading-[1.4] text-foreground">
-                Task Queue
-              </h2>
-              <span className="text-sm text-muted-foreground">20 tasks</span>
-            </div>
-
-            {/* フィルタータブ */}
-            <div className="flex gap-1">
-              <button
-                type="button"
-                className="rounded-md px-3 py-1.5 text-[13px] font-medium text-foreground bg-muted"
-              >
-                All
-              </button>
-              <button
-                type="button"
-                className="rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground"
-              >
-                Active
-              </button>
-              <button
-                type="button"
-                className="rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground"
-              >
-                Completed
-              </button>
-            </div>
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold leading-[1.4] text-foreground">
+              タスクキュー
+            </h2>
+            <span className="text-sm text-muted-foreground">
+              {filteredTasks.length} 件
+            </span>
           </div>
 
           {/* タスクカード */}
-          <div className="flex flex-col gap-2">
-            {MOCK_TASKS.map((task) => (
-              <TaskCard key={task.id} task={task} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center gap-2 py-12 text-center">
+              <AlertCircle className="h-8 w-8 text-destructive" />
+              <p className="text-sm text-muted-foreground">
+                タスクの取得に失敗しました
+              </p>
+            </div>
+          ) : filteredTasks.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 py-12 text-center">
+              <p className="text-sm text-muted-foreground">
+                {activeFilters.size === 0
+                  ? 'フィルターを選択してね〜'
+                  : 'タスクがまだないよ〜'}
+              </p>
+              {activeFilters.size === 0 ? null : (
+                <Button
+                  variant="primary"
+                  onClick={onNewTask}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  新規タスク
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {filteredTasks.map((task) => (
+                <TaskCard key={task.id} task={task} onRetry={onRetry} />
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>
@@ -213,105 +275,116 @@ function PCDashboard() {
 
 // --- SP版 ---
 
-function SPDashboard() {
+function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry }: DashboardProps) {
+  const { activeFilters, metrics, filteredTasks, toggle } = useDashboardFilters(tasks)
+
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-dvh flex-col bg-background">
       <SPHeader />
 
       <main className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
         {/* タイトル + Running バッジ */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold leading-[1.3] text-foreground">
-            Tasks
+            タスク
           </h1>
-          <Badge className="bg-[#16a34a] text-white">Running</Badge>
+          <Badge className="bg-[#16a34a] text-white">実行中</Badge>
         </div>
 
-        {/* メトリクス */}
+        {/* メトリクス（フィルター兼用） */}
         <div className="flex gap-2">
-          <SPMetric value={5} label="Pending" />
           <SPMetric
-            value={1}
-            label="Exec"
-            textColor="text-[#2563eb]"
-            bgColor="bg-[#eff6ff]"
-            borderColor="border-[#2563eb30]"
+            value={metrics.pending}
+            label="Pending"
+            active={activeFilters.has('pending')}
+            onClick={() => toggle('pending')}
+            {...FILTER_STYLES.pending.sp}
           />
           <SPMetric
-            value={12}
-            label="Done"
-            textColor="text-[#16a34a]"
-            bgColor="bg-[#f0fdf4]"
-            borderColor="border-[#16a34a30]"
+            value={metrics.executing}
+            label="実行"
+            active={activeFilters.has('executing')}
+            onClick={() => toggle('executing')}
+            {...FILTER_STYLES.executing.sp}
           />
           <SPMetric
-            value={2}
-            label="Stop"
-            textColor="text-[#dc2626]"
-            bgColor="bg-[#fef2f2]"
-            borderColor="border-[#dc262630]"
+            value={metrics.completed}
+            label="完了"
+            active={activeFilters.has('completed')}
+            onClick={() => toggle('completed')}
+            {...FILTER_STYLES.completed.sp}
+          />
+          <SPMetric
+            value={metrics.failed}
+            label="失敗"
+            active={activeFilters.has('failed')}
+            onClick={() => toggle('failed')}
+            {...FILTER_STYLES.failed.sp}
           />
         </div>
 
         {/* タスクカード */}
-        <div className="flex flex-col gap-2.5">
-          <SPTaskCard
-            title="Implement auth API"
-            subtitle="Phase 3 · 14:32 started"
-            badge={
-              <Badge className="bg-[#2563eb] text-white">Executing</Badge>
-            }
-            borderColor="border-[#2563eb] border-2"
-          />
-          <SPTaskCard
-            title="Add drag-and-drop reorder"
-            subtitle="Round 2 of 3 · 3 personas"
-            badge={
-              <Badge className="bg-[#eab308] text-white">Discussing</Badge>
-            }
-          />
-          <SPTaskCard
-            title="Setup SSE endpoints"
-            subtitle="Queued · Created 14:10"
-            badge={
-              <Badge variant="secondary">Pending</Badge>
-            }
-            actions={
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="h-auto px-2 py-1 text-xs">
-                  <ChevronUp className="mr-1 h-3 w-3" />
-                  Up
-                </Button>
-                <Button variant="outline" size="sm" className="h-auto px-2 py-1 text-xs">
-                  <ChevronDown className="mr-1 h-3 w-3" />
-                  Down
-                </Button>
-              </div>
-            }
-          />
-          <SPTaskCard
-            title="Add error classification"
-            subtitle="CI failed (5/5) · 30 min ago"
-            badge={
-              <Badge className="bg-[#ef4444] text-white">Stopped</Badge>
-            }
-            borderColor="border-[#ef444440]"
-            actions={
-              <Button variant="outline" size="sm" className="h-auto px-2.5 py-1 text-xs">
-                Retry
-              </Button>
-            }
-          />
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center gap-2 py-8 text-center">
+            <AlertCircle className="h-8 w-8 text-destructive" />
+            <p className="text-sm text-muted-foreground">
+              タスクの取得に失敗しました
+            </p>
+          </div>
+        ) : filteredTasks.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              {activeFilters.size === 0
+                ? 'フィルターを選択してね〜'
+                : 'タスクがまだないよ〜'}
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {filteredTasks.map((task) => (
+              <Link key={task.id} to={`/tasks/${task.id}`} className="block">
+                <SPTaskCard
+                  title={task.title}
+                  subtitle={getSPSubtitle(task)}
+                  badge={<StatusBadge status={task.status} />}
+                  borderColor={getSPBorderColor(task)}
+                  actions={
+                    RETRYABLE_STATUSES.has(task.status) ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-auto px-2.5 py-1 text-xs"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          onRetry(task.id)
+                        }}
+                      >
+                        リトライ
+                      </Button>
+                    ) : undefined
+                  }
+                />
+              </Link>
+            ))}
+          </div>
+        )}
       </main>
 
       {/* ボトムナビ */}
       <SPBottomNav>
-        <SPNavItem icon={ListChecks} label="Tasks" active />
-        <button type="button" className="flex flex-col items-center gap-1">
+        <SPNavItem icon={ListChecks} label="タスク" active />
+        <button
+          type="button"
+          className="flex flex-col items-center gap-1"
+          onClick={onNewTask}
+        >
           <PlusCircle className="h-7 w-7 text-primary" />
         </button>
-        <SPNavItem icon={Settings} label="Settings" />
+        <SPNavItem icon={Settings} label="設定" onClick={() => onNavigate('/settings')} />
       </SPBottomNav>
     </div>
   )
@@ -320,15 +393,42 @@ function SPDashboard() {
 // --- エクスポート ---
 
 export function DashboardPage() {
+  const navigate = useNavigate()
+  const handleNewTask = useCallback(() => navigate('?new-task=true'), [navigate])
+  const { data: tasks = [], isLoading, error } = useTasks()
+  const retryTask = useRetryTask()
+  const { toast } = useToast()
+  const handleRetry = useCallback((taskId: number) => {
+    retryTask.mutate(taskId, {
+      onSuccess: () => toast('タスクをリトライキューに戻しました', 'success'),
+      onError: () => toast('リトライに失敗しました', 'error'),
+    })
+  }, [retryTask, toast])
+
   return (
     <>
+      <TaskModal />
       {/* PC版: md以上で表示 */}
       <div className="hidden md:block">
-        <PCDashboard />
+        <PCDashboard
+          tasks={tasks}
+          isLoading={isLoading}
+          error={error}
+          onNewTask={handleNewTask}
+          onNavigate={navigate}
+          onRetry={handleRetry}
+        />
       </div>
       {/* SP版: md未満で表示 */}
       <div className="md:hidden">
-        <SPDashboard />
+        <SPDashboard
+          tasks={tasks}
+          isLoading={isLoading}
+          error={error}
+          onNewTask={handleNewTask}
+          onNavigate={navigate}
+          onRetry={handleRetry}
+        />
       </div>
     </>
   )

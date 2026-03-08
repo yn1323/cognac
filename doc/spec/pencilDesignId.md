@@ -35,4 +35,10 @@ IDはpencilのFrameを指しています。
    - PC：Node ID: SGKRj
    - SP：Node ID: Oroa8
 
+## コンポーネント
 
+1. Snackbar（トースト通知）
+   - Default：Node ID: OeZYr
+   - Success：Node ID: po45K
+   - Error：Node ID: 0jXla
+   - Warning：Node ID: T2tUR

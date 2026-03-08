@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <!-- ネイビー背景の角丸正方形 -->
+  <rect x="440" y="60" width="320" height="320" rx="40" fill="#1A2744"/>
+  <!-- アンバーのC -->
+  <path d="M660 160c-14.4-17.6-36-28-60-28C548.8 132 508 172.8 508 220s40.8 88 92 88c24 0 45.6-10.4 60-28" fill="none" stroke="#B56B1F" stroke-width="28" stroke-linecap="round"/>
+  <!-- 蒸留のしずく -->
+  <path d="M665 170c0 0-8 14-8 21 0 5.6 3.6 10 8 10s8-4.4 8-10c0-7-8-21-8-21z" fill="#D4943A"/>
+  <!-- Cognac テキスト -->
+  <text x="600" y="450" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="56" fill="#D4943A">Cognac</text>
+  <!-- サブテキスト -->
+  <text x="600" y="500" text-anchor="middle" font-family="sans-serif" font-weight="400" font-size="24" fill="#D4943A" opacity="0.7">AI-Powered Task Automation</text>
+</svg>

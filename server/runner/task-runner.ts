@@ -1,20 +1,28 @@
 import type Database from 'better-sqlite3'
-import type { CognacConfig, TaskEvent, Task } from '@cognac/shared'
+import type { CognacConfig, TaskEvent, Task, Phase, CiStep } from '@cognac/shared'
 import type { EventBus } from '../sse/event-bus.js'
 import type { RunnerStatus } from '../api/system.js'
 import * as taskQueries from '../db/queries/tasks.js'
 import * as logQueries from '../db/queries/execution-logs.js'
-import { createTaskBranch, mergeTaskBranch, resetTaskBranch } from './git-ops.js'
+import { buildBranchName /* createTaskBranch, resetTaskBranch, mergeTaskBranch */ } from './git-ops.js'
 import { executePhase3 } from './phase-execute.js'
+import { executePhasePersona } from './phase-persona.js'
+import { executePhaseDiscussion } from './phase-discussion.js'
+import { executePhasePlan } from './phase-plan.js'
+import { buildRetryPrompt } from './retry-prompt.js'
+import { invalidateContextCache } from './context-cache.js'
 import { getCiSteps, runCi } from './ci-runner.js'
 import { classifyError } from './error-classifier.js'
-import { ProcessTimeoutError } from './claude-caller.js'
+import { ProcessTimeoutError, TaskCancelledError } from './claude-caller.js'
 
 export class TaskRunner implements RunnerStatus {
   private running = false
   private paused = false
   private currentTaskId: number | null = null
+  private currentAbortController: AbortController | null = null
   private timer: ReturnType<typeof setTimeout> | null = null
+  // フェーズごとのSSEイベントを蓄積（DB永続化用）
+  private phaseEvents: TaskEvent[] = []
 
   constructor(
     private db: Database.Database,
@@ -26,6 +34,19 @@ export class TaskRunner implements RunnerStatus {
     if (this.paused) return 'paused'
     if (this.currentTaskId !== null) return 'running'
     return 'idle'
+  }
+
+  // 現在の設定を返す（設定APIから参照される）
+  getConfig(): CognacConfig {
+    return this.config
+  }
+
+  // CI設定をメモリ上でホットリロード（設定保存時に呼ばれる）
+  updateConfig(patch: { ci: { maxRetries: number; steps?: CiStep[] } }): void {
+    this.config = {
+      ...this.config,
+      ci: { ...this.config.ci, ...patch.ci },
+    }
   }
 
   start(): void {
@@ -52,6 +73,16 @@ export class TaskRunner implements RunnerStatus {
   resume(): void {
     this.paused = false
     console.log('タスクランナー再開')
+  }
+
+  // 実行中タスクをキャンセル（AbortControllerでプロセスを停止）
+  cancelCurrentTask(taskId: number): boolean {
+    if (this.currentTaskId !== taskId || !this.currentAbortController) {
+      return false
+    }
+    console.log(`タスク ${taskId} のキャンセルシグナルを送信`)
+    this.currentAbortController.abort()
+    return true
   }
 
   private scheduleNextPoll(): void {
@@ -86,61 +117,163 @@ export class TaskRunner implements RunnerStatus {
     this.scheduleNextPoll()
   }
 
-  // タスクイベントを配信するヘルパー
+  // タスクイベントを配信 + 蓄積するヘルパー
   private emit(taskId: number, event: TaskEvent): void {
     this.eventBus.publish(taskId, event)
+    this.phaseEvents.push(event)
   }
 
-  // メインのタスク実行パイプライン（ブートストラップ版）
-  // pending → executing → testing → completed
+  // 蓄積したイベントをJSONで取得してリセット
+  private drainPhaseEvents(): string {
+    const json = JSON.stringify(this.phaseEvents)
+    this.phaseEvents = []
+    return json
+  }
+
+  // メインのタスク実行パイプライン
+  // skipDiscussion=true:  pending → executing → testing → completed（ブートストラップ）
+  // skipDiscussion=false: pending → discussing → planned → executing → testing → completed（フル）
   private async executeTask(task: Task): Promise<void> {
     const { id } = task
-    const timestamp = new Date().toISOString()
+    let currentPhase: Phase = 'execute'
+
+    // キャンセル用 AbortController を作成
+    const abortController = new AbortController()
+    this.currentAbortController = abortController
+    const { signal } = abortController
 
     try {
-      // --- Gitブランチ作成 ---
-      this.emit(id, { type: 'phase_start', phase: 'git', timestamp })
-      const branchName = createTaskBranch(id, task.title, this.config.git.defaultBranch)
-      taskQueries.updateTask(this.db, id, {
-        status: 'executing',
-        branch_name: branchName,
-        started_at: new Date().toISOString(),
-      })
-      this.emit(id, {
-        type: 'git_operation',
-        operation: 'checkout',
-        detail: `ブランチ ${branchName} を作成`,
-      })
-      this.emit(id, { type: 'phase_end', phase: 'git', timestamp: new Date().toISOString(), durationMs: 0 })
+      // イベント蓄積をリセット
+      this.phaseEvents = []
 
-      // --- Phase 3 + CI のリトライループ ---
-      await this.executeWithRetry(task, branchName)
+      const onEvent = (event: TaskEvent): void => this.emit(id, event)
+
+      if (this.config.discussion.skipDiscussion) {
+        // --- ブートストラップモード（Phase 2スキップ） ---
+        const branchName = buildBranchName(id, task.title)
+        taskQueries.updateTask(this.db, id, {
+          status: 'executing',
+          branch_name: branchName,
+          started_at: new Date().toISOString(),
+        })
+        await this.executeWithRetry(task, branchName, undefined, signal)
+      } else {
+        // --- フルパイプライン ---
+        taskQueries.updateTask(this.db, id, {
+          status: 'discussing',
+          started_at: new Date().toISOString(),
+        })
+
+        // Phase 2-A: ペルソナ選定
+        currentPhase = 'persona'
+        this.emit(id, { type: 'phase_start', phase: 'persona', timestamp: new Date().toISOString() })
+        const personaResult = await executePhasePersona(task, this.db, this.config, onEvent, signal)
+        this.emit(id, { type: 'phase_end', phase: 'persona', timestamp: new Date().toISOString(), durationMs: personaResult.durationMs })
+
+        // キャンセルチェック
+        if (signal.aborted) return
+
+        // Phase 2-B: ディスカッション
+        currentPhase = 'discussion'
+        this.emit(id, { type: 'phase_start', phase: 'discussion', timestamp: new Date().toISOString() })
+        const discResult = await executePhaseDiscussion(task, personaResult.personas, this.db, this.config, onEvent, signal)
+        this.emit(id, { type: 'phase_end', phase: 'discussion', timestamp: new Date().toISOString(), durationMs: discResult.totalDurationMs })
+
+        // キャンセルチェック
+        if (signal.aborted) return
+
+        // Phase 2-C: プラン策定
+        currentPhase = 'plan'
+        this.emit(id, { type: 'phase_start', phase: 'plan', timestamp: new Date().toISOString() })
+        const planResult = await executePhasePlan(task, discResult.discussions, personaResult.personas, this.db, this.config, onEvent, signal)
+        this.emit(id, { type: 'phase_end', phase: 'plan', timestamp: new Date().toISOString(), durationMs: planResult.durationMs })
+        taskQueries.updateTask(this.db, id, { status: 'planned' })
+
+        // キャンセルチェック
+        if (signal.aborted) return
+
+        // Gitブランチ作成（一時コメントアウト: 不具合調査のノイズ除去）
+        // currentPhase = 'git'
+        // const branchName = createTaskBranch(id, task.title, this.config.git.defaultBranch)
+        const branchName = buildBranchName(id, task.title)
+        taskQueries.updateTask(this.db, id, { status: 'executing', branch_name: branchName })
+        // this.emit(id, { type: 'git_operation', operation: 'checkout', detail: `ブランチ作成: ${branchName}` })
+
+        // Phase 3 + CI リトライループ（executionPromptを渡す）
+        currentPhase = 'execute'
+        await this.executeWithRetry(task, branchName, planResult.plan.execution_prompt, signal)
+
+        // 完了: Gitマージ + push（一時コメントアウト: 不具合調査のノイズ除去）
+        // currentPhase = 'git'
+        // mergeTaskBranch(branchName, this.config.git.defaultBranch)
+        // this.emit(id, { type: 'git_operation', operation: 'merge', detail: `${branchName} → ${this.config.git.defaultBranch}` })
+
+        // コンテキストキャッシュ無効化
+        invalidateContextCache()
+      }
     } catch (err) {
+      // キャンセルによるエラーはログだけ残して終了（DB更新はAPI側で済み）
+      if (err instanceof TaskCancelledError) {
+        console.log(`タスク ${id} はユーザーによりキャンセルされた`)
+        logQueries.createLog(this.db, {
+          task_id: id,
+          phase: currentPhase,
+          error_type: 'app',
+          error_message: 'ユーザーによるキャンセル',
+        })
+        return
+      }
+
+      const errorMessage = err instanceof Error ? err.message : String(err)
       console.error(`タスク ${id} で致命的エラー:`, err)
+
+      // エラーログをDBに記録（ダッシュボードから確認できるように）
+      logQueries.createLog(this.db, {
+        task_id: id,
+        phase: currentPhase,
+        error_type: 'app',
+        error_message: errorMessage,
+      })
+
       taskQueries.updateTask(this.db, id, {
         status: 'stopped',
-        paused_reason: err instanceof Error ? err.message : String(err),
+        paused_reason: errorMessage,
+        paused_phase: currentPhase,
       })
       this.emit(id, {
         type: 'error',
         errorType: 'app',
-        message: err instanceof Error ? err.message : String(err),
+        message: errorMessage,
       })
       // 後続タスクも全停止
       taskQueries.stopPendingTasks(this.db)
+    } finally {
+      this.currentAbortController = null
     }
   }
 
-  private async executeWithRetry(task: Task, branchName: string): Promise<void> {
+  private async executeWithRetry(
+    task: Task,
+    branchName: string,
+    executionPrompt?: string,
+    signal?: AbortSignal,
+  ): Promise<void> {
     const { id } = task
     const maxRetries = this.config.ci.maxRetries
+    const previousErrors: string[] = []
+    const isFullPipeline = !this.config.discussion.skipDiscussion
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         // --- Phase 3: コード実行 ---
         this.emit(id, { type: 'phase_start', phase: 'execute', timestamp: new Date().toISOString() })
 
-        const execResult = await executePhase3(task, this.config, (event) => this.emit(id, event))
+        // リトライ時はプロンプトにエラーコンテキストを追加
+        const currentPrompt = executionPrompt
+          ? buildRetryPrompt(executionPrompt, attempt, previousErrors)
+          : undefined
+
+        const execResult = await executePhase3(task, this.config, (event) => this.emit(id, event), currentPrompt, signal)
 
         logQueries.createLog(this.db, {
           task_id: id,
@@ -149,6 +282,7 @@ export class TaskRunner implements RunnerStatus {
           token_input: execResult.tokenInput,
           token_output: execResult.tokenOutput,
           duration_ms: execResult.durationMs,
+          output_raw: this.drainPhaseEvents(),
         })
 
         this.emit(id, {
@@ -165,24 +299,28 @@ export class TaskRunner implements RunnerStatus {
         const ciSteps = getCiSteps(this.db, this.config)
         const ciResult = runCi(ciSteps, (event) => this.emit(id, event))
 
+        const ciDurationMs = ciResult.results.reduce((sum, r) => sum + r.durationMs, 0)
+
         this.emit(id, {
           type: 'phase_end',
           phase: 'ci',
           timestamp: new Date().toISOString(),
-          durationMs: ciResult.results.reduce((sum, r) => sum + r.durationMs, 0),
+          durationMs: ciDurationMs,
+        })
+
+        // CIフェーズのイベントをDBに記録
+        logQueries.createLog(this.db, {
+          task_id: id,
+          phase: 'ci',
+          duration_ms: ciDurationMs,
+          output_raw: this.drainPhaseEvents(),
+          ...(ciResult.success ? {} : {
+            error_type: 'app' as const,
+            error_message: ciResult.results.find((r) => !r.success)?.output?.slice(0, 500),
+          }),
         })
 
         if (ciResult.success) {
-          // --- マージ ---
-          this.emit(id, { type: 'phase_start', phase: 'git', timestamp: new Date().toISOString() })
-          mergeTaskBranch(branchName, this.config.git.defaultBranch)
-          this.emit(id, {
-            type: 'git_operation',
-            operation: 'merge',
-            detail: `${branchName} をマージ`,
-          })
-          this.emit(id, { type: 'phase_end', phase: 'git', timestamp: new Date().toISOString(), durationMs: 0 })
-
           taskQueries.updateTask(this.db, id, {
             status: 'completed',
             completed_at: new Date().toISOString(),
@@ -212,6 +350,9 @@ export class TaskRunner implements RunnerStatus {
           return
         }
 
+        // エラー履歴に追加
+        previousErrors.push(errorOutput.slice(0, 2000))
+
         // アプリエラー → リトライ
         if (attempt < maxRetries) {
           taskQueries.updateTask(this.db, id, {
@@ -225,10 +366,18 @@ export class TaskRunner implements RunnerStatus {
             maxRetries,
             reason: `CI失敗（${failedStep?.step.name}）、リトライ ${attempt + 1}/${maxRetries}`,
           })
-          // ブランチリセットしてPhase 3からやり直し
-          resetTaskBranch(id, task.title, this.config.git.defaultBranch)
+          // ブランチリセットしてPhase 3からやり直し（一時コメントアウト: 不具合調査のノイズ除去）
+          // if (isFullPipeline) {
+          //   resetTaskBranch(id, task.title, this.config.git.defaultBranch)
+          //   this.emit(id, { type: 'git_operation', operation: 'checkout', detail: `ブランチリセット: ${branchName}` })
+          // }
         }
       } catch (err) {
+        // キャンセルエラーは上位に伝搬
+        if (err instanceof TaskCancelledError) {
+          throw err
+        }
+
         if (err instanceof ProcessTimeoutError) {
           // プロセス層エラー
           const currentTask = taskQueries.getTask(this.db, id)
@@ -253,8 +402,11 @@ export class TaskRunner implements RunnerStatus {
             maxRetries: this.config.claude.processMaxRetries,
             reason: 'プロセスタイムアウト',
           })
-          // ブランチリセットしてリトライ
-          resetTaskBranch(id, task.title, this.config.git.defaultBranch)
+          // ブランチリセットしてリトライ（一時コメントアウト: 不具合調査のノイズ除去）
+          // if (isFullPipeline) {
+          //   resetTaskBranch(id, task.title, this.config.git.defaultBranch)
+          //   this.emit(id, { type: 'git_operation', operation: 'checkout', detail: `ブランチリセット: ${branchName}` })
+          // }
           continue
         }
 
@@ -263,7 +415,10 @@ export class TaskRunner implements RunnerStatus {
     }
 
     // 最大リトライ到達 → stopped
-    taskQueries.updateTask(this.db, id, { status: 'stopped' })
+    taskQueries.updateTask(this.db, id, {
+      status: 'stopped',
+      paused_phase: 'testing',
+    })
     this.emit(id, {
       type: 'error',
       errorType: 'app',

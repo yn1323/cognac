@@ -67,7 +67,14 @@
       "Bash(printf 'a\\\\ny\\\\n')",
       "Bash(pnpm -r exec echo \"ok\")",
       "Bash(pnpm --filter @cognac/shared typecheck)",
-      "Bash(pnpm --filter @cognac/shared build)"
+      "Bash(pnpm --filter @cognac/shared build)",
+      "mcp__playwright__*",
+      "mcp__playwright__playwright_screenshot",
+      "mcp__playwright__playwright_click",
+      "mcp__playwright__playwright_fill",
+      "mcp__playwright__playwright_evaluate",
+      "Bash(python3 -c \":*)",
+      "Bash(python3 -m json.tool)"
     ],
     "deny": [],
     "additionalDirectories": [

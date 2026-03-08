@@ -18,6 +18,7 @@ const EVENT_TYPES = [
   'claude_output',
   'file_changed',
   'command_executed',
+  'tool_invoked',
   'ci_start',
   'ci_result',
   'retry',
@@ -25,6 +26,7 @@ const EVENT_TYPES = [
   'paused',
   'git_operation',
   'completed',
+  'debug_log',
 ] as const
 
 export function useTaskSSE(taskId: number | null) {

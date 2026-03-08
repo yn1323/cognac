@@ -7,6 +7,10 @@
     ".": {
       "types": "./index.ts",
       "import": "./dist/index.js"
+    },
+    "./utils/hash": {
+      "types": "./utils/hash.ts",
+      "import": "./dist/utils/hash.js"
     }
   },
   "scripts": {

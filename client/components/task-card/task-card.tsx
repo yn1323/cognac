@@ -6,26 +6,15 @@ import { Link } from 'react-router-dom'
 import type { Task } from '@cognac/shared'
 import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
-import { STATUS_CONFIG } from '@/lib/status-config'
+import { formatRelativeTime } from '@/lib/format'
+import { RETRYABLE_STATUSES, STATUS_CONFIG } from '@/lib/status-config'
 import { cn } from '@/lib/utils'
-
-// 経過時間を表示用テキストに変換
-function formatRelativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const minutes = Math.floor(diff / 60000)
-  if (minutes < 1) return 'たった今'
-  if (minutes < 60) return `${minutes}分前`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}時間前`
-  const days = Math.floor(hours / 24)
-  return `${days}日前`
-}
 
 // フェーズ表示テキスト
 function getPhaseText(task: Task): string | null {
-  if (task.status === 'discussing') return 'ディスカッション中'
-  if (task.status === 'executing') return 'Phase 3'
-  if (task.status === 'testing') return 'テスト中'
+  if (task.status === 'discussing') return 'Discussing'
+  if (task.status === 'executing') return 'Phase 3 Executing'
+  if (task.status === 'testing') return 'Testing'
   return null
 }
 
@@ -78,32 +67,32 @@ export function TaskCard({ task, onRetry }: TaskCardProps) {
               {formatRelativeTime(task.started_at ?? task.created_at)}
             </span>
 
-            {/* Stopped状態ではリトライボタンを表示 */}
-            {task.status === 'stopped' && onRetry && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-auto px-2.5 py-1 text-xs"
-                onClick={(e) => {
-                  e.preventDefault()
-                  onRetry(task.id)
-                }}
-              >
-                Retry
-              </Button>
-            )}
-
             {/* リトライ回数 */}
             {task.retry_count > 0 && task.status === 'stopped' && (
               <span className="text-xs font-medium text-status-stopped">
-                CI failed ({task.retry_count}/5)
+                CI失敗 ({task.retry_count}/5)
               </span>
             )}
           </div>
         </div>
 
+        {/* stopped/paused状態ではリトライボタンを表示 */}
+        {RETRYABLE_STATUSES.has(task.status) && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-auto self-center px-2.5 py-1 text-xs"
+            onClick={(e) => {
+              e.preventDefault()
+              onRetry?.(task.id)
+            }}
+          >
+            リトライ
+          </Button>
+        )}
+
         {/* ステータスアイコン */}
-        <div className="flex flex-col items-center pt-1">
+        <div className="flex flex-col items-center self-center">
           <config.icon className={cn('h-5 w-5', config.color)} />
         </div>
       </div>
