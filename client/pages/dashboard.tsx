@@ -28,7 +28,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { TaskModal } from '@/components/task-modal'
 import { formatRelativeTime } from '@/lib/format'
-import { RETRYABLE_STATUSES, STATUS_CONFIG } from '@/lib/status-config'
+import { ACTIVE_STATUSES, RETRYABLE_STATUSES, STATUS_CONFIG } from '@/lib/status-config'
 import { NAV_MAP } from '@/lib/constants'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCallback, useMemo, useState } from 'react'
@@ -90,7 +90,7 @@ function useMetrics(tasks: Task[]) {
       tasks.reduce(
         (acc, t) => {
           if (t.status === 'pending') acc.pending++
-          else if (t.status === 'executing') acc.executing++
+          else if (ACTIVE_STATUSES.has(t.status)) acc.executing++
           else if (t.status === 'completed') acc.completed++
           else if (t.status === 'stopped' || t.status === 'paused') acc.failed++
           return acc
