@@ -27,7 +27,9 @@ export function formatDateTime(dateStr: string | null): string {
  * 例: "5分前", "3時間前", "1日前"
  */
 export function formatRelativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
+  // SQLiteのdatetime('now')はTZ情報なしのUTC文字列を返すため、Zを補完してUTCとして正しくパース
+  const normalized = dateStr.includes('Z') || dateStr.includes('+') ? dateStr : dateStr + 'Z'
+  const diff = Date.now() - new Date(normalized).getTime()
   const minutes = Math.floor(diff / 60000)
   if (minutes < 1) return 'たった今'
   if (minutes < 60) return `${minutes}分前`

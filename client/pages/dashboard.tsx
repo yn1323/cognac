@@ -124,8 +124,6 @@ function useDashboardFilters(tasks: Task[]) {
 
 function getSPSubtitle(task: Task): string {
   const time = formatRelativeTime(task.started_at ?? task.created_at)
-  if (task.status === 'executing') return `Phase 3 Executing · ${time}`
-  if (task.status === 'discussing') return `Discussing · ${time}`
   if (task.status === 'stopped' && task.retry_count > 0)
     return `CI失敗 (${task.retry_count}/5) · ${time}`
   return time
