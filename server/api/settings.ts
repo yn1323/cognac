@@ -4,17 +4,17 @@
 
 import { Hono } from 'hono'
 import { z } from 'zod'
-import type { CognacConfig, CiStep, CommitMessageLanguage, CliProvider, SettingsPayload } from '@cognac/shared'
+import type { CognacConfig, ConfigPatch, SettingsPayload } from '@cognac/shared'
 import { writeConfigFile } from '../runner/config-writer.js'
 
-// TaskRunnerから設定を読み書きするインターフェース
-export interface ConfigAccessor {
+// 設定APIから現在値を読む代表ソース
+export interface ConfigSource {
   getConfig(): CognacConfig
-  updateConfig(patch: {
-    provider: CliProvider
-    ci: { maxRetries: number; steps?: CiStep[] }
-    git: { commitLogLimit: number; commitMessageLanguage: CommitMessageLanguage }
-  }): void
+}
+
+// 設定APIからホットリロードを受ける更新先
+export interface ConfigAccessor {
+  updateConfig(patch: ConfigPatch): void
 }
 
 const ciStepSchema = z.object({
@@ -34,12 +34,12 @@ const updateSettingsSchema = z.object({
   }),
 })
 
-export function settingsRouter(accessor: ConfigAccessor, cwd: string) {
+export function settingsRouter(configSource: ConfigSource, accessors: ConfigAccessor[], cwd: string) {
   const app = new Hono()
 
   // 現在の設定を返す
   app.get('/', (c) => {
-    const config = accessor.getConfig()
+    const config = configSource.getConfig()
     const payload: SettingsPayload = {
       provider: config.provider,
       ci: {
@@ -64,11 +64,15 @@ export function settingsRouter(accessor: ConfigAccessor, cwd: string) {
 
     const { provider, ci, git } = parsed.data
 
+    const patch: ConfigPatch = { provider, ci, git }
+
     // 1. メモリ上のconfigを更新
-    accessor.updateConfig({ provider, ci, git })
+    for (const accessor of accessors) {
+      accessor.updateConfig(patch)
+    }
 
     // 2. cognac.config.ts に書き出す（全設定値を保持）
-    const fullConfig = accessor.getConfig()
+    const fullConfig = configSource.getConfig()
     await writeConfigFile(cwd, fullConfig)
 
     return c.json({ ok: true })

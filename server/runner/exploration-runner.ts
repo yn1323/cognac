@@ -2,6 +2,7 @@ import type Database from 'better-sqlite3'
 import type {
   AgentStreamEvent,
   CognacConfig,
+  ConfigPatch,
   ExplorationArtifact,
   ExplorationEvent,
   ExplorationImage,
@@ -106,6 +107,15 @@ export class ExplorationRunner implements RunnerStatus {
     if (this.paused) return 'paused'
     if (this.currentExecution) return 'running'
     return 'idle'
+  }
+
+  updateConfig(patch: ConfigPatch): void {
+    this.config = {
+      ...this.config,
+      provider: patch.provider,
+      ci: { ...this.config.ci, ...patch.ci },
+      git: { ...this.config.git, ...patch.git },
+    }
   }
 
   start(): void {

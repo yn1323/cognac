@@ -1,5 +1,5 @@
 import type Database from 'better-sqlite3'
-import type { CognacConfig, CommitMessageLanguage, TaskEvent, Task, Phase, CiStep } from '@cognac/shared'
+import type { CognacConfig, ConfigPatch, TaskEvent, Task, Phase } from '@cognac/shared'
 import type { EventBus } from '../sse/event-bus.js'
 import type { RunnerStatus } from '../api/system.js'
 import * as taskQueries from '../db/queries/tasks.js'
@@ -44,11 +44,7 @@ export class TaskRunner implements RunnerStatus {
   }
 
   // 設定をメモリ上でホットリロード（設定保存時に呼ばれる）
-  updateConfig(patch: {
-    provider: 'claude' | 'codex'
-    ci: { maxRetries: number; steps?: CiStep[] }
-    git: { commitLogLimit: number; commitMessageLanguage: CommitMessageLanguage }
-  }): void {
+  updateConfig(patch: ConfigPatch): void {
     this.config = {
       ...this.config,
       provider: patch.provider,

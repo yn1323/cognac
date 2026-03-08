@@ -6,16 +6,24 @@ export type CommitMessageLanguage = 'ja' | 'en'
 // CLIプロバイダー種別
 export type CliProvider = 'claude' | 'codex'
 
-// 設定更新ペイロード（API用）
-export interface SettingsPayload {
+// 設定ホットリロード用の差分
+export interface ConfigPatch {
   provider: CliProvider
   ci: {
     maxRetries: number
-    steps: CiStep[] // 空配列 = 自動検出モード
+    steps?: CiStep[]
   }
   git: {
     commitLogLimit: number
     commitMessageLanguage: CommitMessageLanguage
+  }
+}
+
+// 設定更新ペイロード（API用）
+export interface SettingsPayload extends ConfigPatch {
+  ci: {
+    maxRetries: number
+    steps: CiStep[] // 空配列 = 自動検出モード
   }
 }
 

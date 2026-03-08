@@ -35,6 +35,7 @@ export type {
   CiCache,
 } from './types/events.js'
 export type {
+  ConfigPatch,
   CliProvider,
   CommitMessageLanguage,
   CognacConfig,

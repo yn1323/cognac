@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { DropZone } from '@/components/ui/drop-zone'
 import { ImagePreviewList } from '@/components/ui/image-preview-list'
 import { Textarea } from '@/components/ui/textarea'
+import { MobileModalFooter } from '@/components/mobile-modal-footer'
 import { useToast } from '@/components/toast'
 import { validateTitle } from '@/lib/validation'
 import { useCreateExploration } from '@/hooks/use-explorations'
@@ -144,26 +145,14 @@ function SPExplorationModal({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleClose}
-            className="rounded-lg p-1 text-foreground"
-          >
-            <X className="h-5 w-5" />
-          </button>
-          <h2 className="text-lg font-semibold text-foreground">新規探索</h2>
-        </div>
-        <Button
+        <h2 className="text-lg font-semibold text-foreground">新規探索</h2>
+        <button
           type="button"
-          size="sm"
-          className="bg-blue-600 text-white hover:bg-blue-700"
-          onClick={(e) => handleSubmit(e as unknown as React.FormEvent)}
-          disabled={isSubmitting}
+          onClick={handleClose}
+          className="rounded-lg p-1 text-foreground"
         >
-          <Compass className="mr-1 h-3.5 w-3.5" />
-          開始
-        </Button>
+          <X className="h-5 w-5" />
+        </button>
       </div>
 
       <form
@@ -208,6 +197,26 @@ function SPExplorationModal({
           />
           <ImagePreviewList files={files} onRemove={onFileRemove} />
         </div>
+
+        <MobileModalFooter>
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1 h-auto min-h-10 whitespace-normal px-4 py-2 text-center"
+            onClick={handleClose}
+            disabled={isSubmitting}
+          >
+            キャンセル
+          </Button>
+          <Button
+            type="submit"
+            className="flex-1 h-auto min-h-10 whitespace-normal bg-blue-600 px-4 py-2 text-center text-white hover:bg-blue-700"
+            disabled={isSubmitting}
+          >
+            <Compass className="mr-2 h-4 w-4 shrink-0" />
+            探索開始
+          </Button>
+        </MobileModalFooter>
       </form>
     </div>
   )

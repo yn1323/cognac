@@ -9,7 +9,7 @@ import { tasksRouter, type TaskCanceller } from './api/tasks.js'
 import { streamRouter } from './api/stream.js'
 import { explorationsRouter } from './api/explorations.js'
 import { systemRouter, type RunnerStatus, type SystemStatusProvider } from './api/system.js'
-import { settingsRouter, type ConfigAccessor } from './api/settings.js'
+import { settingsRouter, type ConfigAccessor, type ConfigSource } from './api/settings.js'
 import { gitRouter } from './api/git.js'
 import { consoleRouter } from './api/console.js'
 import { EventBus } from './sse/event-bus.js'
@@ -20,8 +20,8 @@ export interface CreateAppOptions {
   db: Database.Database
   taskEventBus: EventBus<TaskEvent>
   explorationEventBus: EventBus<ExplorationEvent>
-  taskRunner: RunnerStatus & ConfigAccessor & TaskCanceller
-  explorationRunner: RunnerStatus
+  taskRunner: RunnerStatus & ConfigSource & ConfigAccessor & TaskCanceller
+  explorationRunner: RunnerStatus & ConfigAccessor
   systemStatusProvider: SystemStatusProvider
   consoleManager: ConsoleManager
   // ビルド済みクライアントの静的ファイルディレクトリ（パッケージモード用）
@@ -52,7 +52,7 @@ export function createApp({
   app.route('/api/tasks', streamRouter(taskEventBus))
   app.route('/api/explorations', explorationsRouter(db, explorationEventBus))
   app.route('/api', systemRouter(systemStatusProvider, db))
-  app.route('/api/settings', settingsRouter(taskRunner, cwd))
+  app.route('/api/settings', settingsRouter(taskRunner, [taskRunner, explorationRunner], cwd))
   app.route('/api/git', gitRouter(cwd, () => taskRunner.getConfig()))
   app.route('/api/console', consoleRouter(consoleManager))
 
@@ -94,4 +94,4 @@ export { ExecutionCoordinator } from './runner/execution-coordinator.js'
 export { ConsoleManager } from './console/console-manager.js'
 export { runConsoleStartupRecovery, startConsoleCleanupScheduler, cleanupExpiredConsoleRuns } from './console/cleanup.js'
 export type { RunnerStatus } from './api/system.js'
-export type { ConfigAccessor } from './api/settings.js'
+export type { ConfigAccessor, ConfigSource } from './api/settings.js'
