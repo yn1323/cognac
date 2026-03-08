@@ -5,7 +5,7 @@
 // validateBranchName() でバリデーション済み or ハードコード値のみ。
 // ユーザー入力が直接シェルに渡ることはないため安全。
 
-import { execSync } from 'node:child_process'
+import { execSync, spawnSync } from 'node:child_process'
 import type { GitFile, GitFileStatus, GitBranch, GitCommit, GitRemoteStatus, CommitResult } from '@cognac/shared'
 
 // gitコマンドを実行するヘルパー（cwd必須）
@@ -46,15 +46,15 @@ export function getLog(cwd: string, limit = 20): GitCommit[] {
   const format = `%h${sep}%s${sep}%an${sep}%ar${sep}%P${sep}%D`
   let output: string
   try {
-    output = git(`log --format='${format}' -${limit}`, cwd)
+    output = git(`log --format="${format}" -${limit}`, cwd)
   } catch {
     return [] // コミットがないリポジトリ
   }
   if (!output) return []
 
   return output.split('\n').map((line) => {
-    // シングルクォートが残る場合は除去
-    const cleaned = line.replace(/^'|'$/g, '')
+    // ダブルクォートが残る場合は除去
+    const cleaned = line.replace(/^"|"$/g, '')
     const [hash, message, author, date, parents, decorations] = cleaned.split(sep)
     const parentList = (parents ?? '').split(' ').filter(Boolean)
     const isMerge = parentList.length > 1
@@ -88,14 +88,14 @@ export function getLog(cwd: string, limit = 20): GitCommit[] {
 
 // ブランチ一覧を返す（ローカル + リモート）
 export function getBranches(cwd: string): GitBranch[] {
-  const output = git("branch -a --format='%(refname:short)|%(HEAD)'", cwd)
+  const output = git('branch -a --format="%(refname:short)|%(HEAD)"', cwd)
   if (!output) return []
 
   const branches: GitBranch[] = []
   const seen = new Set<string>()
 
   for (const line of output.split('\n')) {
-    const cleaned = line.replace(/^'|'$/g, '')
+    const cleaned = line.replace(/^"|"$/g, '')
     const [rawName, head] = cleaned.split('|')
     if (!rawName) continue
 
@@ -242,9 +242,16 @@ export function getCommitDiff(cwd: string, hash: string): string {
 
 // コミットを実行してCommitResultを返す
 export function commitWithMessage(cwd: string, message: string): CommitResult {
-  // メッセージ内のシングルクォートをエスケープ
-  const escaped = message.replace(/'/g, "'\\''")
-  git(`commit --author='Claude <noreply@anthropic.com>' -m '${escaped}'`, cwd)
+  // spawnSyncで引数配列として渡し、シェル解釈を回避（Win/Mac両対応）
+  const commitResult = spawnSync('git', [
+    'commit',
+    '--author=Claude <noreply@anthropic.com>',
+    '-m',
+    message,
+  ], { cwd, encoding: 'utf8', timeout: 30000 })
+  if (commitResult.status !== 0) {
+    throw new Error(commitResult.stderr || 'git commit failed')
+  }
   const hash = git('rev-parse --short HEAD', cwd)
   // diffstatを取得
   let filesChanged = 0

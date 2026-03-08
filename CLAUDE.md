@@ -138,3 +138,7 @@ pushトリガーの4つのGitHub Actionsワークフロー: `build.yml`、`lint.
 
 - **`client/components/ui/`** — プリミティブUIコンポーネント（button, card, input, badge, switch, dropdown-menu, confirm-dialog 等）
 - **`client/components/`** — ドメイン寄り共通コンポーネント（layout, sidebar, page-header, toast, status-badge, metric-card 等）。コロケーションパターン（`component.tsx` + `index.ts` + `component.stories.tsx`）
+
+## CLI設計
+
+- IMPORTANT: Windonws, Mac両方で正常に動作すること
