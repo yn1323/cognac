@@ -7,6 +7,7 @@ import { DashboardPage } from '@/pages/dashboard'
 import { SettingsPage } from '@/pages/settings'
 import { TaskPage } from '@/pages/task-page'
 import { GitPage } from '@/pages/git'
+import { ConsolePage } from '@/pages/console'
 
 export function App() {
   return (
@@ -20,6 +21,8 @@ export function App() {
         <Route path="/tasks/:id" element={<TaskPage />} />
         {/* Git操作ページ */}
         <Route path="/git" element={<GitPage />} />
+        {/* コンソールページ */}
+        <Route path="/console" element={<ConsolePage />} />
         <Route element={<Layout />}>{/* 将来の共通レイアウトページ */}</Route>
       </Routes>
     </BrowserRouter>

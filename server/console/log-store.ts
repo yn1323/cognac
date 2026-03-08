@@ -1,6 +1,6 @@
 import { mkdirSync, createWriteStream } from 'node:fs'
 import { readFile, rm } from 'node:fs/promises'
-import { dirname, join, resolve } from 'node:path'
+import { join, resolve } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import type { WriteStream } from 'node:fs'
 
@@ -17,7 +17,6 @@ export function buildRunLogPath(cwd: string, commandId: number): string {
 }
 
 export function createRunLogStream(logFilePath: string): WriteStream {
-  mkdirSync(dirname(logFilePath), { recursive: true })
   return createWriteStream(logFilePath, { flags: 'a' })
 }
 

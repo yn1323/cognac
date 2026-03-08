@@ -14,7 +14,7 @@ import { extractJson } from './json-parser.js'
 import * as artifactQueries from '../db/queries/exploration-artifacts.js'
 import * as imageQueries from '../db/queries/exploration-images.js'
 import * as logQueries from '../db/queries/exploration-logs.js'
-import { groupDiscussionsByRound } from './discussion-utils.js'
+import { formatDiscussions } from './discussion-utils.js'
 import {
   ensureExplorationDirs,
   getExplorationPlaywrightDir,
@@ -54,19 +54,6 @@ function buildSystemPrompt(
 }
 \`\`\`
 `
-}
-
-function formatDiscussions(discussions: ExplorationDiscussion[]): string {
-  const grouped = groupDiscussionsByRound(discussions)
-  let markdown = ''
-  for (const [round, entries] of grouped) {
-    markdown += `### ラウンド ${round}\n`
-    for (const discussion of entries) {
-      markdown += `- ${discussion.persona_name}: ${discussion.content}\n`
-    }
-    markdown += '\n'
-  }
-  return markdown
 }
 
 function buildUserPrompt(

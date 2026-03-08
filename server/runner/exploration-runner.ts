@@ -92,7 +92,6 @@ export class ExplorationRunner implements RunnerStatus {
   private running = false
   private paused = false
   private currentExecution: { kind: 'exploration' | 'taskify'; id: number } | null = null
-  private currentAbortController: AbortController | null = null
   private timer: ReturnType<typeof setTimeout> | null = null
 
   constructor(
@@ -169,9 +168,7 @@ export class ExplorationRunner implements RunnerStatus {
   }
 
   private async executeExploration(exploration: ExplorationSession): Promise<void> {
-    const abortController = new AbortController()
-    this.currentAbortController = abortController
-    const { signal } = abortController
+    const { signal } = new AbortController()
 
     try {
       const started = new Date().toISOString()
@@ -265,15 +262,14 @@ export class ExplorationRunner implements RunnerStatus {
       )
       this.emit(exploration.id, phaseEnd('report', reportResult.durationMs))
 
-      const issueCount = explorationArtifactQueries.countExplorationFindings(this.db, exploration.id)
       explorationQueries.markExplorationCompleted(
         this.db,
         exploration.id,
         reportResult.finalMarkdown,
-        issueCount,
+        findings.length,
       )
 
-      this.emit(exploration.id, { type: 'report_created', issueCount })
+      this.emit(exploration.id, { type: 'report_created', issueCount: findings.length })
       this.emit(exploration.id, {
         type: 'completed',
         summary: `探索 "${exploration.title}" が完了`,
@@ -309,8 +305,6 @@ export class ExplorationRunner implements RunnerStatus {
         error_message: message,
       })
       this.emit(exploration.id, { type: 'error', errorType: 'app', message })
-    } finally {
-      this.currentAbortController = null
     }
   }
 
@@ -321,9 +315,7 @@ export class ExplorationRunner implements RunnerStatus {
     const job = explorationTaskifyJobQueries.markExplorationTaskifyJobRunning(this.db, taskifyJobId)
     if (!job) return
 
-    const abortController = new AbortController()
-    this.currentAbortController = abortController
-    const { signal } = abortController
+    const { signal } = new AbortController()
 
     try {
       this.emit(exploration.id, { type: 'taskify_started', jobId: job.id })
@@ -349,8 +341,6 @@ export class ExplorationRunner implements RunnerStatus {
       const message = error instanceof Error ? error.message : String(error)
       explorationTaskifyJobQueries.markExplorationTaskifyJobFailed(this.db, job.id, message)
       this.emit(exploration.id, { type: 'taskify_failed', jobId: job.id, message })
-    } finally {
-      this.currentAbortController = null
     }
   }
 }

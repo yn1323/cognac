@@ -13,7 +13,7 @@ import type {
 } from '@cognac/shared'
 import * as consoleCommandQueries from '../db/queries/console-commands.js'
 import * as consoleRunQueries from '../db/queries/console-runs.js'
-import { ConsoleEventBus } from '../sse/console-event-bus.js'
+import { EventBus } from '../sse/event-bus.js'
 import { buildRunLogPath, createRunLogStream, readRunLog, deleteRunLog, ensureConsoleLogRoot } from './log-store.js'
 import { requestForceKill, requestGracefulStop, requestTerminate } from './process-tree.js'
 
@@ -44,7 +44,7 @@ export class ConsoleManagerError extends Error {
 }
 
 export class ConsoleManager {
-  private readonly eventBus = new ConsoleEventBus()
+  private readonly eventBus = new EventBus<ConsoleStreamEvent>()
   private readonly activeProcesses = new Map<number, ActiveProcess>()
   private readonly commandLocks = new Map<number, Promise<void>>()
 

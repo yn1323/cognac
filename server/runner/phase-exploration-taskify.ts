@@ -16,7 +16,7 @@ import * as artifactQueries from '../db/queries/exploration-artifacts.js'
 import * as logQueries from '../db/queries/exploration-logs.js'
 import * as taskQueries from '../db/queries/tasks.js'
 import * as taskImageQueries from '../db/queries/task-images.js'
-import { resolveCognacPath } from './exploration-paths.js'
+import { getCognacRoot, resolveCognacPath } from './exploration-paths.js'
 
 function buildSystemPrompt(): string {
   return `あなたは探索レポートを実装タスクへ分解する担当だ。
@@ -110,7 +110,7 @@ export async function executeExplorationPhaseTaskify(
     })
     taskIds.push(task.id)
 
-    const targetDir = resolve('.cognac', 'uploads', String(task.id))
+    const targetDir = resolve(getCognacRoot(cwd), 'uploads', String(task.id))
     await mkdir(targetDir, { recursive: true })
 
     for (const imageId of taskInput.selectedImageIds) {

@@ -5,7 +5,7 @@ import { Hono } from 'hono'
 import { streamSSE } from 'hono/streaming'
 import { z } from 'zod'
 import type Database from 'better-sqlite3'
-import type { ExplorationEvent } from '@cognac/shared'
+import type { ExplorationEvent, ExplorationStatus } from '@cognac/shared'
 import type { EventBus } from '../sse/event-bus.js'
 import * as explorationQueries from '../db/queries/explorations.js'
 import * as explorationImageQueries from '../db/queries/exploration-images.js'
@@ -14,7 +14,7 @@ import * as explorationDiscussionQueries from '../db/queries/exploration-discuss
 import * as explorationArtifactQueries from '../db/queries/exploration-artifacts.js'
 import * as explorationLogQueries from '../db/queries/exploration-logs.js'
 import * as explorationTaskifyJobQueries from '../db/queries/exploration-taskify-jobs.js'
-import { getExplorationUploadDir } from '../runner/exploration-paths.js'
+import { getExplorationUploadDir, resolveCognacPath } from '../runner/exploration-paths.js'
 
 const createExplorationSchema = z.object({
   title: z.string().min(2, 'タイトルは2文字以上で入力してね').max(200, 'タイトルは200文字以内にしてね'),
@@ -171,7 +171,8 @@ export function explorationsRouter(
     const id = Number(c.req.param('id'))
     const exploration = explorationQueries.getExploration(db, id)
     if (!exploration) return c.json({ error: '探索が見つからない' }, 404)
-    if (!['paused', 'failed'].includes(exploration.status)) {
+    const retryableStatuses: ExplorationStatus[] = ['paused', 'failed']
+    if (!retryableStatuses.includes(exploration.status)) {
       return c.json({ error: 'リトライできないステータス' }, 400)
     }
 
@@ -202,14 +203,12 @@ export function explorationsRouter(
   app.delete('/:id/images/:imageId', async (c) => {
     const explorationId = Number(c.req.param('id'))
     const imageId = Number(c.req.param('imageId'))
-    const image = explorationImageQueries
-      .listExplorationImages(db, explorationId)
-      .find((item) => item.id === imageId)
+    const image = explorationImageQueries.getExplorationImage(db, explorationId, imageId)
 
     if (!image) return c.json({ error: '画像が見つからない' }, 404)
 
     try {
-      await unlink(resolve('.cognac', image.file_path))
+      await unlink(resolveCognacPath(image.file_path))
     } catch {
       // 既にない場合は無視
     }
@@ -222,20 +221,25 @@ export function explorationsRouter(
     const explorationId = Number(c.req.param('id'))
 
     return streamSSE(c, async (stream) => {
+      const { promise, resolve } = Promise.withResolvers<void>()
+
       const unsubscribe = eventBus.subscribe(explorationId, (event) => {
         stream.writeSSE({
           data: JSON.stringify(event),
           event: event.type,
         })
+
+        if (event.type === 'completed' || event.type === 'error') {
+          resolve()
+        }
       })
 
       stream.onAbort(() => {
         unsubscribe()
+        resolve()
       })
 
-      await new Promise<void>((resolvePromise) => {
-        stream.onAbort(() => resolvePromise())
-      })
+      await promise
       unsubscribe()
     })
   })

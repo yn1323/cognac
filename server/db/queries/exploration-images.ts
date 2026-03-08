@@ -77,6 +77,20 @@ export function getExplorationImagesByIds(
   return stmt.all(explorationSessionId, ...imageIds) as ExplorationImage[]
 }
 
+export function getExplorationImage(
+  db: Database.Database,
+  explorationSessionId: number,
+  imageId: number,
+): ExplorationImage | undefined {
+  const stmt = db.prepare(`
+    SELECT *
+    FROM exploration_images
+    WHERE id = ? AND exploration_session_id = ?
+    LIMIT 1
+  `)
+  return stmt.get(imageId, explorationSessionId) as ExplorationImage | undefined
+}
+
 export function findExplorationImageBySessionAndPath(
   db: Database.Database,
   explorationSessionId: number,
