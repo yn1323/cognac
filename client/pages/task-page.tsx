@@ -357,6 +357,9 @@ export function TaskPage() {
     if (latest.type === 'plan_created') {
       qc.invalidateQueries({ queryKey: ['tasks', task.id, 'plan'] })
     }
+    if (latest.type === 'phase_end') {
+      qc.invalidateQueries({ queryKey: ['tasks', task.id, 'logs'] })
+    }
   }, [sseEvents.length, task, qc])
 
   if (isLoading) {

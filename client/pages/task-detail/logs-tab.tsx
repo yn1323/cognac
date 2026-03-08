@@ -3,7 +3,8 @@
 // 非アクティブ: SSEイベントが残っていればそれを表示、なければDB履歴ログを表示
 // デザイン design.pen PC=ndNzU, SP=cZcuS に準拠
 
-import { useMemo } from 'react'
+import { useMemo, useRef, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import type { Task, TaskEvent, ExecutionLog } from '@cognac/shared'
 import { useTaskLogs } from '@/hooks/use-tasks'
 import { LogView } from '@/components/log-view'
@@ -49,11 +50,31 @@ function LogEntry({ log }: { log: ExecutionLog }) {
   )
 }
 
-// SSEイベントまたはDB履歴からイベントを統合表示するフック
+// SSEイベントとDB履歴を加算マージするフック
+// DB履歴 = 完了済みフェーズ、SSE = 現在進行中フェーズ
+// phase:timestamp キーでデデュプして重複を防ぐ
 function useAllEvents(task: Task, sseEvents: TaskEvent[]) {
   const isActive = ACTIVE_STATUSES.has(task.status)
+  const qc = useQueryClient()
   const { data: logs, isLoading } = useTaskLogs(task.id)
 
+  // SSEで phase_end を受信したらDBログを再取得（新しいログ行が書き込まれたため）
+  const lastPhaseEndCount = useRef(0)
+  useEffect(() => {
+    const count = sseEvents.filter(e => e.type === 'phase_end').length
+    if (count > lastPhaseEndCount.current) {
+      lastPhaseEndCount.current = count
+      setTimeout(() => {
+        qc.invalidateQueries({ queryKey: ['tasks', task.id, 'logs'] })
+      }, 500)
+    }
+  }, [sseEvents, task.id, qc])
+
+  useEffect(() => {
+    lastPhaseEndCount.current = 0
+  }, [task.id])
+
+  // DB履歴からイベントをパース
   const historyEvents = useMemo(() => {
     if (!logs) return []
     const evts: TaskEvent[] = []
@@ -67,8 +88,36 @@ function useAllEvents(task: Task, sseEvents: TaskEvent[]) {
     return evts
   }, [logs])
 
-  // SSEで受信済みのイベントがあればそちらを優先、なければDB履歴
-  const allEvents = sseEvents.length > 0 ? sseEvents : historyEvents
+  // マージ: DB履歴 + 重複除去したSSEイベント
+  const allEvents = useMemo(() => {
+    if (sseEvents.length === 0) return historyEvents
+    if (historyEvents.length === 0) return sseEvents
+
+    // DB履歴にある phase_start のキーセットを構築
+    const dbPhaseKeys = new Set<string>()
+    for (const evt of historyEvents) {
+      if (evt.type === 'phase_start') {
+        dbPhaseKeys.add(`${evt.phase}:${evt.timestamp}`)
+      }
+    }
+
+    // SSEイベントのうち、DBに既にあるフェーズをスキップ
+    let currentSsePhaseInDb = false
+    let sseStartIndex = sseEvents.length
+
+    for (let i = 0; i < sseEvents.length; i++) {
+      const evt = sseEvents[i]
+      if (evt.type === 'phase_start') {
+        currentSsePhaseInDb = dbPhaseKeys.has(`${evt.phase}:${evt.timestamp}`)
+      }
+      if (!currentSsePhaseInDb) {
+        sseStartIndex = i
+        break
+      }
+    }
+
+    return [...historyEvents, ...sseEvents.slice(sseStartIndex)]
+  }, [historyEvents, sseEvents])
 
   return { allEvents, logs, isLoading, isActive }
 }
