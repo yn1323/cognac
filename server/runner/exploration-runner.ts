@@ -114,7 +114,7 @@ export class ExplorationRunner implements RunnerStatus {
   updateConfig(patch: ConfigPatch): void {
     this.config = {
       ...this.config,
-      provider: patch.provider,
+      provider: patch.provider ?? this.config.provider,
       ci: { ...this.config.ci, ...patch.ci },
       git: { ...this.config.git, ...patch.git },
     }

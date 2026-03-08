@@ -13,7 +13,8 @@ const providers: Record<CliProvider, () => CliProviderInterface> = {
 }
 
 export function createProvider(type: CliProvider): CliProviderInterface {
-  const factory = providers[type]
+  const resolved = type ?? 'claude'
+  const factory = providers[resolved]
   if (!factory) throw new Error(`未対応のCLIプロバイダー: ${type}`)
   return factory()
 }

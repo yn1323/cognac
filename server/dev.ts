@@ -1,7 +1,9 @@
 // セルフ開発モード用のサーバー起動スクリプト
 // pnpm dev で tsx watch 経由で実行される
 
+import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { createJiti } from 'jiti'
 import { serve } from '@hono/node-server'
 import { createApp } from './index.js'
 import { EventBus } from './sse/event-bus.js'
@@ -11,12 +13,37 @@ import { ExplorationRunner } from './runner/exploration-runner.js'
 import { ExecutionCoordinator } from './runner/execution-coordinator.js'
 import { ConsoleManager } from './console/console-manager.js'
 import { cleanupExpiredConsoleRuns, runConsoleStartupRecovery, startConsoleCleanupScheduler } from './console/cleanup.js'
-import { defineConfig, type ExplorationEvent, type TaskEvent } from '@cognac/shared'
+import { defineConfig, type CognacConfig, type ExplorationEvent, type TaskEvent } from '@cognac/shared'
 
 const cwd = resolve(process.cwd(), '..')
-const config = defineConfig({
-  ...(process.env.COGNAC_SERVER_PORT ? { port: Number(process.env.COGNAC_SERVER_PORT) } : {}),
-})
+
+// cognac.config.ts を読み込む
+// 'cognac' パッケージ(CLI)を直接importするとCommanderが走るため、
+// jiti の alias で '@cognac/shared' にリダイレクトする
+async function loadConfig(): Promise<CognacConfig> {
+  const configPath = resolve(cwd, 'cognac.config.ts')
+  const envOverrides: Partial<CognacConfig> = {}
+  if (process.env.COGNAC_SERVER_PORT) {
+    envOverrides.port = Number(process.env.COGNAC_SERVER_PORT)
+  }
+
+  if (!existsSync(configPath)) {
+    console.warn('⚠ cognac.config.ts が見つからないよ。デフォルト設定で起動するね')
+    return defineConfig(envOverrides)
+  }
+
+  try {
+    const jiti = createJiti(cwd, { alias: { cognac: '@cognac/shared' } })
+    const mod = (await jiti.import(configPath)) as { default?: Partial<CognacConfig> }
+    const userConfig = mod.default ?? {}
+    return defineConfig({ ...userConfig, ...envOverrides })
+  } catch (err) {
+    console.warn('⚠ cognac.config.ts の読み込みに失敗。デフォルト設定で起動するね:', err)
+    return defineConfig(envOverrides)
+  }
+}
+
+const config = await loadConfig()
 const dbPath = resolve(cwd, '.cognac', 'db.sqlite')
 const db = openDb(dbPath)
 const taskEventBus = new EventBus<TaskEvent>()
