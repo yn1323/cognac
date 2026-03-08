@@ -31,6 +31,7 @@ export interface CallClaudeOptions {
   allowedTools?: string[]
   dangerouslySkipPermissions?: boolean
   onStream?: (event: TaskEvent) => void
+  signal?: AbortSignal
 }
 
 export type CallClaudePrintOptions = Omit<
@@ -53,6 +54,17 @@ export class ProcessTimeoutError extends Error {
   constructor(timeoutMs: number) {
     super(`Claude プロセスが ${timeoutMs}ms 応答なしでタイムアウトした`)
     this.name = 'ProcessTimeoutError'
+  }
+}
+
+/**
+ * タスクキャンセル用エラー
+ * ユーザーがキャンセルしたときに発生するマーカー。
+ */
+export class TaskCancelledError extends Error {
+  constructor() {
+    super('ユーザーによるキャンセル')
+    this.name = 'TaskCancelledError'
   }
 }
 
@@ -196,6 +208,12 @@ export async function callClaude(
 
   try {
     return await new Promise<ClaudeResponse>((resolve, reject) => {
+      // キャンセル済みなら即reject
+      if (options.signal?.aborted) {
+        reject(new TaskCancelledError())
+        return
+      }
+
       const child = spawn('claude', args, {
         stdio: ['pipe', 'pipe', 'pipe'],
         shell: true,
@@ -207,6 +225,20 @@ export async function callClaude(
       const { resetTimeout, clearTimer, getStderr } = setupProcess(
         child, tmpFiles.promptFile, config.claude.stdoutTimeoutMs, reject,
       )
+
+      // AbortSignal によるキャンセル
+      const onAbort = (): void => {
+        console.log(`[callClaude] キャンセルシグナル受信 PID=${child.pid}`)
+        clearTimer()
+        if (child.exitCode === null) {
+          child.kill('SIGTERM')
+          setTimeout(() => {
+            if (child.exitCode === null) child.kill('SIGKILL')
+          }, 5000)
+        }
+        reject(new TaskCancelledError())
+      }
+      options.signal?.addEventListener('abort', onAbort, { once: true })
 
       const parser = new StreamParser()
       let result = ''
@@ -234,6 +266,7 @@ export async function callClaude(
       // プロセス終了
       child.on('close', (code: number | null) => {
         clearTimer()
+        options.signal?.removeEventListener('abort', onAbort)
 
         // パーサーから最終結果を取得
         const finalResult = parser.getResult()
@@ -295,6 +328,12 @@ export async function callClaudePrint(
 
   try {
     return await new Promise<ClaudeResponse>((resolve, reject) => {
+      // キャンセル済みなら即reject
+      if (options.signal?.aborted) {
+        reject(new TaskCancelledError())
+        return
+      }
+
       const child = spawn('claude', args, {
         stdio: ['pipe', 'pipe', 'pipe'],
         shell: true,
@@ -307,6 +346,20 @@ export async function callClaudePrint(
         child, tmpFiles.promptFile, config.claude.stdoutTimeoutMs, reject,
       )
 
+      // AbortSignal によるキャンセル
+      const onAbort = (): void => {
+        console.log(`[callClaudePrint] キャンセルシグナル受信 PID=${child.pid}`)
+        clearTimer()
+        if (child.exitCode === null) {
+          child.kill('SIGTERM')
+          setTimeout(() => {
+            if (child.exitCode === null) child.kill('SIGKILL')
+          }, 5000)
+        }
+        reject(new TaskCancelledError())
+      }
+      options.signal?.addEventListener('abort', onAbort, { once: true })
+
       // stdout をバッファとして蓄積（行単位JSONパース不要）
       const chunks: Buffer[] = []
       let totalBytes = 0
@@ -318,6 +371,7 @@ export async function callClaudePrint(
 
       child.on('close', (code: number | null) => {
         clearTimer()
+        options.signal?.removeEventListener('abort', onAbort)
         const stdout = Buffer.concat(chunks).toString('utf8')
         const durationMs = Date.now() - startTime
         const stderr = getStderr()

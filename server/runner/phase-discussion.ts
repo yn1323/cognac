@@ -115,6 +115,7 @@ export async function executePhaseDiscussion(
   db: Database.Database,
   config: CognacConfig,
   onEvent?: (event: TaskEvent) => void,
+  signal?: AbortSignal,
 ): Promise<{
   discussions: Discussion[]
   sessionId: string
@@ -153,6 +154,7 @@ export async function executePhaseDiscussion(
         {
           prompt: userPrompt,
           systemPrompt,
+          signal,
         },
         config,
       )

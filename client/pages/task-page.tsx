@@ -111,7 +111,7 @@ function PCTaskDetail({
   sseConnected: boolean
 }) {
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-dvh bg-background">
       <Sidebar
         activeItem="タスク"
         onItemClick={(label) => {
@@ -152,7 +152,7 @@ function PCTaskDetail({
 
             {/* アクションボタン */}
             <div className="flex items-center gap-2">
-              {task.status === 'executing' ? (
+              {ACTIVE_STATUSES.has(task.status) ? (
                 <Button
                   variant="destructive"
                   size="sm"
@@ -233,7 +233,7 @@ function SPTaskDetail({
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-dvh flex-col bg-background">
       {/* ヘッダー + タブ */}
       <SPDetailHeader
         title={task.title}
@@ -253,7 +253,7 @@ function SPTaskDetail({
             onOpenChange={setMenuOpen}
             align="right"
           >
-            {task.status === 'executing' ? (
+            {ACTIVE_STATUSES.has(task.status) ? (
               <DropdownMenuItem
                 onClick={() => {
                   setMenuOpen(false)
@@ -361,7 +361,7 @@ export function TaskPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background">
+      <div className="flex h-dvh items-center justify-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     )
@@ -369,7 +369,7 @@ export function TaskPage() {
 
   if (error || !task) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-3 bg-background">
+      <div className="flex h-dvh flex-col items-center justify-center gap-3 bg-background">
         <AlertCircle className="h-8 w-8 text-destructive" />
         <p className="text-sm text-muted-foreground">
           タスクの取得に失敗しました

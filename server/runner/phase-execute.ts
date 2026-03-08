@@ -25,6 +25,7 @@ export async function executePhase3(
   config: CognacConfig,
   onEvent?: (event: TaskEvent) => void,
   executionPrompt?: string,
+  signal?: AbortSignal,
 ): Promise<{ sessionId: string; tokenInput: number; tokenOutput: number; durationMs: number }> {
   const prompt = executionPrompt ?? buildExecutionPrompt(task)
 
@@ -34,6 +35,7 @@ export async function executePhase3(
       maxTurns: config.claude.maxTurnsExecution,
       dangerouslySkipPermissions: true,
       onStream: onEvent,
+      signal,
     },
     config,
   )

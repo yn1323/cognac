@@ -6,7 +6,7 @@ import { BrandLogo } from '@/components/brand-logo'
 
 export function Layout() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
         <div className="mx-auto max-w-2xl px-4 py-3 flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2 font-bold text-lg">

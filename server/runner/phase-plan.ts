@@ -117,6 +117,7 @@ export async function executePhasePlan(
   db: Database.Database,
   config: CognacConfig,
   onEvent?: (event: TaskEvent) => void,
+  signal?: AbortSignal,
 ): Promise<{
   plan: Plan
   sessionId: string
@@ -142,6 +143,7 @@ export async function executePhasePlan(
       {
         prompt: userPrompt,
         systemPrompt,
+        signal,
       },
       config,
     )

@@ -152,7 +152,7 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry }
   const { activeFilters, metrics, filteredTasks, toggle } = useDashboardFilters(tasks)
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-dvh bg-background">
       <Sidebar
         className="h-full shrink-0"
         onItemClick={(label) => {
@@ -281,7 +281,7 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry }
   const { activeFilters, metrics, filteredTasks, toggle } = useDashboardFilters(tasks)
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-dvh flex-col bg-background">
       <SPHeader />
 
       <main className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">

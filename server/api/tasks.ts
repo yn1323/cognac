@@ -35,7 +35,12 @@ const ALLOWED_MIME_TYPES = [
   'image/webp',
 ]
 
-export function tasksRouter(db: Database.Database) {
+// 実行中タスクのキャンセルインターフェース
+export interface TaskCanceller {
+  cancelCurrentTask(taskId: number): boolean
+}
+
+export function tasksRouter(db: Database.Database, canceller?: TaskCanceller) {
   const app = new Hono()
 
   // タスク一覧
@@ -203,7 +208,7 @@ export function tasksRouter(db: Database.Database) {
     return c.json(task)
   })
 
-  // タスクキャンセル（executing中のタスクをstoppedにする）
+  // タスクキャンセル（実行中のタスクをstoppedにし、プロセスも停止する）
   app.post('/:id/cancel', (c) => {
     const id = Number(c.req.param('id'))
     const task = taskQueries.getTask(db, id)
@@ -213,6 +218,8 @@ export function tasksRouter(db: Database.Database) {
     if (!['executing', 'testing', 'discussing', 'planned'].includes(task.status)) {
       return c.json({ error: 'キャンセルできないステータス' }, 400)
     }
+    // 実行中プロセスを停止
+    canceller?.cancelCurrentTask(id)
     const updated = taskQueries.updateTask(db, id, {
       status: 'stopped',
       paused_reason: 'ユーザーによるキャンセル',

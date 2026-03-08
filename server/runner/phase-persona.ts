@@ -83,6 +83,7 @@ export async function executePhasePersona(
   db: Database.Database,
   config: CognacConfig,
   onEvent?: (event: TaskEvent) => void,
+  signal?: AbortSignal,
 ): Promise<{
   personas: Persona[]
   sessionId: string
@@ -105,6 +106,7 @@ export async function executePhasePersona(
       {
         prompt: userPrompt,
         systemPrompt,
+        signal,
       },
       config,
     )

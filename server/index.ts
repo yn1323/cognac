@@ -4,7 +4,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { serveStatic } from '@hono/node-server/serve-static'
 import type Database from 'better-sqlite3'
-import { tasksRouter } from './api/tasks.js'
+import { tasksRouter, type TaskCanceller } from './api/tasks.js'
 import { streamRouter } from './api/stream.js'
 import { systemRouter, type RunnerStatus } from './api/system.js'
 import { settingsRouter, type ConfigAccessor } from './api/settings.js'
@@ -13,7 +13,7 @@ import { EventBus } from './sse/event-bus.js'
 export interface CreateAppOptions {
   db: Database.Database
   eventBus: EventBus
-  runner: RunnerStatus & ConfigAccessor
+  runner: RunnerStatus & ConfigAccessor & TaskCanceller
   // ビルド済みクライアントの静的ファイルディレクトリ（パッケージモード用）
   publicDir?: string
   // 設定ファイル書き込み先（デフォルト: process.cwd()）
@@ -28,7 +28,7 @@ export function createApp({ db, eventBus, runner, publicDir, cwd = process.cwd()
   app.use('/*', cors())
 
   // APIルーティング
-  app.route('/api/tasks', tasksRouter(db))
+  app.route('/api/tasks', tasksRouter(db, runner))
   app.route('/api/tasks', streamRouter(eventBus))
   app.route('/api', systemRouter(runner, db))
   app.route('/api/settings', settingsRouter(runner, cwd))

@@ -130,7 +130,7 @@ function PCSettings({
   const navigate = useNavigate()
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-dvh bg-background">
       <Sidebar
         activeItem="設定"
         onItemClick={(label) => {
@@ -248,7 +248,7 @@ function SPSettings({
   const navigate = useNavigate()
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-dvh flex-col bg-background">
       {/* ヘッダー */}
       <header className="border-b bg-background px-4 py-3">
         <h1 className="text-lg font-semibold text-foreground">設定</h1>

@@ -13,12 +13,13 @@ import { buildRetryPrompt } from './retry-prompt.js'
 import { invalidateContextCache } from './context-cache.js'
 import { getCiSteps, runCi } from './ci-runner.js'
 import { classifyError } from './error-classifier.js'
-import { ProcessTimeoutError } from './claude-caller.js'
+import { ProcessTimeoutError, TaskCancelledError } from './claude-caller.js'
 
 export class TaskRunner implements RunnerStatus {
   private running = false
   private paused = false
   private currentTaskId: number | null = null
+  private currentAbortController: AbortController | null = null
   private timer: ReturnType<typeof setTimeout> | null = null
   // フェーズごとのSSEイベントを蓄積（DB永続化用）
   private phaseEvents: TaskEvent[] = []
@@ -74,6 +75,16 @@ export class TaskRunner implements RunnerStatus {
     console.log('タスクランナー再開')
   }
 
+  // 実行中タスクをキャンセル（AbortControllerでプロセスを停止）
+  cancelCurrentTask(taskId: number): boolean {
+    if (this.currentTaskId !== taskId || !this.currentAbortController) {
+      return false
+    }
+    console.log(`タスク ${taskId} のキャンセルシグナルを送信`)
+    this.currentAbortController.abort()
+    return true
+  }
+
   private scheduleNextPoll(): void {
     if (!this.running) return
     this.timer = setTimeout(() => this.poll(), 1000)
@@ -126,6 +137,11 @@ export class TaskRunner implements RunnerStatus {
     const { id } = task
     let currentPhase: Phase = 'execute'
 
+    // キャンセル用 AbortController を作成
+    const abortController = new AbortController()
+    this.currentAbortController = abortController
+    const { signal } = abortController
+
     try {
       // イベント蓄積をリセット
       this.phaseEvents = []
@@ -140,7 +156,7 @@ export class TaskRunner implements RunnerStatus {
           branch_name: branchName,
           started_at: new Date().toISOString(),
         })
-        await this.executeWithRetry(task, branchName)
+        await this.executeWithRetry(task, branchName, undefined, signal)
       } else {
         // --- フルパイプライン ---
         taskQueries.updateTask(this.db, id, {
@@ -151,21 +167,30 @@ export class TaskRunner implements RunnerStatus {
         // Phase 2-A: ペルソナ選定
         currentPhase = 'persona'
         this.emit(id, { type: 'phase_start', phase: 'persona', timestamp: new Date().toISOString() })
-        const personaResult = await executePhasePersona(task, this.db, this.config, onEvent)
+        const personaResult = await executePhasePersona(task, this.db, this.config, onEvent, signal)
         this.emit(id, { type: 'phase_end', phase: 'persona', timestamp: new Date().toISOString(), durationMs: personaResult.durationMs })
+
+        // キャンセルチェック
+        if (signal.aborted) return
 
         // Phase 2-B: ディスカッション
         currentPhase = 'discussion'
         this.emit(id, { type: 'phase_start', phase: 'discussion', timestamp: new Date().toISOString() })
-        const discResult = await executePhaseDiscussion(task, personaResult.personas, this.db, this.config, onEvent)
+        const discResult = await executePhaseDiscussion(task, personaResult.personas, this.db, this.config, onEvent, signal)
         this.emit(id, { type: 'phase_end', phase: 'discussion', timestamp: new Date().toISOString(), durationMs: discResult.totalDurationMs })
+
+        // キャンセルチェック
+        if (signal.aborted) return
 
         // Phase 2-C: プラン策定
         currentPhase = 'plan'
         this.emit(id, { type: 'phase_start', phase: 'plan', timestamp: new Date().toISOString() })
-        const planResult = await executePhasePlan(task, discResult.discussions, personaResult.personas, this.db, this.config, onEvent)
+        const planResult = await executePhasePlan(task, discResult.discussions, personaResult.personas, this.db, this.config, onEvent, signal)
         this.emit(id, { type: 'phase_end', phase: 'plan', timestamp: new Date().toISOString(), durationMs: planResult.durationMs })
         taskQueries.updateTask(this.db, id, { status: 'planned' })
+
+        // キャンセルチェック
+        if (signal.aborted) return
 
         // Gitブランチ作成（一時コメントアウト: 不具合調査のノイズ除去）
         // currentPhase = 'git'
@@ -176,7 +201,7 @@ export class TaskRunner implements RunnerStatus {
 
         // Phase 3 + CI リトライループ（executionPromptを渡す）
         currentPhase = 'execute'
-        await this.executeWithRetry(task, branchName, planResult.plan.execution_prompt)
+        await this.executeWithRetry(task, branchName, planResult.plan.execution_prompt, signal)
 
         // 完了: Gitマージ + push（一時コメントアウト: 不具合調査のノイズ除去）
         // currentPhase = 'git'
@@ -187,6 +212,18 @@ export class TaskRunner implements RunnerStatus {
         invalidateContextCache()
       }
     } catch (err) {
+      // キャンセルによるエラーはログだけ残して終了（DB更新はAPI側で済み）
+      if (err instanceof TaskCancelledError) {
+        console.log(`タスク ${id} はユーザーによりキャンセルされた`)
+        logQueries.createLog(this.db, {
+          task_id: id,
+          phase: currentPhase,
+          error_type: 'app',
+          error_message: 'ユーザーによるキャンセル',
+        })
+        return
+      }
+
       const errorMessage = err instanceof Error ? err.message : String(err)
       console.error(`タスク ${id} で致命的エラー:`, err)
 
@@ -210,6 +247,8 @@ export class TaskRunner implements RunnerStatus {
       })
       // 後続タスクも全停止
       taskQueries.stopPendingTasks(this.db)
+    } finally {
+      this.currentAbortController = null
     }
   }
 
@@ -217,6 +256,7 @@ export class TaskRunner implements RunnerStatus {
     task: Task,
     branchName: string,
     executionPrompt?: string,
+    signal?: AbortSignal,
   ): Promise<void> {
     const { id } = task
     const maxRetries = this.config.ci.maxRetries
@@ -233,7 +273,7 @@ export class TaskRunner implements RunnerStatus {
           ? buildRetryPrompt(executionPrompt, attempt, previousErrors)
           : undefined
 
-        const execResult = await executePhase3(task, this.config, (event) => this.emit(id, event), currentPrompt)
+        const execResult = await executePhase3(task, this.config, (event) => this.emit(id, event), currentPrompt, signal)
 
         logQueries.createLog(this.db, {
           task_id: id,
@@ -333,6 +373,11 @@ export class TaskRunner implements RunnerStatus {
           // }
         }
       } catch (err) {
+        // キャンセルエラーは上位に伝搬
+        if (err instanceof TaskCancelledError) {
+          throw err
+        }
+
         if (err instanceof ProcessTimeoutError) {
           // プロセス層エラー
           const currentTask = taskQueries.getTask(this.db, id)
