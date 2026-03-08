@@ -59,7 +59,7 @@ function BranchSelector({ currentBranch, className }: BranchSelectorProps) {
       >
         <GitBranch className="h-4 w-4 text-[#1d4ed8]" />
         <span className="font-semibold text-foreground">{currentBranch}</span>
-        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        <ChevronDown className="ml-auto h-4 w-4 text-muted-foreground" />
       </button>
 
       {open && (
