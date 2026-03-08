@@ -6,6 +6,15 @@ export type Phase = 'persona' | 'discussion' | 'plan' | 'execute' | 'ci' | 'git'
 // エラー種別
 export type ErrorType = 'app' | 'infra' | 'process'
 
+// CLIストリームの低レベルイベント
+export type AgentStreamEvent =
+  | { type: 'agent_output'; content: string }
+  | { type: 'tool_invoked'; toolName: string }
+  | { type: 'command_executed'; command: string; output: string; exitCode: number }
+  | { type: 'file_changed'; path: string; toolName: 'Write' | 'Edit' }
+  | { type: 'debug_log'; message: string; level: 'info' | 'warn' | 'error' }
+  | { type: 'error'; errorType: ErrorType; message: string }
+
 // SSEで配信されるタスクイベントの全種類
 export type TaskEvent =
   // フェーズ制御
@@ -27,20 +36,15 @@ export type TaskEvent =
   | { type: 'plan_created'; planMarkdown: string; estimatedComplexity: string }
   // Phase 3: コード実行
   | { type: 'claude_output'; content: string }
-  | { type: 'file_changed'; path: string; toolName: 'Write' | 'Edit' }
-  | { type: 'command_executed'; command: string; output: string; exitCode: number }
-  | { type: 'tool_invoked'; toolName: string }
+  | Extract<AgentStreamEvent, { type: 'file_changed' | 'command_executed' | 'tool_invoked' | 'debug_log' | 'error' }>
   // CI
   | { type: 'ci_start'; step: string; command: string }
   | { type: 'ci_result'; step: string; success: boolean; output: string; durationMs: number }
   // エラー・リトライ
   | { type: 'retry'; errorType: 'app' | 'process'; count: number; maxRetries: number; reason: string }
-  | { type: 'error'; errorType: ErrorType; message: string }
   | { type: 'paused'; reason: string; phase: Phase }
   // Git
   | { type: 'git_operation'; operation: 'checkout' | 'commit' | 'merge' | 'push'; detail: string }
-  // デバッグ
-  | { type: 'debug_log'; message: string; level: 'info' | 'warn' | 'error' }
   // 完了
   | {
       type: 'completed'

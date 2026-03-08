@@ -1,11 +1,11 @@
 /**
  * Codex CLI JSONL 出力パーサー
  *
- * `codex exec --json` の各行JSONをパースし、TaskEvent に変換する。
+ * `codex exec --json` の各行JSONをパースし、AgentStreamEvent に変換する。
  * Claude の StreamParser と同じ parse() / getResult() インターフェース。
  */
 
-import type { TaskEvent } from '@cognac/shared'
+import type { AgentStreamEvent } from '@cognac/shared'
 
 // ── Codex JSONL イベント型 ──
 
@@ -51,10 +51,10 @@ export class CodexStreamParser {
   private totalUsage = { inputTokens: 0, outputTokens: 0 }
 
   /**
-   * 1行分のJSONをパースして TaskEvent を返す。
+   * 1行分のJSONをパースして AgentStreamEvent を返す。
    * 該当なし or 不明タイプなら null。
    */
-  parse(line: string): TaskEvent | null {
+  parse(line: string): AgentStreamEvent | null {
     if (!line.trim()) return null
 
     let event: CodexEvent
@@ -113,7 +113,7 @@ export class CodexStreamParser {
 
   // ── 内部ハンドラ ──
 
-  private handleItemStarted(item?: CodexItem): TaskEvent | null {
+  private handleItemStarted(item?: CodexItem): AgentStreamEvent | null {
     if (!item) return null
 
     if (item.type === 'command_execution') {
@@ -126,14 +126,14 @@ export class CodexStreamParser {
     return null
   }
 
-  private handleItemCompleted(item?: CodexItem): TaskEvent | null {
+  private handleItemCompleted(item?: CodexItem): AgentStreamEvent | null {
     if (!item) return null
 
     switch (item.type) {
       case 'agent_message':
         this.lastAgentMessage = item.text ?? ''
         return {
-          type: 'claude_output',
+          type: 'agent_output',
           content: item.text ?? '',
         }
 

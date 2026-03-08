@@ -148,9 +148,9 @@ export async function executePhaseDiscussion(
 
     // 最大2回トライ（初回 + 1回リトライ）
     let response = { result: '', sessionId: '', usage: { inputTokens: 0, outputTokens: 0 }, durationMs: 0 }
+    const provider = createProvider(config.provider)
 
     for (let attempt = 0; attempt < 2; attempt++) {
-      const provider = createProvider(config.provider)
       response = await provider.execPrint(
         {
           prompt: userPrompt,

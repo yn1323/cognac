@@ -1,8 +1,9 @@
 import { Hono } from 'hono'
 import { streamSSE } from 'hono/streaming'
+import type { TaskEvent } from '@cognac/shared'
 import type { EventBus } from '../sse/event-bus.js'
 
-export function streamRouter(eventBus: EventBus) {
+export function streamRouter(eventBus: EventBus<TaskEvent>) {
   const app = new Hono()
 
   // SSEストリーム

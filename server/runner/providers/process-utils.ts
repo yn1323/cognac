@@ -8,7 +8,7 @@
 import { type ChildProcess } from 'node:child_process'
 import { createReadStream, writeFileSync, unlinkSync, mkdirSync } from 'node:fs'
 import path from 'node:path'
-import { ProcessTimeoutError } from './types.js'
+import { ProcessTimeoutError, TaskCancelledError } from './types.js'
 
 // ── 共通トーンルール（全プロンプトに自動注入） ──
 export const TONE_RULES = `
@@ -55,6 +55,29 @@ export interface SpawnHelpers {
   resetTimeout: () => void
   clearTimer: () => void
   getStderr: () => string
+}
+
+export function setupAbortHandler(
+  child: ChildProcess,
+  signal: AbortSignal | undefined,
+  clearTimer: () => void,
+  reject: (reason: unknown) => void,
+  label: string,
+): () => void {
+  const onAbort = (): void => {
+    console.log(`[${label}] キャンセルシグナル受信 PID=${child.pid}`)
+    clearTimer()
+    if (child.exitCode === null) {
+      child.kill('SIGTERM')
+      setTimeout(() => {
+        if (child.exitCode === null) child.kill('SIGKILL')
+      }, 5000)
+    }
+    reject(new TaskCancelledError())
+  }
+
+  signal?.addEventListener('abort', onAbort, { once: true })
+  return onAbort
 }
 
 export function setupProcess(

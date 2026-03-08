@@ -11,7 +11,7 @@ import type { CognacConfig } from '@cognac/shared'
 import { CodexStreamParser } from './codex-stream-parser.js'
 import type { CliProviderInterface, CliResponse, StreamExecOptions, PrintExecOptions } from './types.js'
 import { TaskCancelledError } from './types.js'
-import { TONE_RULES, writeTmpFiles, cleanupTmpFiles, setupProcess } from './process-utils.js'
+import { TONE_RULES, writeTmpFiles, cleanupTmpFiles, setupAbortHandler, setupProcess } from './process-utils.js'
 
 /**
  * Codex はシステムプロンプト用の専用フラグがないため、
@@ -24,11 +24,6 @@ function buildPromptWithSystem(prompt: string, systemPrompt?: string): string {
 
 export class CodexProvider implements CliProviderInterface {
   readonly name = 'codex'
-
-  getCleanEnv(): NodeJS.ProcessEnv {
-    // Codex はネストセッション問題がないので、フィルタリング不要
-    return { ...process.env } as NodeJS.ProcessEnv
-  }
 
   async execStream(options: StreamExecOptions, config: CognacConfig): Promise<CliResponse> {
     const fullPrompt = buildPromptWithSystem(options.prompt, options.systemPrompt)
@@ -59,7 +54,7 @@ export class CodexProvider implements CliProviderInterface {
         const child = spawn('codex', args, {
           stdio: ['pipe', 'pipe', 'pipe'],
           shell: true,
-          env: this.getCleanEnv(),
+          env: process.env,
         })
 
         console.log(`[CodexProvider] プロセス起動 PID=${child.pid}`)
@@ -68,19 +63,7 @@ export class CodexProvider implements CliProviderInterface {
           child, tmpFiles.promptFile, config.claude.stdoutTimeoutMs, reject,
         )
 
-        // AbortSignal によるキャンセル
-        const onAbort = (): void => {
-          console.log(`[CodexProvider] キャンセルシグナル受信 PID=${child.pid}`)
-          clearTimer()
-          if (child.exitCode === null) {
-            child.kill('SIGTERM')
-            setTimeout(() => {
-              if (child.exitCode === null) child.kill('SIGKILL')
-            }, 5000)
-          }
-          reject(new TaskCancelledError())
-        }
-        options.signal?.addEventListener('abort', onAbort, { once: true })
+        const onAbort = setupAbortHandler(child, options.signal, clearTimer, reject, 'CodexProvider')
 
         const parser = new CodexStreamParser()
         let lineCount = 0
@@ -147,7 +130,7 @@ export class CodexProvider implements CliProviderInterface {
         const child = spawn('codex', args, {
           stdio: ['pipe', 'pipe', 'pipe'],
           shell: true,
-          env: this.getCleanEnv(),
+          env: process.env,
         })
 
         console.log(`[CodexProvider] プロセス起動 PID=${child.pid}`)
@@ -156,19 +139,7 @@ export class CodexProvider implements CliProviderInterface {
           child, tmpFiles.promptFile, config.claude.stdoutTimeoutMs, reject,
         )
 
-        // AbortSignal によるキャンセル
-        const onAbort = (): void => {
-          console.log(`[CodexProvider] キャンセルシグナル受信 PID=${child.pid}`)
-          clearTimer()
-          if (child.exitCode === null) {
-            child.kill('SIGTERM')
-            setTimeout(() => {
-              if (child.exitCode === null) child.kill('SIGKILL')
-            }, 5000)
-          }
-          reject(new TaskCancelledError())
-        }
-        options.signal?.addEventListener('abort', onAbort, { once: true })
+        const onAbort = setupAbortHandler(child, options.signal, clearTimer, reject, 'CodexProvider')
 
         // stdout をバッファとして蓄積
         const chunks: Buffer[] = []

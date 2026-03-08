@@ -4,7 +4,7 @@
  * Claude CLI / Codex CLI 共通のインターフェース、オプション型、エラークラスを定義する。
  */
 
-import type { CognacConfig, TaskEvent } from '@cognac/shared'
+import type { AgentStreamEvent, CognacConfig } from '@cognac/shared'
 
 // ── プロバイダー共通レスポンス ──
 
@@ -25,7 +25,7 @@ export interface StreamExecOptions {
   maxTurns?: number
   allowedTools?: string[]
   dangerouslySkipPermissions?: boolean
-  onStream?: (event: TaskEvent) => void
+  onStream?: (event: AgentStreamEvent) => void
   signal?: AbortSignal
 }
 
@@ -46,9 +46,6 @@ export interface CliProviderInterface {
 
   /** テキスト出力モード実行（Phase 2: ディスカッション/プラン + Git AI） */
   execPrint(options: PrintExecOptions, config: CognacConfig): Promise<CliResponse>
-
-  /** ネストセッション防止用の環境変数クリーニング */
-  getCleanEnv(): NodeJS.ProcessEnv
 }
 
 // ── エラークラス（claude-caller.ts から移動） ──

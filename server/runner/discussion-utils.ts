@@ -1,16 +1,14 @@
 // ディスカッション関連のユーティリティ
 
-import type { Discussion } from '@cognac/shared'
-
 /**
  * ディスカッションをラウンド番号でグルーピングする
  */
-export function groupDiscussionsByRound(
-  discussions: Discussion[],
-): Map<number, Discussion[]> {
-  const grouped = new Map<number, Discussion[]>()
+export function groupDiscussionsByRound<T extends { round: number }>(
+  discussions: T[],
+): Map<number, T[]> {
+  const grouped = new Map<number, T[]>()
   for (const d of discussions) {
-    const existing = grouped.get(d.round) ?? []
+    const existing = grouped.get(d.round) ?? ([] as T[])
     existing.push(d)
     grouped.set(d.round, existing)
   }

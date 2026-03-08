@@ -11,22 +11,25 @@ import type { CognacConfig } from '@cognac/shared'
 import { StreamParser } from '../stream-parser.js'
 import type { CliProviderInterface, CliResponse, StreamExecOptions, PrintExecOptions } from './types.js'
 import { TaskCancelledError } from './types.js'
-import { writeTmpFiles, cleanupTmpFiles, setupProcess } from './process-utils.js'
+import { writeTmpFiles, cleanupTmpFiles, setupAbortHandler, setupProcess } from './process-utils.js'
 
-export class ClaudeProvider implements CliProviderInterface {
-  readonly name = 'claude'
-
-  getCleanEnv(): NodeJS.ProcessEnv {
-    // Claude Code は CLAUDECODE 環境変数をセットするため、
-    // 子プロセスで再度 claude を起動すると「ネストされたセッション」と判定されてしまう。
-    const env = Object.fromEntries(
+// Claude Code は CLAUDECODE 環境変数をセットするため、
+// 子プロセスで再度 claude を起動すると「ネストされたセッション」と判定されてしまう。
+// process.env は実行中変化しないのでキャッシュする。
+let cachedCleanEnv: NodeJS.ProcessEnv | null = null
+function getCleanEnv(): NodeJS.ProcessEnv {
+  if (!cachedCleanEnv) {
+    cachedCleanEnv = Object.fromEntries(
       Object.entries(process.env).filter(
         ([key]) => key !== 'CLAUDECODE' && !key.startsWith('CLAUDE_CODE_'),
       ),
     ) as NodeJS.ProcessEnv
-    console.log(`[ClaudeProvider] CLAUDECODE除外: 元=${process.env.CLAUDECODE} → 結果=${env.CLAUDECODE ?? '(未定義)'}`)
-    return env
   }
+  return cachedCleanEnv
+}
+
+export class ClaudeProvider implements CliProviderInterface {
+  readonly name = 'claude'
 
   async execStream(options: StreamExecOptions, config: CognacConfig): Promise<CliResponse> {
     const tmpFiles = writeTmpFiles(options.prompt, options.systemPrompt)
@@ -65,7 +68,7 @@ export class ClaudeProvider implements CliProviderInterface {
         const child = spawn('claude', args, {
           stdio: ['pipe', 'pipe', 'pipe'],
           shell: true,
-          env: this.getCleanEnv(),
+          env: getCleanEnv(),
         })
 
         console.log(`[ClaudeProvider] プロセス起動 PID=${child.pid}`)
@@ -74,19 +77,7 @@ export class ClaudeProvider implements CliProviderInterface {
           child, tmpFiles.promptFile, config.claude.stdoutTimeoutMs, reject,
         )
 
-        // AbortSignal によるキャンセル
-        const onAbort = (): void => {
-          console.log(`[ClaudeProvider] キャンセルシグナル受信 PID=${child.pid}`)
-          clearTimer()
-          if (child.exitCode === null) {
-            child.kill('SIGTERM')
-            setTimeout(() => {
-              if (child.exitCode === null) child.kill('SIGKILL')
-            }, 5000)
-          }
-          reject(new TaskCancelledError())
-        }
-        options.signal?.addEventListener('abort', onAbort, { once: true })
+        const onAbort = setupAbortHandler(child, options.signal, clearTimer, reject, 'ClaudeProvider')
 
         const parser = new StreamParser()
         let result = ''
@@ -103,7 +94,7 @@ export class ClaudeProvider implements CliProviderInterface {
 
           options.onStream?.(parsed)
 
-          if (parsed.type === 'claude_output') {
+          if (parsed.type === 'agent_output') {
             result += parsed.content
           }
         })
@@ -165,7 +156,7 @@ export class ClaudeProvider implements CliProviderInterface {
         const child = spawn('claude', args, {
           stdio: ['pipe', 'pipe', 'pipe'],
           shell: true,
-          env: this.getCleanEnv(),
+          env: getCleanEnv(),
         })
 
         console.log(`[ClaudeProvider] プロセス起動 PID=${child.pid}`)
@@ -174,19 +165,7 @@ export class ClaudeProvider implements CliProviderInterface {
           child, tmpFiles.promptFile, config.claude.stdoutTimeoutMs, reject,
         )
 
-        // AbortSignal によるキャンセル
-        const onAbort = (): void => {
-          console.log(`[ClaudeProvider] キャンセルシグナル受信 PID=${child.pid}`)
-          clearTimer()
-          if (child.exitCode === null) {
-            child.kill('SIGTERM')
-            setTimeout(() => {
-              if (child.exitCode === null) child.kill('SIGKILL')
-            }, 5000)
-          }
-          reject(new TaskCancelledError())
-        }
-        options.signal?.addEventListener('abort', onAbort, { once: true })
+        const onAbort = setupAbortHandler(child, options.signal, clearTimer, reject, 'ClaudeProvider')
 
         // stdout をバッファとして蓄積
         const chunks: Buffer[] = []

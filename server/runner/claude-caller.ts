@@ -17,22 +17,23 @@ export type { StreamExecOptions as CallClaudeOptions } from './providers/types.j
 export type { PrintExecOptions as CallClaudePrintOptions } from './providers/types.js'
 export type { CliResponse as ClaudeResponse } from './providers/types.js'
 
-const claude = new ClaudeProvider()
+// 遅延初期化（Codex使用時に不要なインスタンス化を避ける）
+let claude: ClaudeProvider | null = null
+function getClaude(): ClaudeProvider {
+  if (!claude) claude = new ClaudeProvider()
+  return claude
+}
 
 export async function callClaude(
   options: StreamExecOptions,
   config: CognacConfig,
 ): Promise<CliResponse> {
-  return claude.execStream(options, config)
+  return getClaude().execStream(options, config)
 }
 
 export async function callClaudePrint(
   options: PrintExecOptions,
   config: CognacConfig,
 ): Promise<CliResponse> {
-  return claude.execPrint(options, config)
-}
-
-export function getCleanEnv(): NodeJS.ProcessEnv {
-  return claude.getCleanEnv()
+  return getClaude().execPrint(options, config)
 }

@@ -3,18 +3,27 @@ import { join } from 'node:path'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { serveStatic } from '@hono/node-server/serve-static'
+import type { ExplorationEvent, TaskEvent } from '@cognac/shared'
 import type Database from 'better-sqlite3'
 import { tasksRouter, type TaskCanceller } from './api/tasks.js'
 import { streamRouter } from './api/stream.js'
-import { systemRouter, type RunnerStatus } from './api/system.js'
+import { explorationsRouter } from './api/explorations.js'
+import { systemRouter, type RunnerStatus, type SystemStatusProvider } from './api/system.js'
 import { settingsRouter, type ConfigAccessor } from './api/settings.js'
 import { gitRouter } from './api/git.js'
+import { consoleRouter } from './api/console.js'
 import { EventBus } from './sse/event-bus.js'
+import { ConsoleManager } from './console/console-manager.js'
+import { runConsoleStartupRecovery, startConsoleCleanupScheduler, cleanupExpiredConsoleRuns } from './console/cleanup.js'
 
 export interface CreateAppOptions {
   db: Database.Database
-  eventBus: EventBus
-  runner: RunnerStatus & ConfigAccessor & TaskCanceller
+  taskEventBus: EventBus<TaskEvent>
+  explorationEventBus: EventBus<ExplorationEvent>
+  taskRunner: RunnerStatus & ConfigAccessor & TaskCanceller
+  explorationRunner: RunnerStatus
+  systemStatusProvider: SystemStatusProvider
+  consoleManager: ConsoleManager
   // ビルド済みクライアントの静的ファイルディレクトリ（パッケージモード用）
   publicDir?: string
   // 設定ファイル書き込み先（デフォルト: process.cwd()）
@@ -22,21 +31,34 @@ export interface CreateAppOptions {
 }
 
 // Honoアプリを構築する
-export function createApp({ db, eventBus, runner, publicDir, cwd = process.cwd() }: CreateAppOptions) {
+export function createApp({
+  db,
+  taskEventBus,
+  explorationEventBus,
+  taskRunner,
+  explorationRunner,
+  systemStatusProvider,
+  consoleManager,
+  publicDir,
+  cwd = process.cwd(),
+}: CreateAppOptions) {
   const app = new Hono()
 
   // ミドルウェア
   app.use('/*', cors())
 
   // APIルーティング
-  app.route('/api/tasks', tasksRouter(db, runner))
-  app.route('/api/tasks', streamRouter(eventBus))
-  app.route('/api', systemRouter(runner, db))
-  app.route('/api/settings', settingsRouter(runner, cwd))
-  app.route('/api/git', gitRouter(cwd, () => runner.getConfig()))
+  app.route('/api/tasks', tasksRouter(db, taskRunner))
+  app.route('/api/tasks', streamRouter(taskEventBus))
+  app.route('/api/explorations', explorationsRouter(db, explorationEventBus))
+  app.route('/api', systemRouter(systemStatusProvider, db))
+  app.route('/api/settings', settingsRouter(taskRunner, cwd))
+  app.route('/api/git', gitRouter(cwd, () => taskRunner.getConfig()))
+  app.route('/api/console', consoleRouter(consoleManager))
 
-  // アップロード画像の静的配信
+  // 添付画像と探索artifactの静的配信
   app.use('/uploads/*', serveStatic({ root: '.cognac/' }))
+  app.use('/artifacts/*', serveStatic({ root: '.cognac/' }))
 
   // 静的ファイルサービング（パッケージモード用）
   if (publicDir && existsSync(publicDir)) {
@@ -67,5 +89,9 @@ export function createApp({ db, eventBus, runner, publicDir, cwd = process.cwd()
 export { EventBus } from './sse/event-bus.js'
 export { openDb } from './db/connection.js'
 export { TaskRunner } from './runner/task-runner.js'
+export { ExplorationRunner } from './runner/exploration-runner.js'
+export { ExecutionCoordinator } from './runner/execution-coordinator.js'
+export { ConsoleManager } from './console/console-manager.js'
+export { runConsoleStartupRecovery, startConsoleCleanupScheduler, cleanupExpiredConsoleRuns } from './console/cleanup.js'
 export type { RunnerStatus } from './api/system.js'
 export type { ConfigAccessor } from './api/settings.js'

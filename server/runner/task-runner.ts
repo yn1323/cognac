@@ -14,6 +14,7 @@ import { invalidateContextCache } from './context-cache.js'
 import { getCiSteps, runCi } from './ci-runner.js'
 import { classifyError } from './error-classifier.js'
 import { ProcessTimeoutError, TaskCancelledError } from './claude-caller.js'
+import type { ExecutionCoordinator } from './execution-coordinator.js'
 
 export class TaskRunner implements RunnerStatus {
   private running = false
@@ -26,8 +27,9 @@ export class TaskRunner implements RunnerStatus {
 
   constructor(
     private db: Database.Database,
-    private eventBus: EventBus,
+    private eventBus: EventBus<TaskEvent>,
     private config: CognacConfig,
+    private coordinator?: ExecutionCoordinator,
   ) {}
 
   getStatus(): 'running' | 'paused' | 'idle' {
@@ -127,6 +129,10 @@ export class TaskRunner implements RunnerStatus {
 
     const task = taskQueries.getNextPendingTask(this.db)
     if (task) {
+      if (this.coordinator && !this.coordinator.acquire('task', task.id)) {
+        this.scheduleNextPoll()
+        return
+      }
       this.currentTaskId = task.id
       try {
         await this.executeTask(task)
@@ -134,6 +140,7 @@ export class TaskRunner implements RunnerStatus {
         console.error(`タスク ${task.id} の実行中に予期しないエラー:`, err)
       } finally {
         this.currentTaskId = null
+        this.coordinator?.release('task', task.id)
       }
     }
 

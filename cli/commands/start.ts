@@ -7,8 +7,19 @@ import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { createJiti } from 'jiti'
 import { serve } from '@hono/node-server'
-import { defineConfig, type CognacConfig } from '@cognac/shared'
-import { createApp, EventBus, openDb, TaskRunner } from '@cognac/server'
+import { defineConfig, type CognacConfig, type ExplorationEvent, type TaskEvent } from '@cognac/shared'
+import {
+  cleanupExpiredConsoleRuns,
+  ConsoleManager,
+  createApp,
+  ExecutionCoordinator,
+  EventBus,
+  ExplorationRunner,
+  openDb,
+  runConsoleStartupRecovery,
+  startConsoleCleanupScheduler,
+  TaskRunner,
+} from '@cognac/server'
 
 /**
  * 設定ファイルを読み込む
@@ -41,17 +52,40 @@ export async function runStart(): Promise<void> {
   console.log('✔ DB接続OK')
 
   // EventBus作成
-  const eventBus = new EventBus()
+  const taskEventBus = new EventBus<TaskEvent>()
+  const explorationEventBus = new EventBus<ExplorationEvent>()
+  const coordinator = new ExecutionCoordinator()
 
   // TaskRunner作成
-  const runner = new TaskRunner(db, eventBus, config)
+  const runner = new TaskRunner(db, taskEventBus, config, coordinator)
+  const explorationRunner = new ExplorationRunner(db, explorationEventBus, config, coordinator, cwd)
+  const consoleManager = new ConsoleManager(db, cwd)
+  runConsoleStartupRecovery(db, cwd)
+  await cleanupExpiredConsoleRuns(db)
+  const stopConsoleCleanup = startConsoleCleanupScheduler(db)
+
+  const systemStatusProvider = {
+    getTaskRunnerStatus: () => runner.getStatus(),
+    getExplorationRunnerStatus: () => explorationRunner.getStatus(),
+    getActiveExecution: () => coordinator.getCurrent(),
+  }
 
   // ビルド済みクライアントのパスを解決（CLIバイナリと同階層の public/）
   const __dirname = dirname(fileURLToPath(import.meta.url))
   const publicDir = resolve(__dirname, 'public')
 
   // Honoアプリ作成
-  const app = createApp({ db, eventBus, runner, publicDir, cwd })
+  const app = createApp({
+    db,
+    taskEventBus,
+    explorationEventBus,
+    taskRunner: runner,
+    explorationRunner,
+    systemStatusProvider,
+    consoleManager,
+    publicDir,
+    cwd,
+  })
 
   // サーバー起動
   const server = serve(
@@ -67,11 +101,15 @@ export async function runStart(): Promise<void> {
 
   // タスクランナー開始
   runner.start()
+  explorationRunner.start()
 
   // グレースフルシャットダウン
-  const shutdown = () => {
+  const shutdown = async () => {
     console.log('\n⏹ シャットダウン中...')
     runner.stop()
+    explorationRunner.stop()
+    stopConsoleCleanup()
+    await consoleManager.shutdown()
     db.close()
     server.close()
     console.log('👋 おつかれ！')

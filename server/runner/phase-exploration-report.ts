@@ -1,0 +1,172 @@
+import type Database from 'better-sqlite3'
+import type {
+  CognacConfig,
+  ExplorationArtifact,
+  ExplorationDiscussion,
+  ExplorationImage,
+  ExplorationPersona,
+  ExplorationReportResult,
+  ExplorationSession,
+} from '@cognac/shared'
+import { createProvider } from './providers/index.js'
+import { extractJson } from './json-parser.js'
+import { groupDiscussionsByRound } from './discussion-utils.js'
+import * as artifactQueries from '../db/queries/exploration-artifacts.js'
+import * as logQueries from '../db/queries/exploration-logs.js'
+
+function formatDiscussions(discussions: ExplorationDiscussion[]): string {
+  const grouped = groupDiscussionsByRound(discussions)
+  let markdown = ''
+  for (const [round, entries] of grouped) {
+    markdown += `### ラウンド ${round}\n`
+    for (const discussion of entries) {
+      markdown += `- ${discussion.persona_name}: ${discussion.content}\n`
+    }
+    markdown += '\n'
+  }
+  return markdown
+}
+
+function buildSystemPrompt(): string {
+  return `あなたは探索結果レポートをまとめる担当だ。
+必ず以下の 5 セクションを含む Markdown を作って。
+
+- ## 結論
+- ## 調査内容
+- ## ディスカッション要約
+- ## 課題
+- ## 次アクション
+
+返答は JSON だけにして。
+
+\`\`\`json
+{
+  "reportMarkdown": "## 結論\\n...",
+  "findings": [
+    { "title": "課題タイトル", "detail": "詳細", "severity": "medium" }
+  ],
+  "nextActions": ["次アクション"]
+}
+\`\`\`
+`
+}
+
+function buildUserPrompt(
+  exploration: ExplorationSession,
+  personas: ExplorationPersona[],
+  discussions: ExplorationDiscussion[],
+  summaryArtifact: ExplorationArtifact | undefined,
+  findings: ExplorationArtifact[],
+  images: ExplorationImage[],
+): string {
+  let prompt = `## 探索依頼
+
+**タイトル**: ${exploration.title}
+**本文**: ${exploration.request}
+
+## ペルソナ
+${personas.map((persona) => `- ${persona.name}: ${persona.focus}`).join('\n')}
+
+## ディスカッション
+${formatDiscussions(discussions)}
+
+## 探索サマリー
+${summaryArtifact?.content_text ?? 'なし'}
+
+## 課題メモ
+${findings.map((artifact) => `- ${artifact.title}: ${artifact.content_text ?? ''}`).join('\n') || 'なし'}
+`
+
+  if (images.length > 0) {
+    prompt += '\n## 証跡画像\n'
+    for (const image of images) {
+      prompt += `- ${image.file_path}\n`
+    }
+  }
+
+  prompt += '\n\nこの内容から最終レポートをまとめて。'
+  return prompt
+}
+
+function appendEvidenceSection(
+  markdown: string,
+  images: ExplorationImage[],
+): string {
+  if (images.length === 0) return markdown
+  const evidenceLines = images.map((image) => `- ${image.file_path}`).join('\n')
+  return `${markdown.trim()}\n\n### 証跡画像\n${evidenceLines}\n`
+}
+
+function getFallbackReport(markdown: string): ExplorationReportResult {
+  return {
+    reportMarkdown: markdown.trim() || '## 結論\nレポート生成に失敗したため原文を保存した\n\n## 調査内容\nなし\n\n## ディスカッション要約\nなし\n\n## 課題\nなし\n\n## 次アクション\nなし',
+    findings: [],
+    nextActions: [],
+  }
+}
+
+export async function executeExplorationPhaseReport(
+  exploration: ExplorationSession,
+  personas: ExplorationPersona[],
+  discussions: ExplorationDiscussion[],
+  summaryArtifact: ExplorationArtifact | undefined,
+  findings: ExplorationArtifact[],
+  evidenceImages: ExplorationImage[],
+  db: Database.Database,
+  config: CognacConfig,
+  signal?: AbortSignal,
+): Promise<{
+  report: ExplorationReportResult
+  finalMarkdown: string
+  sessionId: string
+  tokenInput: number
+  tokenOutput: number
+  durationMs: number
+}> {
+  const provider = createProvider(config.provider)
+  const systemPrompt = buildSystemPrompt()
+  const prompt = buildUserPrompt(
+    exploration,
+    personas,
+    discussions,
+    summaryArtifact,
+    findings,
+    evidenceImages,
+  )
+
+  const response = await provider.execPrint({ prompt, systemPrompt, signal }, config)
+  let report: ExplorationReportResult
+  try {
+    report = extractJson<ExplorationReportResult>(response.result)
+  } catch {
+    report = getFallbackReport(response.result)
+  }
+
+  const finalMarkdown = appendEvidenceSection(report.reportMarkdown, evidenceImages)
+
+  artifactQueries.createExplorationArtifact(db, {
+    exploration_session_id: exploration.id,
+    kind: 'report',
+    title: '最終レポート',
+    content_text: finalMarkdown,
+  })
+
+  logQueries.createExplorationLog(db, {
+    exploration_session_id: exploration.id,
+    phase: 'report',
+    session_id: response.sessionId,
+    token_input: response.usage.inputTokens,
+    token_output: response.usage.outputTokens,
+    duration_ms: response.durationMs,
+    output_summary: '最終レポート生成',
+  })
+
+  return {
+    report,
+    finalMarkdown,
+    sessionId: response.sessionId,
+    tokenInput: response.usage.inputTokens,
+    tokenOutput: response.usage.outputTokens,
+    durationMs: response.durationMs,
+  }
+}

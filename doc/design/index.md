@@ -34,6 +34,14 @@ pencilでデザイン作成後、コード側で微調整しており、細部�
    - PC：Node ID: vHG2Z
    - SP：Node ID: k01OP
 
+1. コンソール画面 `@doc/design/ConsolePage.pen`
+   1. コンソール一覧 + ログ表示
+      - PC：Node ID: HmvhY
+   1. コンソール一覧（SPリスト画面）
+      - SP：Node ID: wukk3
+   1. コンソールログ詳細（SP画面）
+      - SP：Node ID: 3tUlE
+
 1. Git画面 `@doc/design/GitPage.pen`
    - PC：Node ID: elYDX
    - SP：Node ID: Vc82Z
