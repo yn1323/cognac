@@ -23,5 +23,9 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {}
 
 export const DashboardActive: Story = {
-  args: { activeItem: 'Dashboard' },
+  args: { activeItem: 'タスク' },
+}
+
+export const SettingsActive: Story = {
+  args: { activeItem: '設定' },
 }
