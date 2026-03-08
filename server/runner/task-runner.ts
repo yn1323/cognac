@@ -41,11 +41,15 @@ export class TaskRunner implements RunnerStatus {
     return this.config
   }
 
-  // CI設定をメモリ上でホットリロード（設定保存時に呼ばれる）
-  updateConfig(patch: { ci: { maxRetries: number; steps?: CiStep[] } }): void {
+  // 設定をメモリ上でホットリロード（設定保存時に呼ばれる）
+  updateConfig(patch: {
+    ci: { maxRetries: number; steps?: CiStep[] }
+    git: { commitLogLimit: number }
+  }): void {
     this.config = {
       ...this.config,
       ci: { ...this.config.ci, ...patch.ci },
+      git: { ...this.config.git, ...patch.git },
     }
   }
 

@@ -6,6 +6,7 @@ import { Layout } from '@/components/layout'
 import { DashboardPage } from '@/pages/dashboard'
 import { SettingsPage } from '@/pages/settings'
 import { TaskPage } from '@/pages/task-page'
+import { GitPage } from '@/pages/git'
 
 export function App() {
   return (
@@ -17,6 +18,8 @@ export function App() {
         <Route path="/settings" element={<SettingsPage />} />
         {/* タスク詳細も独自レイアウト（サイドバー / SPDetailHeader） */}
         <Route path="/tasks/:id" element={<TaskPage />} />
+        {/* Git操作ページ */}
+        <Route path="/git" element={<GitPage />} />
         <Route element={<Layout />}>{/* 将来の共通レイアウトページ */}</Route>
       </Routes>
     </BrowserRouter>

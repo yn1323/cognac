@@ -4,11 +4,11 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ListChecks, PlusCircle, Settings, Plus, X, ChevronUp, ChevronDown } from 'lucide-react'
+import { Plus, X, ChevronUp, ChevronDown } from 'lucide-react'
 import type { CiStep } from '@cognac/shared'
 import { Sidebar } from '@/components/sidebar'
 import { NAV_MAP } from '@/lib/constants'
-import { SPBottomNav, SPNavItem } from '@/components/sp-bottom-nav'
+import { AppBottomNav } from '@/components/app-bottom-nav'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -109,6 +109,8 @@ function CiCommandsEditor({
 interface SettingsPanelProps {
   maxRetries: string
   setMaxRetries: (v: string) => void
+  commitLogLimit: string
+  setCommitLogLimit: (v: string) => void
   ciSteps: CiStep[]
   setCiSteps: (steps: CiStep[]) => void
   onDeleteDatabase: () => void
@@ -121,6 +123,8 @@ interface SettingsPanelProps {
 function PCSettings({
   maxRetries,
   setMaxRetries,
+  commitLogLimit,
+  setCommitLogLimit,
   ciSteps,
   setCiSteps,
   onDeleteDatabase,
@@ -174,6 +178,22 @@ function PCSettings({
               />
               <p className="mt-1 text-[12px] text-muted-foreground">
                 CI失敗時にコード修正を再試行する最大回数
+              </p>
+            </div>
+            <div>
+              <label className="text-sm font-medium leading-[1.4] text-foreground">
+                コミット履歴表示件数
+              </label>
+              <Input
+                className="mt-1.5 w-32"
+                type="number"
+                min={1}
+                max={100}
+                value={commitLogLimit}
+                onChange={(e) => setCommitLogLimit(e.target.value)}
+              />
+              <p className="mt-1 text-[12px] text-muted-foreground">
+                Gitページに表示するコミット履歴の件数
               </p>
             </div>
           </CardContent>
@@ -239,6 +259,8 @@ function PCSettings({
 function SPSettings({
   maxRetries,
   setMaxRetries,
+  commitLogLimit,
+  setCommitLogLimit,
   ciSteps,
   setCiSteps,
   onDeleteDatabase,
@@ -254,7 +276,7 @@ function SPSettings({
         <h1 className="text-lg font-semibold text-foreground">設定</h1>
       </header>
 
-      <main className="flex flex-1 flex-col gap-5 overflow-y-auto p-4">
+      <main className="flex flex-1 flex-col gap-5 overflow-y-auto p-4 pb-20">
         {/* 基本設定セクション */}
         <Card>
           <CardHeader className="p-4">
@@ -278,6 +300,22 @@ function SPSettings({
               />
               <p className="mt-1 text-[11px] text-muted-foreground">
                 CI失敗時にコード修正を再試行する最大回数
+              </p>
+            </div>
+            <div>
+              <label className="text-sm font-medium leading-[1.4] text-foreground">
+                コミット履歴表示件数
+              </label>
+              <Input
+                className="mt-1.5 w-28"
+                type="number"
+                min={1}
+                max={100}
+                value={commitLogLimit}
+                onChange={(e) => setCommitLogLimit(e.target.value)}
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Gitページに表示するコミット履歴の件数
               </p>
             </div>
           </CardContent>
@@ -337,21 +375,7 @@ function SPSettings({
       </main>
 
       {/* ボトムナビ */}
-      <SPBottomNav>
-        <SPNavItem
-          icon={ListChecks}
-          label="タスク"
-          onClick={() => navigate('/')}
-        />
-        <button
-          type="button"
-          className="flex flex-col items-center gap-1"
-          onClick={() => navigate('/?new-task=true')}
-        >
-          <PlusCircle className="h-7 w-7 text-primary" />
-        </button>
-        <SPNavItem icon={Settings} label="設定" active />
-      </SPBottomNav>
+      <AppBottomNav activeItem="設定" />
     </div>
   )
 }
@@ -360,6 +384,7 @@ function SPSettings({
 
 export function SettingsPage() {
   const [maxRetries, setMaxRetries] = useState('5')
+  const [commitLogLimit, setCommitLogLimit] = useState('50')
   const [ciSteps, setCiSteps] = useState<CiStep[]>([])
   const [showDbDeleteConfirm, setShowDbDeleteConfirm] = useState(false)
   const deleteDatabase = useDeleteDatabase()
@@ -372,6 +397,7 @@ export function SettingsPage() {
     if (settings && !initialized.current) {
       initialized.current = true
       setMaxRetries(String(settings.ci.maxRetries))
+      setCommitLogLimit(String(settings.git.commitLogLimit))
       setCiSteps(settings.ci.steps)
     }
   }, [settings])
@@ -379,11 +405,16 @@ export function SettingsPage() {
   const handleSave = () => {
     const maxRetriesNum = parseInt(maxRetries, 10)
     if (Number.isNaN(maxRetriesNum) || maxRetriesNum < 0) return
+    const commitLogLimitNum = parseInt(commitLogLimit, 10)
+    if (Number.isNaN(commitLogLimitNum) || commitLogLimitNum < 1) return
 
     updateSettings.mutate({
       ci: {
         maxRetries: maxRetriesNum,
         steps: ciSteps.filter((s) => s.name.trim() && s.command.trim()),
+      },
+      git: {
+        commitLogLimit: commitLogLimitNum,
       },
     })
   }
@@ -398,6 +429,8 @@ export function SettingsPage() {
   const panelProps: SettingsPanelProps = {
     maxRetries,
     setMaxRetries,
+    commitLogLimit,
+    setCommitLogLimit,
     ciSteps,
     setCiSteps,
     onDeleteDatabase: () => setShowDbDeleteConfirm(true),

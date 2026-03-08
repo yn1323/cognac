@@ -20,6 +20,26 @@ export type {
   ClaudeConfig,
   SettingsPayload,
 } from './types/config.js'
+export type {
+  GitFileStatus,
+  GitFile,
+  GitBranch,
+  GitCommit,
+  GitRemoteStatus,
+  CommitStepStatus,
+  CommitStep,
+  CommitResult,
+  GitStatusResponse,
+  GitLogResponse,
+  GitBranchesResponse,
+  GitRemoteStatusResponse,
+  GitCommitResponse,
+  GitMergeResponse,
+  GitPushResponse,
+  GitCheckoutRequest,
+  GitCreateBranchRequest,
+  GitMergeRequest,
+} from './types/git.js'
 
 // ランタイム
 export { defineConfig } from './types/config.js'

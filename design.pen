@@ -1837,319 +1837,6 @@
                       ]
                     }
                   ]
-                },
-                {
-                  "type": "frame",
-                  "id": "iJRy4",
-                  "name": "Progress Section",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": 16,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "TltAC",
-                      "name": "prTitle",
-                      "fill": "$--foreground",
-                      "content": "Task Progress",
-                      "lineHeight": 1.4,
-                      "fontFamily": "Inter",
-                      "fontSize": 16,
-                      "fontWeight": "600"
-                    },
-                    {
-                      "id": "tBMr1",
-                      "type": "ref",
-                      "ref": "pcGlv",
-                      "width": "fill_container",
-                      "height": "fit_content",
-                      "name": "progressCard",
-                      "descendants": {
-                        "CgJv7": {
-                          "enabled": false
-                        },
-                        "frWPV": {
-                          "type": "frame",
-                          "id": "jvwA1",
-                          "name": "Progress Content",
-                          "width": "fill_container",
-                          "layout": "vertical",
-                          "gap": 20,
-                          "padding": 24,
-                          "children": [
-                            {
-                              "type": "frame",
-                              "id": "YTqzR",
-                              "name": "Step - Persona",
-                              "width": "fill_container",
-                              "gap": 12,
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "B0FM0",
-                                  "name": "s1icon",
-                                  "width": 28,
-                                  "height": 28,
-                                  "fill": "#16a34a",
-                                  "cornerRadius": 9999,
-                                  "layout": "vertical",
-                                  "justifyContent": "center",
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon_font",
-                                      "id": "RJxPq",
-                                      "name": "s1check",
-                                      "width": 14,
-                                      "height": 14,
-                                      "iconFontName": "check",
-                                      "iconFontFamily": "lucide",
-                                      "fill": "#ffffff"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "0jRtv",
-                                  "name": "s1body",
-                                  "width": "fill_container",
-                                  "layout": "vertical",
-                                  "gap": 2,
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "IGgkz",
-                                      "name": "s1title",
-                                      "fill": "$--foreground",
-                                      "content": "Phase 2-A: Persona Selection",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 13,
-                                      "fontWeight": "600"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "CnPfs",
-                                      "name": "s1sub",
-                                      "fill": "$--muted-foreground",
-                                      "content": "3 personas selected — Completed",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "normal"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "frame",
-                              "id": "jzYRS",
-                              "name": "Step - Discussion",
-                              "width": "fill_container",
-                              "gap": 12,
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "7oX0J",
-                                  "name": "s2icon",
-                                  "width": 28,
-                                  "height": 28,
-                                  "fill": "#eab308",
-                                  "cornerRadius": 9999,
-                                  "layout": "vertical",
-                                  "justifyContent": "center",
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "frame",
-                                      "id": "TL9ig",
-                                      "name": "s2dot",
-                                      "width": 8,
-                                      "height": 8,
-                                      "fill": "#ffffff",
-                                      "cornerRadius": 9999
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "VAPlE",
-                                  "name": "s2body",
-                                  "width": "fill_container",
-                                  "layout": "vertical",
-                                  "gap": 2,
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "WFGPT",
-                                      "name": "s2title",
-                                      "fill": "$--foreground",
-                                      "content": "Phase 2-B: Multi-Persona Discussion",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 13,
-                                      "fontWeight": "600"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "iS453",
-                                      "name": "s2sub",
-                                      "fill": "#eab308",
-                                      "content": "Round 1 of 3 — In progress",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "500"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "frame",
-                              "id": "OjApg",
-                              "name": "Step - Plan",
-                              "width": "fill_container",
-                              "gap": 12,
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "TEvSB",
-                                  "name": "s3icon",
-                                  "width": 28,
-                                  "height": 28,
-                                  "fill": "$--muted",
-                                  "cornerRadius": 9999,
-                                  "layout": "vertical",
-                                  "justifyContent": "center",
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "x5Auy",
-                                      "name": "s3num",
-                                      "fill": "$--muted-foreground",
-                                      "content": "3",
-                                      "textAlign": "center",
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "600"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "wIVTV",
-                                  "name": "s3body",
-                                  "width": "fill_container",
-                                  "layout": "vertical",
-                                  "gap": 2,
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "rVC0B",
-                                      "name": "s3title",
-                                      "fill": "$--muted-foreground",
-                                      "content": "Phase 2-C: Plan Confirmation",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 13,
-                                      "fontWeight": "500"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "9hy08",
-                                      "name": "s3sub",
-                                      "fill": "$--muted-foreground",
-                                      "content": "Waiting",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "normal"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "frame",
-                              "id": "FL2GT",
-                              "name": "Step - Execute",
-                              "width": "fill_container",
-                              "gap": 12,
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "C55MB",
-                                  "name": "s4icon",
-                                  "width": 28,
-                                  "height": 28,
-                                  "fill": "$--muted",
-                                  "cornerRadius": 9999,
-                                  "layout": "vertical",
-                                  "justifyContent": "center",
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "ZKyT9",
-                                      "name": "s4num",
-                                      "fill": "$--muted-foreground",
-                                      "content": "4",
-                                      "textAlign": "center",
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "600"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "RH5dx",
-                                  "name": "s4body",
-                                  "width": "fill_container",
-                                  "layout": "vertical",
-                                  "gap": 2,
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "bgPV8",
-                                      "name": "s4title",
-                                      "fill": "$--muted-foreground",
-                                      "content": "Phase 3: Code Execution",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 13,
-                                      "fontWeight": "500"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "jjs69",
-                                      "name": "s4sub",
-                                      "fill": "$--muted-foreground",
-                                      "content": "Waiting",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "normal"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        "bvhSM": {
-                          "enabled": false
-                        }
-                      }
-                    }
-                  ]
                 }
               ]
             }
@@ -6757,24 +6444,18 @@
               }
             },
             {
-              "type": "frame",
-              "id": "HtwBc",
-              "name": "nav3",
-              "layout": "vertical",
-              "gap": 4,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "icon_font",
-                  "id": "dn6pw",
-                  "name": "ic",
-                  "width": 28,
-                  "height": 28,
-                  "iconFontName": "plus-circle",
-                  "iconFontFamily": "lucide",
-                  "fill": "$--primary"
+              "id": "AA5gP",
+              "type": "ref",
+              "ref": "wCYPK",
+              "name": "gitNavItem",
+              "descendants": {
+                "4NO1q": {
+                  "iconFontName": "git-branch"
+                },
+                "FU8E3": {
+                  "content": "Git"
                 }
-              ]
+              }
             },
             {
               "id": "xoJlN",
@@ -7472,212 +7153,6 @@
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "500"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "CrQ5a",
-              "name": "SP Progress",
-              "width": "fill_container",
-              "fill": "$--card",
-              "cornerRadius": 8,
-              "stroke": {
-                "align": "inside",
-                "thickness": 1,
-                "fill": "$--border"
-              },
-              "layout": "vertical",
-              "gap": 12,
-              "padding": 16,
-              "children": [
-                {
-                  "type": "text",
-                  "id": "tOJ7B",
-                  "name": "prTitle",
-                  "fill": "$--foreground",
-                  "content": "Progress",
-                  "lineHeight": 1.4,
-                  "fontFamily": "Inter",
-                  "fontSize": 15,
-                  "fontWeight": "600"
-                },
-                {
-                  "type": "frame",
-                  "id": "GOUjp",
-                  "name": "s1",
-                  "width": "fill_container",
-                  "gap": 10,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "yWFim",
-                      "name": "s1ic",
-                      "width": 24,
-                      "height": 24,
-                      "fill": "#16a34a",
-                      "cornerRadius": 9999,
-                      "layout": "vertical",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "oUOWA",
-                          "name": "s1ck",
-                          "width": 12,
-                          "height": 12,
-                          "iconFontName": "check",
-                          "iconFontFamily": "lucide",
-                          "fill": "#ffffff"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "text",
-                      "id": "DUpDg",
-                      "name": "s1t",
-                      "fill": "$--foreground",
-                      "content": "Persona Selection",
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "500"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "pZGwB",
-                  "name": "s2",
-                  "width": "fill_container",
-                  "gap": 10,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "gsVls",
-                      "name": "s2ic",
-                      "width": 24,
-                      "height": 24,
-                      "fill": "#eab308",
-                      "cornerRadius": 9999,
-                      "layout": "vertical",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "bxsKQ",
-                          "name": "s2dot",
-                          "width": 6,
-                          "height": 6,
-                          "fill": "#ffffff",
-                          "cornerRadius": 9999
-                        }
-                      ]
-                    },
-                    {
-                      "type": "text",
-                      "id": "KD4cp",
-                      "name": "s2t",
-                      "fill": "#eab308",
-                      "content": "Discussion (Round 1/3)",
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "600"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "keqkb",
-                  "name": "s3",
-                  "width": "fill_container",
-                  "gap": 10,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "HHwZm",
-                      "name": "s3ic",
-                      "width": 24,
-                      "height": 24,
-                      "fill": "$--muted",
-                      "cornerRadius": 9999,
-                      "layout": "vertical",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "VnY0q",
-                          "name": "s3n",
-                          "fill": "$--muted-foreground",
-                          "content": "3",
-                          "textAlign": "center",
-                          "fontFamily": "Inter",
-                          "fontSize": 10,
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "text",
-                      "id": "EGSA9",
-                      "name": "s3t",
-                      "fill": "$--muted-foreground",
-                      "content": "Plan Confirmation",
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "uprmp",
-                  "name": "s4",
-                  "width": "fill_container",
-                  "gap": 10,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "r7O2L",
-                      "name": "s4ic",
-                      "width": 24,
-                      "height": 24,
-                      "fill": "$--muted",
-                      "cornerRadius": 9999,
-                      "layout": "vertical",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "Os5sX",
-                          "name": "s4n",
-                          "fill": "$--muted-foreground",
-                          "content": "4",
-                          "textAlign": "center",
-                          "fontFamily": "Inter",
-                          "fontSize": 10,
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "text",
-                      "id": "Ka2yP",
-                      "name": "s4t",
-                      "fill": "$--muted-foreground",
-                      "content": "Code Execution",
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -9301,24 +8776,18 @@
               }
             },
             {
-              "type": "frame",
-              "id": "h5MYQ",
-              "name": "nav3",
-              "layout": "vertical",
-              "gap": 4,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "icon_font",
-                  "id": "INZ73",
-                  "name": "ic",
-                  "width": 28,
-                  "height": 28,
-                  "iconFontName": "plus-circle",
-                  "iconFontFamily": "lucide",
-                  "fill": "$--primary"
+              "id": "YbofZ",
+              "type": "ref",
+              "ref": "wCYPK",
+              "name": "gitNavItem2",
+              "descendants": {
+                "4NO1q": {
+                  "iconFontName": "git-branch"
+                },
+                "FU8E3": {
+                  "content": "Git"
                 }
-              ]
+              }
             },
             {
               "id": "mwG31",
@@ -14698,6 +14167,24 @@
                   }
                 },
                 {
+                  "id": "IAANj",
+                  "type": "ref",
+                  "ref": "jBcUh",
+                  "name": "navGit",
+                  "width": "fill_container",
+                  "descendants": {
+                    "r6B2W": {
+                      "iconFontName": "git-branch"
+                    },
+                    "0Ru22": {
+                      "content": "Git"
+                    },
+                    "eSZOD": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
                   "id": "6eYn3",
                   "type": "ref",
                   "ref": "jBcUh",
@@ -15789,6 +15276,179 @@
                       "content": "Delete"
                     }
                   }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "qMrRv",
+          "x": 780,
+          "y": 1200,
+          "name": "Git File Row",
+          "reusable": true,
+          "width": "fill_container(360)",
+          "stroke": {
+            "align": "inside",
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "$--border"
+          },
+          "gap": 12,
+          "padding": [
+            10,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "FjQzj",
+              "name": "statusBadge",
+              "width": 28,
+              "fill": "#dbeafe",
+              "cornerRadius": 4,
+              "padding": [
+                2,
+                6
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "NzDR6",
+                  "name": "statusText",
+                  "fill": "#1d4ed8",
+                  "content": "M",
+                  "textAlign": "center",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "sOQQQ",
+              "name": "fileName",
+              "fill": "$--foreground",
+              "content": "src/example/file.ts",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "fkBBE",
+          "x": 780,
+          "y": 1260,
+          "name": "Git Commit Row",
+          "reusable": true,
+          "width": "fill_container(360)",
+          "stroke": {
+            "align": "inside",
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "$--border"
+          },
+          "gap": 12,
+          "padding": [
+            12,
+            16
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "tW9qC",
+              "name": "graphCol",
+              "width": 24,
+              "height": "fill_container",
+              "layout": "none",
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "6XWBu",
+                  "x": 7,
+                  "y": 3,
+                  "name": "dot",
+                  "fill": "$--primary",
+                  "width": 10,
+                  "height": 10
+                },
+                {
+                  "type": "rectangle",
+                  "id": "L0rsy",
+                  "x": 11,
+                  "y": 16,
+                  "name": "line",
+                  "fill": "$--border",
+                  "width": 2,
+                  "height": "fill_container(0)"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "JGQwU",
+              "name": "info",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 4,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "051IM",
+                  "name": "message",
+                  "fill": "$--foreground",
+                  "content": "feat: コミットメッセージ",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "mUJG6",
+                  "name": "meta",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ou1Xr",
+                      "name": "hash",
+                      "fill": "$--primary",
+                      "content": "a1b2c3d",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "qMpXB",
+                      "name": "time",
+                      "fill": "$--muted-foreground",
+                      "content": "2時間前",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "dpcPa",
+                      "name": "author",
+                      "fill": "$--muted-foreground",
+                      "content": "Author",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
                 }
               ]
             }
@@ -17555,319 +17215,6 @@
                       ]
                     }
                   ]
-                },
-                {
-                  "type": "frame",
-                  "id": "LgL0t",
-                  "name": "Progress Section",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": 16,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "FGEWy",
-                      "name": "prTitle",
-                      "fill": "$--foreground",
-                      "content": "Task Progress",
-                      "lineHeight": 1.4,
-                      "fontFamily": "Inter",
-                      "fontSize": 16,
-                      "fontWeight": "600"
-                    },
-                    {
-                      "id": "8kdHw",
-                      "type": "ref",
-                      "ref": "pcGlv",
-                      "width": "fill_container",
-                      "height": "fit_content",
-                      "name": "progressCard",
-                      "descendants": {
-                        "CgJv7": {
-                          "enabled": false
-                        },
-                        "frWPV": {
-                          "type": "frame",
-                          "id": "O855v",
-                          "name": "Progress Content",
-                          "width": "fill_container",
-                          "layout": "vertical",
-                          "gap": 20,
-                          "padding": 24,
-                          "children": [
-                            {
-                              "type": "frame",
-                              "id": "05VdP",
-                              "name": "Step - Persona",
-                              "width": "fill_container",
-                              "gap": 12,
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "czLUU",
-                                  "name": "s1icon",
-                                  "width": 28,
-                                  "height": 28,
-                                  "fill": "#16a34a",
-                                  "cornerRadius": 9999,
-                                  "layout": "vertical",
-                                  "justifyContent": "center",
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon_font",
-                                      "id": "Yrrxs",
-                                      "name": "s1check",
-                                      "width": 14,
-                                      "height": 14,
-                                      "iconFontName": "check",
-                                      "iconFontFamily": "lucide",
-                                      "fill": "#ffffff"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "BcDXH",
-                                  "name": "s1body",
-                                  "width": "fill_container",
-                                  "layout": "vertical",
-                                  "gap": 2,
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "ld8d0",
-                                      "name": "s1title",
-                                      "fill": "$--foreground",
-                                      "content": "Phase 2-A: Persona Selection",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 13,
-                                      "fontWeight": "600"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "AXlGC",
-                                      "name": "s1sub",
-                                      "fill": "$--muted-foreground",
-                                      "content": "3 personas selected — Completed",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "normal"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "frame",
-                              "id": "NATYL",
-                              "name": "Step - Discussion",
-                              "width": "fill_container",
-                              "gap": 12,
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "Cvvsd",
-                                  "name": "s2icon",
-                                  "width": 28,
-                                  "height": 28,
-                                  "fill": "#eab308",
-                                  "cornerRadius": 9999,
-                                  "layout": "vertical",
-                                  "justifyContent": "center",
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "frame",
-                                      "id": "UcW5N",
-                                      "name": "s2dot",
-                                      "width": 8,
-                                      "height": 8,
-                                      "fill": "#ffffff",
-                                      "cornerRadius": 9999
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "pcDqw",
-                                  "name": "s2body",
-                                  "width": "fill_container",
-                                  "layout": "vertical",
-                                  "gap": 2,
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "O6aXn",
-                                      "name": "s2title",
-                                      "fill": "$--foreground",
-                                      "content": "Phase 2-B: Multi-Persona Discussion",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 13,
-                                      "fontWeight": "600"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "DDDeS",
-                                      "name": "s2sub",
-                                      "fill": "#eab308",
-                                      "content": "Round 1 of 3 — In progress",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "500"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "frame",
-                              "id": "WYjpl",
-                              "name": "Step - Plan",
-                              "width": "fill_container",
-                              "gap": 12,
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "obeFK",
-                                  "name": "s3icon",
-                                  "width": 28,
-                                  "height": 28,
-                                  "fill": "$--muted",
-                                  "cornerRadius": 9999,
-                                  "layout": "vertical",
-                                  "justifyContent": "center",
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "4P95y",
-                                      "name": "s3num",
-                                      "fill": "$--muted-foreground",
-                                      "content": "3",
-                                      "textAlign": "center",
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "600"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "lN7x5",
-                                  "name": "s3body",
-                                  "width": "fill_container",
-                                  "layout": "vertical",
-                                  "gap": 2,
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "K1Dwz",
-                                      "name": "s3title",
-                                      "fill": "$--muted-foreground",
-                                      "content": "Phase 2-C: Plan Confirmation",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 13,
-                                      "fontWeight": "500"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "OnoC4",
-                                      "name": "s3sub",
-                                      "fill": "$--muted-foreground",
-                                      "content": "Waiting",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "normal"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "frame",
-                              "id": "8nlYT",
-                              "name": "Step - Execute",
-                              "width": "fill_container",
-                              "gap": 12,
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "CBCqd",
-                                  "name": "s4icon",
-                                  "width": 28,
-                                  "height": 28,
-                                  "fill": "$--muted",
-                                  "cornerRadius": 9999,
-                                  "layout": "vertical",
-                                  "justifyContent": "center",
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "qHJgh",
-                                      "name": "s4num",
-                                      "fill": "$--muted-foreground",
-                                      "content": "4",
-                                      "textAlign": "center",
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "600"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "a9AtO",
-                                  "name": "s4body",
-                                  "width": "fill_container",
-                                  "layout": "vertical",
-                                  "gap": 2,
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "2X7hQ",
-                                      "name": "s4title",
-                                      "fill": "$--muted-foreground",
-                                      "content": "Phase 3: Code Execution",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 13,
-                                      "fontWeight": "500"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "AgjQ6",
-                                      "name": "s4sub",
-                                      "fill": "$--muted-foreground",
-                                      "content": "Waiting",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "normal"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        "bvhSM": {
-                          "enabled": false
-                        }
-                      }
-                    }
-                  ]
                 }
               ]
             }
@@ -18754,319 +18101,6 @@
                       ]
                     }
                   ]
-                },
-                {
-                  "type": "frame",
-                  "id": "YHeVM",
-                  "name": "Progress Section",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": 16,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "pXnCF",
-                      "name": "prTitle",
-                      "fill": "$--foreground",
-                      "content": "Task Progress",
-                      "lineHeight": 1.4,
-                      "fontFamily": "Inter",
-                      "fontSize": 16,
-                      "fontWeight": "600"
-                    },
-                    {
-                      "id": "KQgVz",
-                      "type": "ref",
-                      "ref": "pcGlv",
-                      "width": "fill_container",
-                      "height": "fit_content",
-                      "name": "progressCard",
-                      "descendants": {
-                        "CgJv7": {
-                          "enabled": false
-                        },
-                        "frWPV": {
-                          "type": "frame",
-                          "id": "83BRU",
-                          "name": "Progress Content",
-                          "width": "fill_container",
-                          "layout": "vertical",
-                          "gap": 20,
-                          "padding": 24,
-                          "children": [
-                            {
-                              "type": "frame",
-                              "id": "vjmLx",
-                              "name": "Step - Persona",
-                              "width": "fill_container",
-                              "gap": 12,
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "PrLBI",
-                                  "name": "s1icon",
-                                  "width": 28,
-                                  "height": 28,
-                                  "fill": "#16a34a",
-                                  "cornerRadius": 9999,
-                                  "layout": "vertical",
-                                  "justifyContent": "center",
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon_font",
-                                      "id": "WjK0A",
-                                      "name": "s1check",
-                                      "width": 14,
-                                      "height": 14,
-                                      "iconFontName": "check",
-                                      "iconFontFamily": "lucide",
-                                      "fill": "#ffffff"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "Wr8nf",
-                                  "name": "s1body",
-                                  "width": "fill_container",
-                                  "layout": "vertical",
-                                  "gap": 2,
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "7lTk3",
-                                      "name": "s1title",
-                                      "fill": "$--foreground",
-                                      "content": "Phase 2-A: Persona Selection",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 13,
-                                      "fontWeight": "600"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "2rMrF",
-                                      "name": "s1sub",
-                                      "fill": "$--muted-foreground",
-                                      "content": "3 personas selected — Completed",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "normal"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "frame",
-                              "id": "0cASs",
-                              "name": "Step - Discussion",
-                              "width": "fill_container",
-                              "gap": 12,
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "yhtI4",
-                                  "name": "s2icon",
-                                  "width": 28,
-                                  "height": 28,
-                                  "fill": "#eab308",
-                                  "cornerRadius": 9999,
-                                  "layout": "vertical",
-                                  "justifyContent": "center",
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "frame",
-                                      "id": "fLK15",
-                                      "name": "s2dot",
-                                      "width": 8,
-                                      "height": 8,
-                                      "fill": "#ffffff",
-                                      "cornerRadius": 9999
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "GskLd",
-                                  "name": "s2body",
-                                  "width": "fill_container",
-                                  "layout": "vertical",
-                                  "gap": 2,
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "ezwwJ",
-                                      "name": "s2title",
-                                      "fill": "$--foreground",
-                                      "content": "Phase 2-B: Multi-Persona Discussion",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 13,
-                                      "fontWeight": "600"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "nuYWN",
-                                      "name": "s2sub",
-                                      "fill": "#eab308",
-                                      "content": "Round 1 of 3 — In progress",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "500"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "frame",
-                              "id": "6HSD4",
-                              "name": "Step - Plan",
-                              "width": "fill_container",
-                              "gap": 12,
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "tovtl",
-                                  "name": "s3icon",
-                                  "width": 28,
-                                  "height": 28,
-                                  "fill": "$--muted",
-                                  "cornerRadius": 9999,
-                                  "layout": "vertical",
-                                  "justifyContent": "center",
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "ruHXi",
-                                      "name": "s3num",
-                                      "fill": "$--muted-foreground",
-                                      "content": "3",
-                                      "textAlign": "center",
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "600"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "DqJDm",
-                                  "name": "s3body",
-                                  "width": "fill_container",
-                                  "layout": "vertical",
-                                  "gap": 2,
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "BUlZp",
-                                      "name": "s3title",
-                                      "fill": "$--muted-foreground",
-                                      "content": "Phase 2-C: Plan Confirmation",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 13,
-                                      "fontWeight": "500"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "7fHrO",
-                                      "name": "s3sub",
-                                      "fill": "$--muted-foreground",
-                                      "content": "Waiting",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "normal"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "frame",
-                              "id": "ionGG",
-                              "name": "Step - Execute",
-                              "width": "fill_container",
-                              "gap": 12,
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "type": "frame",
-                                  "id": "c9nHy",
-                                  "name": "s4icon",
-                                  "width": 28,
-                                  "height": 28,
-                                  "fill": "$--muted",
-                                  "cornerRadius": 9999,
-                                  "layout": "vertical",
-                                  "justifyContent": "center",
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "rB7MZ",
-                                      "name": "s4num",
-                                      "fill": "$--muted-foreground",
-                                      "content": "4",
-                                      "textAlign": "center",
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "600"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "L11ag",
-                                  "name": "s4body",
-                                  "width": "fill_container",
-                                  "layout": "vertical",
-                                  "gap": 2,
-                                  "children": [
-                                    {
-                                      "type": "text",
-                                      "id": "0GJqk",
-                                      "name": "s4title",
-                                      "fill": "$--muted-foreground",
-                                      "content": "Phase 3: Code Execution",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 13,
-                                      "fontWeight": "500"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "iha7Y",
-                                      "name": "s4sub",
-                                      "fill": "$--muted-foreground",
-                                      "content": "Waiting",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "Inter",
-                                      "fontSize": 12,
-                                      "fontWeight": "normal"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        "bvhSM": {
-                          "enabled": false
-                        }
-                      }
-                    }
-                  ]
                 }
               ]
             }
@@ -19341,6 +18375,2658 @@
                   }
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "TySUT",
+      "x": 0,
+      "y": 9674,
+      "name": "Cognac - Git",
+      "theme": {
+        "Accent": "Blue"
+      },
+      "width": 1440,
+      "height": 900,
+      "fill": "$--background",
+      "children": [
+        {
+          "id": "Nfxvq",
+          "type": "ref",
+          "ref": "vaicN",
+          "name": "sidebar",
+          "height": "fill_container",
+          "descendants": {
+            "S0PJj": {
+              "fill": []
+            },
+            "IAANj": {
+              "fill": "$--sidebar-accent"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "G6xuw",
+          "name": "Main Content",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": 32,
+          "children": [
+            {
+              "id": "upfb2",
+              "type": "ref",
+              "ref": "QGxfO",
+              "name": "pageHeader",
+              "width": "fill_container",
+              "descendants": {
+                "gtEww": {
+                  "content": "Git"
+                },
+                "WHFkd": {
+                  "content": "ブランチ管理、変更の確認、コミット操作"
+                },
+                "7W70b": {
+                  "children": [
+                    {
+                      "id": "FxVIF",
+                      "type": "ref",
+                      "ref": "C10zH",
+                      "descendants": {
+                        "l8v2I": {
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "IwXLo",
+                              "x": 0,
+                              "y": 0,
+                              "width": 16,
+                              "height": 16,
+                              "iconFontName": "refresh-cw",
+                              "iconFontFamily": "lucide",
+                              "fill": "$--foreground"
+                            }
+                          ]
+                        },
+                        "poRwU": {
+                          "content": "Fetch"
+                        }
+                      }
+                    },
+                    {
+                      "id": "3BPoo",
+                      "type": "ref",
+                      "ref": "C10zH",
+                      "descendants": {
+                        "l8v2I": {
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "2BkHu",
+                              "x": 0,
+                              "y": 0,
+                              "width": 16,
+                              "height": 16,
+                              "iconFontName": "git-merge",
+                              "iconFontFamily": "lucide",
+                              "fill": "$--foreground"
+                            }
+                          ]
+                        },
+                        "poRwU": {
+                          "content": "マージ"
+                        }
+                      }
+                    },
+                    {
+                      "id": "qRxru",
+                      "type": "ref",
+                      "ref": "VSnC2",
+                      "descendants": {
+                        "8jVfJ": {
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "QmM6S",
+                              "x": 0,
+                              "y": 0,
+                              "width": 16,
+                              "height": 16,
+                              "iconFontName": "upload",
+                              "iconFontFamily": "lucide",
+                              "fill": "$--primary-foreground"
+                            }
+                          ]
+                        },
+                        "8tnXG": {
+                          "content": "Push"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "qgonW",
+              "name": "Branch Row",
+              "width": "fill_container",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "0URhU",
+                  "name": "Branch Selector",
+                  "fill": "$--background",
+                  "cornerRadius": 6,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$--border"
+                  },
+                  "gap": 8,
+                  "padding": [
+                    8,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "hf6m5",
+                      "name": "branchIcon",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "git-branch",
+                      "iconFontFamily": "lucide",
+                      "fill": "$--primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "jNK82",
+                      "name": "branchName",
+                      "fill": "$--foreground",
+                      "content": "feat/git",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "uyOFM",
+                      "name": "branchChevron",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "chevron-down",
+                      "iconFontFamily": "lucide",
+                      "fill": "$--muted-foreground"
+                    }
+                  ]
+                },
+                {
+                  "id": "sIhk4",
+                  "type": "ref",
+                  "ref": "C10zH",
+                  "name": "newBranchBtn",
+                  "descendants": {
+                    "l8v2I": {
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "wy5aW",
+                          "x": 0,
+                          "y": 0,
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "git-branch-plus",
+                          "iconFontFamily": "lucide",
+                          "fill": "$--foreground"
+                        }
+                      ]
+                    },
+                    "poRwU": {
+                      "content": "新規ブランチ"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "4yoFj",
+                  "name": "Remote Status",
+                  "fill": "#dbeafe",
+                  "cornerRadius": 16,
+                  "gap": 8,
+                  "padding": [
+                    6,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "AXKwv",
+                      "name": "remoteIcon",
+                      "width": 14,
+                      "height": 14,
+                      "iconFontName": "arrow-up",
+                      "iconFontFamily": "lucide",
+                      "fill": "#1d4ed8"
+                    },
+                    {
+                      "type": "text",
+                      "id": "YnGPs",
+                      "name": "remoteText",
+                      "fill": "#1d4ed8",
+                      "content": "2 commits ahead",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "N5JxD",
+              "name": "Content Columns",
+              "width": "fill_container",
+              "height": "fill_container",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "wRQeL",
+                  "name": "Left Column",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "vUhue",
+                      "name": "Changes Card",
+                      "width": "fill_container",
+                      "fill": "$--card",
+                      "cornerRadius": 8,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$--border"
+                      },
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#0000000d",
+                        "offset": {
+                          "x": 0,
+                          "y": 1
+                        },
+                        "blur": 1.75
+                      },
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Vk5Cf",
+                          "name": "Changes Header",
+                          "width": "fill_container",
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": {
+                              "bottom": 1
+                            },
+                            "fill": "$--border"
+                          },
+                          "gap": 12,
+                          "padding": 16,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "GjM8W",
+                              "name": "Left",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "7tzKC",
+                                  "name": "changesTitle",
+                                  "fill": "$--foreground",
+                                  "content": "変更ファイル",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 14,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "xDrWP",
+                                  "name": "Count Badge",
+                                  "fill": "$--primary",
+                                  "cornerRadius": 10,
+                                  "padding": [
+                                    2,
+                                    8
+                                  ],
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "oGgw2",
+                                      "name": "changesCountText",
+                                      "fill": "$--primary-foreground",
+                                      "content": "5",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 12,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "id": "lJD2T",
+                              "type": "ref",
+                              "ref": "C10zH",
+                              "name": "discardBtn",
+                              "descendants": {
+                                "l8v2I": {
+                                  "children": [
+                                    {
+                                      "type": "icon_font",
+                                      "id": "ydHuu",
+                                      "x": 0,
+                                      "y": 0,
+                                      "width": 16,
+                                      "height": 16,
+                                      "iconFontName": "trash-2",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "$--destructive"
+                                    }
+                                  ]
+                                },
+                                "poRwU": {
+                                  "content": "全て破棄",
+                                  "fill": "$--destructive",
+                                  "fontSize": 12
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "0Fg4c",
+                          "name": "File List",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "id": "SWnDa",
+                              "type": "ref",
+                              "ref": "qMrRv",
+                              "width": "fill_container",
+                              "name": "f1",
+                              "children": [
+                                {
+                                  "id": "FjQzj",
+                                  "type": "ref",
+                                  "ref": "FjQzj",
+                                  "fill": "#dbeafe",
+                                  "children": [
+                                    {
+                                      "id": "NzDR6",
+                                      "type": "ref",
+                                      "ref": "NzDR6",
+                                      "content": "M",
+                                      "fill": "#1d4ed8",
+                                      "x": 8.5,
+                                      "y": 2
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "sOQQQ",
+                                  "type": "ref",
+                                  "ref": "sOQQQ",
+                                  "content": "src/api/git.ts"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "flVAT",
+                              "type": "ref",
+                              "ref": "qMrRv",
+                              "width": "fill_container",
+                              "name": "f2",
+                              "children": [
+                                {
+                                  "id": "FjQzj",
+                                  "type": "ref",
+                                  "ref": "FjQzj",
+                                  "fill": "#dcfce7",
+                                  "children": [
+                                    {
+                                      "id": "NzDR6",
+                                      "type": "ref",
+                                      "ref": "NzDR6",
+                                      "content": "A",
+                                      "fill": "#16a34a",
+                                      "x": 9.5,
+                                      "y": 2
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "sOQQQ",
+                                  "type": "ref",
+                                  "ref": "sOQQQ",
+                                  "content": "src/api/git-routes.ts"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "2cS84",
+                              "type": "ref",
+                              "ref": "qMrRv",
+                              "width": "fill_container",
+                              "name": "f3",
+                              "children": [
+                                {
+                                  "id": "FjQzj",
+                                  "type": "ref",
+                                  "ref": "FjQzj",
+                                  "fill": "#fef2f2",
+                                  "children": [
+                                    {
+                                      "id": "NzDR6",
+                                      "type": "ref",
+                                      "ref": "NzDR6",
+                                      "content": "D",
+                                      "fill": "#ef4444",
+                                      "x": 10,
+                                      "y": 2
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "sOQQQ",
+                                  "type": "ref",
+                                  "ref": "sOQQQ",
+                                  "content": "src/runner/auto-commit.ts"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "8MPSe",
+                              "type": "ref",
+                              "ref": "qMrRv",
+                              "width": "fill_container",
+                              "name": "f4",
+                              "children": [
+                                {
+                                  "id": "FjQzj",
+                                  "type": "ref",
+                                  "ref": "FjQzj",
+                                  "fill": "#dbeafe",
+                                  "children": [
+                                    {
+                                      "id": "NzDR6",
+                                      "type": "ref",
+                                      "ref": "NzDR6",
+                                      "content": "M",
+                                      "fill": "#1d4ed8",
+                                      "x": 8.5,
+                                      "y": 2
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "sOQQQ",
+                                  "type": "ref",
+                                  "ref": "sOQQQ",
+                                  "content": "src/runner/task-runner.ts"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "MOcbI",
+                              "type": "ref",
+                              "ref": "qMrRv",
+                              "width": "fill_container",
+                              "name": "f5",
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 0,
+                                "fill": "$--border"
+                              },
+                              "children": [
+                                {
+                                  "id": "FjQzj",
+                                  "type": "ref",
+                                  "ref": "FjQzj",
+                                  "fill": "#f5f5f4",
+                                  "x": 16,
+                                  "y": 10,
+                                  "children": [
+                                    {
+                                      "id": "NzDR6",
+                                      "type": "ref",
+                                      "ref": "NzDR6",
+                                      "content": "?",
+                                      "fill": "$--muted-foreground",
+                                      "x": 10.5,
+                                      "y": 2
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "sOQQQ",
+                                  "type": "ref",
+                                  "ref": "sOQQQ",
+                                  "content": "src/api/merge-handler.ts",
+                                  "x": 56,
+                                  "y": 10.5
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "5lhf9",
+                          "name": "AI Commit Area",
+                          "width": "fill_container",
+                          "padding": 16,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "id": "ydnfX",
+                              "type": "ref",
+                              "ref": "VSnC2",
+                              "name": "aiCommitBtn",
+                              "width": "fill_container",
+                              "descendants": {
+                                "8jVfJ": {
+                                  "children": [
+                                    {
+                                      "type": "icon_font",
+                                      "id": "RR7EW",
+                                      "x": 0,
+                                      "y": 0,
+                                      "width": 16,
+                                      "height": 16,
+                                      "iconFontName": "bot",
+                                      "iconFontFamily": "lucide",
+                                      "fill": "$--primary-foreground"
+                                    }
+                                  ]
+                                },
+                                "8tnXG": {
+                                  "content": "AI コミット"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "iBeq5",
+                  "name": "Right Column",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "P9vrb",
+                      "name": "Log Card",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "fill": "$--card",
+                      "cornerRadius": 8,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$--border"
+                      },
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#0000000d",
+                        "offset": {
+                          "x": 0,
+                          "y": 1
+                        },
+                        "blur": 1.75
+                      },
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "C6B3x",
+                          "name": "Log Header",
+                          "width": "fill_container",
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": {
+                              "bottom": 1
+                            },
+                            "fill": "$--border"
+                          },
+                          "gap": 12,
+                          "padding": 16,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "EyTfc",
+                              "name": "logTitle",
+                              "fill": "$--foreground",
+                              "content": "コミット履歴",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "IE5Ft",
+                          "name": "Log List",
+                          "width": "fill_container",
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "id": "Jg87m",
+                              "type": "ref",
+                              "ref": "fkBBE",
+                              "width": "fill_container",
+                              "name": "c1",
+                              "descendants": {
+                                "6XWBu": {
+                                  "fill": "#2563eb"
+                                },
+                                "L0rsy": {
+                                  "fill": "#2563eb"
+                                },
+                                "051IM": {
+                                  "content": "feat: Git API エンドポイント追加"
+                                },
+                                "ou1Xr": {
+                                  "content": "a1b2c3d"
+                                },
+                                "qMpXB": {
+                                  "content": "2時間前"
+                                },
+                                "dpcPa": {
+                                  "content": "Claude"
+                                }
+                              }
+                            },
+                            {
+                              "id": "nKndE",
+                              "type": "ref",
+                              "ref": "fkBBE",
+                              "width": "fill_container",
+                              "name": "c2",
+                              "descendants": {
+                                "6XWBu": {
+                                  "fill": "#2563eb"
+                                },
+                                "L0rsy": {
+                                  "fill": "#2563eb"
+                                },
+                                "051IM": {
+                                  "content": "fix: タスクランナーのタイムアウト修正"
+                                },
+                                "ou1Xr": {
+                                  "content": "e4f5g6h"
+                                },
+                                "qMpXB": {
+                                  "content": "5時間前"
+                                },
+                                "dpcPa": {
+                                  "content": "natani"
+                                }
+                              }
+                            },
+                            {
+                              "id": "VuihC",
+                              "type": "ref",
+                              "ref": "fkBBE",
+                              "width": "fill_container",
+                              "name": "c3",
+                              "descendants": {
+                                "6XWBu": {
+                                  "fill": "#16a34a"
+                                },
+                                "L0rsy": {
+                                  "fill": "#16a34a"
+                                },
+                                "051IM": {
+                                  "content": "feat: SSEストリーミング実装"
+                                },
+                                "ou1Xr": {
+                                  "content": "i7j8k9l"
+                                },
+                                "qMpXB": {
+                                  "content": "1日前"
+                                },
+                                "dpcPa": {
+                                  "content": "Claude"
+                                }
+                              }
+                            },
+                            {
+                              "id": "h2IRB",
+                              "type": "ref",
+                              "ref": "fkBBE",
+                              "width": "fill_container",
+                              "name": "c4",
+                              "descendants": {
+                                "6XWBu": {
+                                  "fill": "#7c3aed"
+                                },
+                                "L0rsy": {
+                                  "fill": "#7c3aed"
+                                },
+                                "051IM": {
+                                  "content": "Merge feat/sse into main",
+                                  "fill": "#7c3aed",
+                                  "fontWeight": "600"
+                                },
+                                "ou1Xr": {
+                                  "content": "c5d6e7f"
+                                },
+                                "qMpXB": {
+                                  "content": "1日前"
+                                },
+                                "dpcPa": {
+                                  "content": "natani"
+                                }
+                              }
+                            },
+                            {
+                              "id": "pPwSW",
+                              "type": "ref",
+                              "ref": "fkBBE",
+                              "width": "fill_container",
+                              "name": "c5",
+                              "descendants": {
+                                "6XWBu": {
+                                  "fill": "#2563eb"
+                                },
+                                "L0rsy": {
+                                  "fill": "#2563eb"
+                                },
+                                "051IM": {
+                                  "content": "refactor: DB初期化処理をリファクタ"
+                                },
+                                "ou1Xr": {
+                                  "content": "b3c4d5e"
+                                },
+                                "qMpXB": {
+                                  "content": "2日前"
+                                },
+                                "dpcPa": {
+                                  "content": "natani"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "A0mek",
+      "x": 3280,
+      "y": 7047,
+      "name": "SP - Git",
+      "theme": {
+        "Accent": "Blue"
+      },
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$--background",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "uHOtV",
+          "type": "ref",
+          "ref": "jgbHC",
+          "name": "spHeader",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "RXM74",
+          "name": "SP Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 16,
+          "padding": 16,
+          "children": [
+            {
+              "type": "frame",
+              "id": "8v1Q6",
+              "name": "SP Title Row",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ALAoM",
+                  "name": "spTitle",
+                  "fill": "$--foreground",
+                  "content": "Git",
+                  "fontFamily": "Inter",
+                  "fontSize": 20,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "z0qLm",
+                  "name": "Actions",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "vQgsa",
+                      "type": "ref",
+                      "ref": "3f2VW",
+                      "name": "fetchBtn",
+                      "descendants": {
+                        "AeXMI": {
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "EWOUk",
+                              "x": 0,
+                              "y": 0,
+                              "width": 16,
+                              "height": 16,
+                              "iconFontName": "refresh-cw",
+                              "iconFontFamily": "lucide",
+                              "fill": "$--foreground"
+                            }
+                          ]
+                        },
+                        "UZfKV": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "CqtlH",
+                      "type": "ref",
+                      "ref": "3f2VW",
+                      "name": "pullBtn",
+                      "descendants": {
+                        "AeXMI": {
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "H6h9b",
+                              "x": 0,
+                              "y": 0,
+                              "width": 16,
+                              "height": 16,
+                              "iconFontName": "git-merge",
+                              "iconFontFamily": "lucide",
+                              "fill": "$--foreground"
+                            }
+                          ]
+                        },
+                        "UZfKV": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "9WT7h",
+                      "type": "ref",
+                      "ref": "VSnC2",
+                      "name": "pushBtn",
+                      "descendants": {
+                        "8jVfJ": {
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "ttGYJ",
+                              "x": 0,
+                              "y": 0,
+                              "width": 16,
+                              "height": 16,
+                              "iconFontName": "upload",
+                              "iconFontFamily": "lucide",
+                              "fill": "$--primary-foreground"
+                            }
+                          ]
+                        },
+                        "8tnXG": {
+                          "enabled": false
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "fy4dr",
+              "name": "SP Branch Row",
+              "width": "fill_container",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "xDzG9",
+                  "name": "Branch Selector",
+                  "width": "fill_container",
+                  "fill": "$--background",
+                  "cornerRadius": 6,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$--border"
+                  },
+                  "gap": 8,
+                  "padding": [
+                    8,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "yLE7J",
+                      "name": "spBrIcon",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "git-branch",
+                      "iconFontFamily": "lucide",
+                      "fill": "$--primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "sbKlb",
+                      "name": "spBrName",
+                      "fill": "$--foreground",
+                      "content": "feat/git",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "YT7Tm",
+                      "name": "spBrChev",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "chevron-down",
+                      "iconFontFamily": "lucide",
+                      "fill": "$--muted-foreground"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "jvWf1",
+                  "name": "Remote Badge",
+                  "fill": "#dbeafe",
+                  "cornerRadius": 16,
+                  "gap": 4,
+                  "padding": [
+                    6,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "RfDP8",
+                      "name": "spRemIcon",
+                      "width": 12,
+                      "height": 12,
+                      "iconFontName": "arrow-up",
+                      "iconFontFamily": "lucide",
+                      "fill": "#1d4ed8"
+                    },
+                    {
+                      "type": "text",
+                      "id": "sfqo5",
+                      "name": "spRemText",
+                      "fill": "#1d4ed8",
+                      "content": "2",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "lPblY",
+              "name": "SP Changes",
+              "width": "fill_container",
+              "fill": "$--card",
+              "cornerRadius": 8,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "$--border"
+              },
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "LTlZ4",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "bottom": 1
+                    },
+                    "fill": "$--border"
+                  },
+                  "padding": [
+                    12,
+                    16
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Vuc1S",
+                      "name": "Left",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ZVpPQ",
+                          "name": "spChTitle",
+                          "fill": "$--foreground",
+                          "content": "変更ファイル",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Y3g53",
+                          "name": "Badge",
+                          "fill": "$--primary",
+                          "cornerRadius": 10,
+                          "padding": [
+                            2,
+                            6
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "QAHMP",
+                              "name": "spChBdgTx",
+                              "fill": "$--primary-foreground",
+                              "content": "5",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "Tz0T9",
+                      "type": "ref",
+                      "ref": "3f2VW",
+                      "name": "discardBtn",
+                      "descendants": {
+                        "AeXMI": {
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "svoVZ",
+                              "x": 0,
+                              "y": 0,
+                              "width": 16,
+                              "height": 16,
+                              "iconFontName": "trash-2",
+                              "iconFontFamily": "lucide",
+                              "fill": "$--destructive"
+                            }
+                          ]
+                        },
+                        "UZfKV": {
+                          "enabled": false
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "febog",
+                  "name": "SP File List",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "id": "s6JOI",
+                      "type": "ref",
+                      "ref": "qMrRv",
+                      "width": "fill_container",
+                      "name": "sf1",
+                      "descendants": {
+                        "FjQzj": {
+                          "fill": "#dbeafe"
+                        },
+                        "NzDR6": {
+                          "content": "M",
+                          "fill": "#1d4ed8"
+                        },
+                        "sOQQQ": {
+                          "content": "src/api/git.ts"
+                        }
+                      }
+                    },
+                    {
+                      "id": "cfEAM",
+                      "type": "ref",
+                      "ref": "qMrRv",
+                      "width": "fill_container",
+                      "name": "sf2",
+                      "descendants": {
+                        "FjQzj": {
+                          "fill": "#dcfce7"
+                        },
+                        "NzDR6": {
+                          "content": "A",
+                          "fill": "#16a34a"
+                        },
+                        "sOQQQ": {
+                          "content": "src/api/git-routes.ts"
+                        }
+                      }
+                    },
+                    {
+                      "id": "fBz0D",
+                      "type": "ref",
+                      "ref": "qMrRv",
+                      "width": "fill_container",
+                      "name": "sf3",
+                      "descendants": {
+                        "FjQzj": {
+                          "fill": "#fef2f2"
+                        },
+                        "NzDR6": {
+                          "content": "D",
+                          "fill": "#ef4444"
+                        },
+                        "sOQQQ": {
+                          "content": "src/runner/auto-commit.ts"
+                        }
+                      }
+                    },
+                    {
+                      "id": "FOewH",
+                      "type": "ref",
+                      "ref": "qMrRv",
+                      "width": "fill_container",
+                      "name": "sf4",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$--border"
+                      },
+                      "descendants": {
+                        "FjQzj": {
+                          "fill": "#dbeafe",
+                          "x": 16,
+                          "y": 10
+                        },
+                        "NzDR6": {
+                          "content": "M",
+                          "fill": "#1d4ed8"
+                        },
+                        "sOQQQ": {
+                          "content": "src/runner/task-runner.ts",
+                          "x": 56,
+                          "y": 10.5
+                        }
+                      }
+                    },
+                    {
+                      "id": "hf7dB",
+                      "type": "ref",
+                      "ref": "qMrRv",
+                      "width": "fill_container",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 0,
+                        "fill": "$--border"
+                      },
+                      "name": "f5",
+                      "children": [
+                        {
+                          "id": "FjQzj",
+                          "type": "ref",
+                          "ref": "FjQzj",
+                          "fill": "#f5f5f4",
+                          "children": [
+                            {
+                              "id": "NzDR6",
+                              "type": "ref",
+                              "ref": "NzDR6",
+                              "content": "?",
+                              "fill": "$--muted-foreground"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "sOQQQ",
+                          "type": "ref",
+                          "ref": "sOQQQ",
+                          "content": "src/api/merge-handler.ts"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "sAGxn",
+              "type": "ref",
+              "ref": "VSnC2",
+              "name": "aiCommitBtn",
+              "width": "fill_container",
+              "descendants": {
+                "8jVfJ": {
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "e2bpM",
+                      "x": 0,
+                      "y": 0,
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "bot",
+                      "iconFontFamily": "lucide",
+                      "fill": "$--primary-foreground"
+                    }
+                  ]
+                },
+                "8tnXG": {
+                  "content": "AI コミット"
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "sM9gL",
+              "name": "SP Log Section",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "$--card",
+              "cornerRadius": 8,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "$--border"
+              },
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "sPERX",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "bottom": 1
+                    },
+                    "fill": "$--border"
+                  },
+                  "padding": [
+                    12,
+                    16
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "PwbXT",
+                      "name": "spLogTitle",
+                      "fill": "$--foreground",
+                      "content": "コミット履歴",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "jqxmv",
+                  "name": "SP Log List",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "id": "YIoVR",
+                      "type": "ref",
+                      "ref": "fkBBE",
+                      "width": "fill_container",
+                      "name": "c1",
+                      "descendants": {
+                        "6XWBu": {
+                          "fill": "#2563eb"
+                        },
+                        "L0rsy": {
+                          "fill": "#2563eb"
+                        },
+                        "051IM": {
+                          "content": "feat: Git API エンドポイント追加"
+                        },
+                        "ou1Xr": {
+                          "content": "a1b2c3d"
+                        },
+                        "qMpXB": {
+                          "content": "2時間前"
+                        },
+                        "dpcPa": {
+                          "content": "Claude"
+                        }
+                      }
+                    },
+                    {
+                      "id": "REvQ8",
+                      "type": "ref",
+                      "ref": "fkBBE",
+                      "width": "fill_container",
+                      "name": "c2",
+                      "descendants": {
+                        "6XWBu": {
+                          "fill": "#2563eb"
+                        },
+                        "L0rsy": {
+                          "fill": "#2563eb"
+                        },
+                        "051IM": {
+                          "content": "fix: タスクランナーのタイムアウト修正"
+                        },
+                        "ou1Xr": {
+                          "content": "e4f5g6h"
+                        },
+                        "qMpXB": {
+                          "content": "5時間前"
+                        },
+                        "dpcPa": {
+                          "content": "natani"
+                        }
+                      }
+                    },
+                    {
+                      "id": "cY1Ky",
+                      "type": "ref",
+                      "ref": "fkBBE",
+                      "width": "fill_container",
+                      "name": "c3",
+                      "descendants": {
+                        "6XWBu": {
+                          "fill": "#16a34a"
+                        },
+                        "L0rsy": {
+                          "fill": "#16a34a"
+                        },
+                        "051IM": {
+                          "content": "feat: SSEストリーミング実装"
+                        },
+                        "ou1Xr": {
+                          "content": "i7j8k9l"
+                        },
+                        "qMpXB": {
+                          "content": "1日前"
+                        },
+                        "dpcPa": {
+                          "content": "Claude"
+                        }
+                      }
+                    },
+                    {
+                      "id": "r6rho",
+                      "type": "ref",
+                      "ref": "fkBBE",
+                      "width": "fill_container",
+                      "name": "c4",
+                      "descendants": {
+                        "6XWBu": {
+                          "fill": "#7c3aed"
+                        },
+                        "L0rsy": {
+                          "fill": "#7c3aed"
+                        },
+                        "051IM": {
+                          "content": "Merge feat/sse into main",
+                          "fill": "#7c3aed",
+                          "fontWeight": "600"
+                        },
+                        "ou1Xr": {
+                          "content": "c5d6e7f"
+                        },
+                        "qMpXB": {
+                          "content": "1日前"
+                        },
+                        "dpcPa": {
+                          "content": "natani"
+                        }
+                      }
+                    },
+                    {
+                      "id": "hfayh",
+                      "type": "ref",
+                      "ref": "fkBBE",
+                      "width": "fill_container",
+                      "name": "c5",
+                      "descendants": {
+                        "6XWBu": {
+                          "fill": "#2563eb"
+                        },
+                        "L0rsy": {
+                          "fill": "#2563eb"
+                        },
+                        "051IM": {
+                          "content": "refactor: DB初期化処理をリファクタ"
+                        },
+                        "ou1Xr": {
+                          "content": "b3c4d5e"
+                        },
+                        "qMpXB": {
+                          "content": "2日前"
+                        },
+                        "dpcPa": {
+                          "content": "natani"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "UVRxc",
+          "type": "ref",
+          "ref": "xHLdq",
+          "name": "btmNav",
+          "width": "fill_container",
+          "children": [
+            {
+              "id": "O93J7",
+              "type": "ref",
+              "ref": "wCYPK",
+              "descendants": {
+                "4NO1q": {
+                  "iconFontName": "list-checks"
+                },
+                "FU8E3": {
+                  "content": "Tasks"
+                }
+              }
+            },
+            {
+              "id": "cnET3",
+              "type": "ref",
+              "ref": "rYrmZ",
+              "descendants": {
+                "4NO1q": {
+                  "iconFontName": "git-branch"
+                },
+                "FU8E3": {
+                  "content": "Git"
+                }
+              }
+            },
+            {
+              "id": "aJDmu",
+              "type": "ref",
+              "ref": "wCYPK",
+              "descendants": {
+                "4NO1q": {
+                  "iconFontName": "settings"
+                },
+                "FU8E3": {
+                  "content": "Settings"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "6MUix",
+      "x": 1520,
+      "y": 9674,
+      "name": "Merge Modal",
+      "width": 440,
+      "fill": "$--card",
+      "cornerRadius": 8,
+      "stroke": {
+        "align": "inside",
+        "thickness": 1,
+        "fill": "$--border"
+      },
+      "effect": [
+        {
+          "type": "shadow",
+          "shadowType": "outer",
+          "color": "#0000001a",
+          "offset": {
+            "x": 0,
+            "y": 20
+          },
+          "blur": 20
+        },
+        {
+          "type": "shadow",
+          "shadowType": "outer",
+          "color": "#0000000a",
+          "offset": {
+            "x": 0,
+            "y": 10
+          },
+          "blur": 10
+        }
+      ],
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "5xYLQ",
+          "name": "Header",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "padding": 24,
+          "children": [
+            {
+              "type": "frame",
+              "id": "wkFGT",
+              "name": "iconRow",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "BvwNr",
+                  "name": "iconCircle",
+                  "width": 40,
+                  "height": 40,
+                  "fill": "#eff6ff",
+                  "cornerRadius": 20,
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "bzbc3",
+                      "name": "mergeIcon",
+                      "width": 20,
+                      "height": 20,
+                      "iconFontName": "git-merge",
+                      "iconFontFamily": "lucide",
+                      "fill": "$--primary"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "ivHaH",
+                  "name": "titleText",
+                  "fill": "$--foreground",
+                  "content": "ブランチをマージ",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 18,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "o1Sit",
+              "name": "descText",
+              "fill": "$--muted-foreground",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "指定したブランチを現在のブランチにマージします。マージコミットが作成されます（--no-ff）。",
+              "lineHeight": 1.43,
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "eHcqY",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 16,
+          "padding": [
+            0,
+            24
+          ],
+          "children": [
+            {
+              "id": "1eSRP",
+              "type": "ref",
+              "ref": "A4VOm",
+              "width": "fill_container",
+              "name": "fromSelect",
+              "descendants": {
+                "Yd2lV": {
+                  "content": "マージ元ブランチ"
+                },
+                "V1STL": {
+                  "content": "feat/git-gui",
+                  "fill": "$--foreground"
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "PiZ7v",
+              "name": "arrowRow",
+              "width": "fill_container",
+              "gap": 8,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "IeWDj",
+                  "name": "arrowIcon",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "arrow-down",
+                  "iconFontFamily": "lucide",
+                  "fill": "$--muted-foreground"
+                },
+                {
+                  "type": "text",
+                  "id": "eZXah",
+                  "name": "arrowLabel",
+                  "fill": "$--muted-foreground",
+                  "content": "feat/git-gui → main にマージ",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "id": "YuLvu",
+              "type": "ref",
+              "ref": "A4VOm",
+              "width": "fill_container",
+              "name": "toSelect",
+              "descendants": {
+                "Yd2lV": {
+                  "content": "マージ先ブランチ（現在のブランチ）"
+                },
+                "V1STL": {
+                  "content": "main",
+                  "fill": "$--foreground"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "65Fvi",
+          "name": "Actions",
+          "width": "fill_container",
+          "gap": 8,
+          "padding": [
+            16,
+            24,
+            24,
+            24
+          ],
+          "justifyContent": "end",
+          "children": [
+            {
+              "id": "JF1RG",
+              "type": "ref",
+              "ref": "C10zH",
+              "name": "cancelBtn",
+              "descendants": {
+                "l8v2I": {
+                  "enabled": false
+                },
+                "poRwU": {
+                  "content": "キャンセル"
+                }
+              }
+            },
+            {
+              "id": "qdxq8",
+              "type": "ref",
+              "ref": "VSnC2",
+              "name": "mergeBtn",
+              "fill": "#1d4ed8",
+              "descendants": {
+                "8jVfJ": {
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "JvOOt",
+                      "x": 0,
+                      "y": 0,
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "git-merge",
+                      "iconFontFamily": "lucide",
+                      "fill": "$--primary-foreground"
+                    }
+                  ]
+                },
+                "8tnXG": {
+                  "content": "マージ実行"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "tey6p",
+      "x": 2560,
+      "y": 9674,
+      "name": "Cognac - Git (AI Commit Running)",
+      "theme": {
+        "Accent": "Blue"
+      },
+      "width": 1440,
+      "height": 900,
+      "fill": "$--background",
+      "children": [
+        {
+          "id": "Pa6Z5",
+          "type": "ref",
+          "ref": "vaicN",
+          "name": "sidebar",
+          "height": "fill_container",
+          "descendants": {
+            "S0PJj": {
+              "fill": []
+            },
+            "IAANj": {
+              "fill": "$--sidebar-accent"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "i0INA",
+          "name": "Main Content",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": 32,
+          "children": [
+            {
+              "id": "BEAPV",
+              "type": "ref",
+              "ref": "QGxfO",
+              "name": "pageHeader",
+              "width": "fill_container",
+              "descendants": {
+                "gtEww": {
+                  "content": "Git"
+                },
+                "WHFkd": {
+                  "content": "ブランチ管理、変更の確認、コミット操作"
+                },
+                "7W70b": {
+                  "children": [
+                    {
+                      "id": "2lSq7",
+                      "type": "ref",
+                      "ref": "C10zH",
+                      "descendants": {
+                        "l8v2I": {
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "DBbkM",
+                              "x": 0,
+                              "y": 0,
+                              "width": 16,
+                              "height": 16,
+                              "iconFontName": "refresh-cw",
+                              "iconFontFamily": "lucide",
+                              "fill": "$--foreground"
+                            }
+                          ]
+                        },
+                        "poRwU": {
+                          "content": "Fetch"
+                        }
+                      }
+                    },
+                    {
+                      "id": "nSYFe",
+                      "type": "ref",
+                      "ref": "C10zH",
+                      "descendants": {
+                        "l8v2I": {
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "9rG8I",
+                              "x": 0,
+                              "y": 0,
+                              "width": 16,
+                              "height": 16,
+                              "iconFontName": "git-merge",
+                              "iconFontFamily": "lucide",
+                              "fill": "$--foreground"
+                            }
+                          ]
+                        },
+                        "poRwU": {
+                          "content": "マージ"
+                        }
+                      }
+                    },
+                    {
+                      "id": "sHxZB",
+                      "type": "ref",
+                      "ref": "VSnC2",
+                      "descendants": {
+                        "8jVfJ": {
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "l27qL",
+                              "x": 0,
+                              "y": 0,
+                              "width": 16,
+                              "height": 16,
+                              "iconFontName": "upload",
+                              "iconFontFamily": "lucide",
+                              "fill": "$--primary-foreground"
+                            }
+                          ]
+                        },
+                        "8tnXG": {
+                          "content": "Push"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "n5Sg4",
+              "name": "Branch Row",
+              "width": "fill_container",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Pt3g2",
+                  "name": "Branch Selector",
+                  "fill": "$--background",
+                  "cornerRadius": 6,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$--border"
+                  },
+                  "gap": 8,
+                  "padding": [
+                    8,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "3UHyX",
+                      "name": "branchIcon",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "git-branch",
+                      "iconFontFamily": "lucide",
+                      "fill": "$--primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "D4FNc",
+                      "name": "branchName",
+                      "fill": "$--foreground",
+                      "content": "feat/git",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "wSnpc",
+                      "name": "branchChevron",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "chevron-down",
+                      "iconFontFamily": "lucide",
+                      "fill": "$--muted-foreground"
+                    }
+                  ]
+                },
+                {
+                  "id": "lgCRm",
+                  "type": "ref",
+                  "ref": "C10zH",
+                  "name": "newBranchBtn",
+                  "descendants": {
+                    "l8v2I": {
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "KTyMZ",
+                          "x": 0,
+                          "y": 0,
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "git-branch-plus",
+                          "iconFontFamily": "lucide",
+                          "fill": "$--foreground"
+                        }
+                      ]
+                    },
+                    "poRwU": {
+                      "content": "新規ブランチ"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "mvm9c",
+                  "name": "Remote Status",
+                  "fill": "#dbeafe",
+                  "cornerRadius": 16,
+                  "gap": 8,
+                  "padding": [
+                    6,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "gDpkI",
+                      "name": "remoteIcon",
+                      "width": 14,
+                      "height": 14,
+                      "iconFontName": "arrow-up",
+                      "iconFontFamily": "lucide",
+                      "fill": "#1d4ed8"
+                    },
+                    {
+                      "type": "text",
+                      "id": "0bXDz",
+                      "name": "remoteText",
+                      "fill": "#1d4ed8",
+                      "content": "2 commits ahead",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "6OyQa",
+              "name": "Content Columns",
+              "width": "fill_container",
+              "height": "fill_container",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "yXzOp",
+                  "name": "Left Column",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "kOGNA",
+                      "name": "newCard",
+                      "width": "fill_container",
+                      "fill": "$--card",
+                      "cornerRadius": 8,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1.5,
+                        "fill": "$--border"
+                      },
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#0000000d",
+                        "offset": {
+                          "x": 0,
+                          "y": 1
+                        },
+                        "blur": 1.75
+                      },
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "I6exH",
+                          "name": "Changes Header",
+                          "width": "fill_container",
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": {
+                              "bottom": 1
+                            },
+                            "fill": "$--border"
+                          },
+                          "gap": 12,
+                          "padding": 16,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "pDhf5",
+                              "name": "Left",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "ERG0l",
+                                  "name": "changesTitle",
+                                  "fill": "$--foreground",
+                                  "content": "AIコミット",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 14,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "KBr1l",
+                                  "name": "Count Badge",
+                                  "fill": "#dbeafe",
+                                  "cornerRadius": 6,
+                                  "padding": [
+                                    2,
+                                    8
+                                  ],
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "v9Y1t",
+                                      "name": "changesCountText",
+                                      "fill": "#1d4ed8",
+                                      "content": "実行中",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "icon_font",
+                              "id": "dsH1U",
+                              "name": "spinIcon",
+                              "opacity": 0.5,
+                              "width": 16,
+                              "height": 16,
+                              "iconFontName": "loader",
+                              "iconFontFamily": "lucide",
+                              "fill": "$--muted-foreground"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "O2VGY",
+                          "name": "AI Commit Area",
+                          "width": "fill_container",
+                          "fill": "$--card",
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": {
+                              "top": 1
+                            },
+                            "fill": "$--border"
+                          },
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "L0KvK",
+                              "name": "Log Body",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 2,
+                              "padding": [
+                                12,
+                                16
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "EYfLF",
+                                  "name": "line1",
+                                  "fill": "$--muted-foreground",
+                                  "content": "$ git diff --staged",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "J8d98",
+                                  "name": "line2",
+                                  "fill": "$--foreground",
+                                  "content": "analyzing 5 changed files...",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "6bXH8",
+                                  "name": "line3",
+                                  "fill": "$--foreground",
+                                  "content": "generating commit plan...",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "FGHo7",
+                                  "name": "line4",
+                                  "fill": "$--foreground",
+                                  "content": "split into 2 commits",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "eaTRz",
+                                  "name": "line5",
+                                  "fill": "#a3a3a3",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "r7epg",
+                                  "name": "line6",
+                                  "fill": "$--muted-foreground",
+                                  "content": "$ git add src/api/git.ts src/api/git-routes.ts",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "pfGE1",
+                                  "name": "line7",
+                                  "fill": "$--muted-foreground",
+                                  "content": "$ git commit -m \"feat: Git API エンドポイント追加\"",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "7xnJ0",
+                                  "name": "line8",
+                                  "fill": "#16a34a",
+                                  "content": "[feat/git a1b2c3d] feat: Git API エンドポイント追加",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "O3rTx",
+                                  "name": "line9",
+                                  "fill": "$--muted-foreground",
+                                  "content": " 2 files changed, 145 insertions(+)",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "F023e",
+                                  "name": "line10",
+                                  "fill": "#a3a3a3",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "obkjy",
+                                  "name": "line11",
+                                  "fill": "$--muted-foreground",
+                                  "content": "$ git add src/runner/auto-commit.ts src/runner/task-runner.ts",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "DYJoG",
+                                  "name": "line12",
+                                  "fill": "$--primary",
+                                  "content": "$ git commit -m \"refactor: 自動コミット処理を削除\"",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "1nlzL",
+                  "name": "Right Column",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "pSe8s",
+                      "name": "Log Card",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "fill": "$--card",
+                      "cornerRadius": 8,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$--border"
+                      },
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#0000000d",
+                        "offset": {
+                          "x": 0,
+                          "y": 1
+                        },
+                        "blur": 1.75
+                      },
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "tt75s",
+                          "name": "Log Header",
+                          "width": "fill_container",
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": {
+                              "bottom": 1
+                            },
+                            "fill": "$--border"
+                          },
+                          "gap": 12,
+                          "padding": 16,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "xx71C",
+                              "name": "logTitle",
+                              "fill": "$--foreground",
+                              "content": "コミット履歴",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "hNKIq",
+                          "name": "Log List",
+                          "width": "fill_container",
+                          "height": "fill_container",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "id": "F6OiE",
+                              "type": "ref",
+                              "ref": "fkBBE",
+                              "width": "fill_container",
+                              "name": "c1",
+                              "descendants": {
+                                "6XWBu": {
+                                  "fill": "#2563eb"
+                                },
+                                "L0rsy": {
+                                  "fill": "#2563eb"
+                                },
+                                "051IM": {
+                                  "content": "feat: Git API エンドポイント追加"
+                                },
+                                "ou1Xr": {
+                                  "content": "a1b2c3d"
+                                },
+                                "qMpXB": {
+                                  "content": "2時間前"
+                                },
+                                "dpcPa": {
+                                  "content": "Claude"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "MsVc8",
+      "x": 2020,
+      "y": 9674,
+      "name": "Create Branch Modal",
+      "width": 440,
+      "fill": "$--card",
+      "cornerRadius": 8,
+      "stroke": {
+        "align": "inside",
+        "thickness": 1,
+        "fill": "$--border"
+      },
+      "effect": [
+        {
+          "type": "shadow",
+          "shadowType": "outer",
+          "color": "#0000001a",
+          "offset": {
+            "x": 0,
+            "y": 20
+          },
+          "blur": 20
+        },
+        {
+          "type": "shadow",
+          "shadowType": "outer",
+          "color": "#0000000a",
+          "offset": {
+            "x": 0,
+            "y": 10
+          },
+          "blur": 10
+        }
+      ],
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "FTuz0",
+          "name": "Header",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "padding": 24,
+          "children": [
+            {
+              "type": "frame",
+              "id": "uoVUF",
+              "name": "iconRow",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "X0vwt",
+                  "name": "iconCircle",
+                  "width": 40,
+                  "height": 40,
+                  "fill": "#f0fdf4",
+                  "cornerRadius": 20,
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "cagvM",
+                      "name": "branchIcon",
+                      "width": 20,
+                      "height": 20,
+                      "iconFontName": "git-branch-plus",
+                      "iconFontFamily": "lucide",
+                      "fill": "#16a34a"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "0O961",
+                  "name": "titleText",
+                  "fill": "$--foreground",
+                  "content": "新規ブランチを作成",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 18,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "hd6Xx",
+              "name": "descText",
+              "fill": "$--muted-foreground",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "現在のブランチまたは指定したブランチから新しいブランチを作成します。",
+              "lineHeight": 1.43,
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "g2K9d",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 16,
+          "padding": [
+            0,
+            24
+          ],
+          "children": [
+            {
+              "id": "U75cb",
+              "type": "ref",
+              "ref": "1415a",
+              "name": "branchNameInput",
+              "width": "fill_container",
+              "descendants": {
+                "BX0XX": {
+                  "content": "ブランチ名"
+                },
+                "SDRKn": {
+                  "content": "feature/my-new-branch"
+                }
+              }
+            },
+            {
+              "id": "IBDpg",
+              "type": "ref",
+              "ref": "A4VOm",
+              "name": "fromBranchSelect",
+              "width": "fill_container",
+              "descendants": {
+                "Yd2lV": {
+                  "content": "作成元ブランチ"
+                },
+                "V1STL": {
+                  "content": "main",
+                  "fill": "$--foreground"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "OIHE1",
+          "name": "Actions",
+          "width": "fill_container",
+          "gap": 8,
+          "padding": [
+            16,
+            24,
+            24,
+            24
+          ],
+          "justifyContent": "end",
+          "children": [
+            {
+              "id": "ZJqIP",
+              "type": "ref",
+              "ref": "C10zH",
+              "name": "cancelBtn",
+              "descendants": {
+                "l8v2I": {
+                  "enabled": false
+                },
+                "poRwU": {
+                  "content": "キャンセル"
+                }
+              }
+            },
+            {
+              "id": "KqRoT",
+              "type": "ref",
+              "ref": "VSnC2",
+              "name": "createBtn",
+              "fill": "#1d4ed8",
+              "descendants": {
+                "8jVfJ": {
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "CdxRN",
+                      "x": 0,
+                      "y": 0,
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "git-branch-plus",
+                      "iconFontFamily": "lucide",
+                      "fill": "$--primary-foreground"
+                    }
+                  ]
+                },
+                "8tnXG": {
+                  "content": "ブランチを作成"
+                }
+              }
             }
           ]
         }

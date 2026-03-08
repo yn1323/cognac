@@ -1,0 +1,23 @@
+import { defineConfig } from 'cognac'
+
+export default defineConfig({
+  port: 4000,
+  git: {
+    defaultBranch: "main",
+  },
+  ci: {
+    maxRetries: 5,
+  },
+  discussion: {
+    maxRounds: 3,
+    minPersonas: 2,
+    maxPersonas: 4,
+    skipDiscussion: false,
+  },
+  claude: {
+    maxTurnsExecution: 30,
+    maxTurnsDiscussion: 1,
+    stdoutTimeoutMs: 300000,
+    processMaxRetries: 2,
+  },
+})

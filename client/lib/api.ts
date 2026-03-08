@@ -1,7 +1,11 @@
 // APIクライアント
 // fetchのラッパー。ベースURLはvite proxyで /api にマッピングされてるから相対パスでOK
 
-import type { Task, TaskImage, ExecutionLog, CreateTaskInput, UpdateTaskInput, Persona, Discussion, Plan, SettingsPayload } from '@cognac/shared'
+import type {
+  Task, TaskImage, ExecutionLog, CreateTaskInput, UpdateTaskInput, Persona, Discussion, Plan, SettingsPayload,
+  GitStatusResponse, GitLogResponse, GitBranchesResponse, GitRemoteStatusResponse,
+  GitCommitResponse, GitMergeResponse, GitPushResponse,
+} from '@cognac/shared'
 
 const BASE = '/api'
 
@@ -72,5 +76,23 @@ export const api = {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
+  },
+  git: {
+    status: () => fetchJson<GitStatusResponse>('/git/status'),
+    log: (limit = 20) => fetchJson<GitLogResponse>(`/git/log?limit=${limit}`),
+    branches: () => fetchJson<GitBranchesResponse>('/git/branches'),
+    remoteStatus: () => fetchJson<GitRemoteStatusResponse>('/git/remote-status'),
+    discard: () => fetchJson<{ ok: boolean }>('/git/discard', { method: 'POST' }),
+    commit: () => fetchJson<GitCommitResponse>('/git/commit', { method: 'POST' }),
+    checkout: (branch: string) =>
+      fetchJson<{ ok: boolean }>('/git/checkout', { method: 'POST', body: JSON.stringify({ branch }) }),
+    createBranch: (name: string, base?: string) =>
+      fetchJson<{ ok: boolean }>('/git/branch', { method: 'POST', body: JSON.stringify({ name, base }) }),
+    deleteBranch: (name: string) =>
+      fetchJson<{ ok: boolean }>(`/git/branch/${encodeURIComponent(name)}`, { method: 'DELETE' }),
+    push: () => fetchJson<GitPushResponse>('/git/push', { method: 'POST' }),
+    fetch: () => fetchJson<{ ok: boolean }>('/git/fetch', { method: 'POST' }),
+    merge: (from: string, into: string) =>
+      fetchJson<GitMergeResponse>('/git/merge', { method: 'POST', body: JSON.stringify({ from, into }) }),
   },
 }
