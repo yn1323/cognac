@@ -1,0 +1,440 @@
+// Git ページ
+// PC: サイドバー + メインコンテンツ(2カラム) / SP: ヘッダー + ボディ + ボトムナビ
+// デザイン design.pen PC=TySUT, SP=A0mek に準拠
+
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+  GitBranch,
+  GitBranchPlus,
+  GitMerge,
+  RefreshCw,
+  Upload,
+  Trash2,
+  Bot,
+  ChevronDown,
+  ArrowUp,
+  ArrowDown,
+} from 'lucide-react'
+import { Sidebar } from '@/components/sidebar'
+import { PageHeader } from '@/components/page-header'
+import { SPHeader } from '@/components/sp-header'
+import { AppBottomNav } from '@/components/app-bottom-nav'
+import { Button } from '@/components/ui/button'
+import { GitFileRow } from '@/components/git-file-row'
+import { GitCommitRow } from '@/components/git-commit-row'
+import { AiCommitProgress } from '@/components/ai-commit-progress'
+import { MergeModal } from '@/components/merge-modal'
+import { NewBranchModal } from '@/components/new-branch-modal'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { NAV_MAP } from '@/lib/constants'
+import {
+  MOCK_FILES,
+  MOCK_BRANCHES,
+  MOCK_COMMITS,
+  MOCK_REMOTE_STATUS,
+  MOCK_COMMIT_LOG_LINES,
+} from './mock-data'
+
+// モジュールレベルで一度だけ計算
+const LOCAL_BRANCHES = MOCK_BRANCHES.filter((b) => !b.remote)
+const REMOTE_BRANCHES = MOCK_BRANCHES.filter((b) => b.remote)
+
+// --- ブランチセレクター ---
+
+interface BranchSelectorProps {
+  currentBranch: string
+  className?: string
+}
+
+function BranchSelector({ currentBranch, className }: BranchSelectorProps) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className={className}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 rounded-md border border-[#e5e5e5] bg-[#fafafa] px-3 py-2 text-sm"
+      >
+        <GitBranch className="h-4 w-4 text-[#1d4ed8]" />
+        <span className="font-semibold text-foreground">{currentBranch}</span>
+        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+      </button>
+
+      {open && (
+        <>
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute z-50 mt-1 min-w-[200px] rounded-md border border-[#e5e5e5] bg-white shadow-lg">
+            <div className="px-3 py-2 text-xs font-semibold text-muted-foreground">
+              ローカル
+            </div>
+            {LOCAL_BRANCHES.map((b) => (
+              <button
+                key={b.name}
+                type="button"
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-neutral-50"
+              >
+                <span className={b.current ? 'font-semibold text-[#1d4ed8]' : 'text-foreground'}>
+                  {b.name}
+                </span>
+              </button>
+            ))}
+            <div className="border-t border-[#e5e5e5] px-3 py-2 text-xs font-semibold text-muted-foreground">
+              リモート
+            </div>
+            {REMOTE_BRANCHES.map((b) => (
+              <button
+                key={`remote-${b.name}`}
+                type="button"
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-muted-foreground hover:bg-neutral-50"
+              >
+                origin/{b.name}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// --- リモートステータスバッジ ---
+
+function RemoteStatusBadge() {
+  const { ahead, behind } = MOCK_REMOTE_STATUS
+  return (
+    <div className="flex items-center gap-2 rounded-full bg-[#dbeafe] px-3 py-1.5 text-xs font-medium text-[#1d4ed8]">
+      {ahead > 0 && (
+        <span className="flex items-center gap-1">
+          <ArrowUp className="h-3 w-3" />
+          {ahead} ahead
+        </span>
+      )}
+      {behind > 0 && (
+        <span className="flex items-center gap-1">
+          <ArrowDown className="h-3 w-3" />
+          {behind} behind
+        </span>
+      )}
+    </div>
+  )
+}
+
+// --- 共通Props ---
+
+interface GitPageViewProps {
+  onNavigate: (path: string) => void
+  isCommitting: boolean
+  onStartCommit: () => void
+  onToggleMergeModal: () => void
+  onToggleNewBranchModal: () => void
+  onToggleDiscardDialog: () => void
+}
+
+// --- PC版 ---
+
+function PCGitPage({
+  onNavigate,
+  isCommitting,
+  onStartCommit,
+  onToggleMergeModal,
+  onToggleNewBranchModal,
+  onToggleDiscardDialog,
+}: GitPageViewProps) {
+  return (
+    <div className="flex h-screen bg-[#fafafa]">
+      {/* サイドバー */}
+      <Sidebar
+        activeItem="Git"
+        onItemClick={(label) => {
+          const path = NAV_MAP[label]
+          if (path) onNavigate(path)
+        }}
+      />
+
+      {/* メインコンテンツ */}
+      <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-8">
+        {/* ページヘッダー */}
+        <PageHeader
+          title="Git"
+          subtitle="ブランチ管理、変更の確認、コミット操作"
+        >
+          <Button variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4" />
+            Fetch
+          </Button>
+          <Button variant="outline" size="sm" onClick={onToggleMergeModal}>
+            <GitMerge className="h-4 w-4" />
+            マージ
+          </Button>
+          <Button variant="primary" size="sm">
+            <Upload className="h-4 w-4" />
+            Push
+          </Button>
+        </PageHeader>
+
+        {/* ブランチ行 */}
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <BranchSelector currentBranch="feat/git" />
+          </div>
+          <Button variant="outline" size="sm" onClick={onToggleNewBranchModal}>
+            <GitBranchPlus className="h-4 w-4" />
+            新規ブランチ
+          </Button>
+          <RemoteStatusBadge />
+        </div>
+
+        {/* 2カラムコンテンツ */}
+        <div className="flex flex-1 gap-6">
+          {/* 左カラム: 変更ファイル */}
+          <div className="flex flex-1 flex-col gap-4">
+            <div className="flex flex-col overflow-hidden rounded-lg border border-[#e5e5e5] bg-[#fafafa] shadow-[0_1px_1.75px_#0000000d]">
+              {/* AIコミット中はヘッダーなしでログのみ表示 */}
+              {isCommitting ? (
+                <AiCommitProgress logLines={MOCK_COMMIT_LOG_LINES} />
+              ) : (
+                <>
+                  {/* ヘッダー */}
+                  <div className="flex items-center justify-between border-b border-[#e5e5e5] px-4 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-foreground">変更ファイル</span>
+                      <span className="text-sm text-muted-foreground">({MOCK_FILES.length})</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto px-2 py-1 text-xs text-[#e7000b]"
+                      onClick={onToggleDiscardDialog}
+                    >
+                      <Trash2 className="h-4 w-4 text-[#e7000b]" />
+                      全て破棄
+                    </Button>
+                  </div>
+
+                  {/* ファイルリスト */}
+                  <div className="flex flex-col">
+                    {MOCK_FILES.map((file, i) => (
+                      <GitFileRow
+                        key={file.path}
+                        status={file.status}
+                        path={file.path}
+                        isLast={i === MOCK_FILES.length - 1}
+                      />
+                    ))}
+                  </div>
+
+                  {/* AIコミットボタン */}
+                  <div className="flex justify-center p-4">
+                    <Button
+                      variant="primary"
+                      className="w-full"
+                      onClick={onStartCommit}
+                      disabled={MOCK_FILES.length === 0}
+                    >
+                      <Bot className="h-4 w-4" />
+                      AI コミット
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* 右カラム: コミット履歴 */}
+          <div className="flex flex-1 flex-col gap-4">
+            <div className="flex flex-col overflow-hidden rounded-lg border border-[#e5e5e5] bg-[#fafafa] shadow-[0_1px_1.75px_#0000000d]">
+              <div className="border-b border-[#e5e5e5] px-4 py-4">
+                <span className="text-sm font-semibold text-foreground">コミット履歴</span>
+              </div>
+              <div className="flex flex-col">
+                {MOCK_COMMITS.map((commit, i) => (
+                  <GitCommitRow
+                    key={commit.hash}
+                    commit={commit}
+                    isLast={i === MOCK_COMMITS.length - 1}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// --- SP版 ---
+
+function SPGitPage({
+  onNavigate,
+  isCommitting,
+  onStartCommit,
+  onToggleMergeModal,
+  onToggleNewBranchModal,
+  onToggleDiscardDialog,
+}: GitPageViewProps) {
+  return (
+    <div className="flex h-screen flex-col bg-[#fafafa]">
+      {/* SPヘッダー */}
+      <SPHeader />
+
+      {/* ボディ */}
+      <main className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+        {/* タイトル行 */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold text-foreground">Git</h1>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" className="h-8 w-8">
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={onToggleNewBranchModal}>
+              <GitBranchPlus className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={onToggleMergeModal}>
+              <GitMerge className="h-4 w-4" />
+            </Button>
+            <Button variant="primary" size="icon" className="h-8 w-8">
+              <Upload className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* ブランチ行 */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <BranchSelector currentBranch="feat/git" className="w-full [&>button]:w-full" />
+          </div>
+          <RemoteStatusBadge />
+        </div>
+
+        {/* 変更ファイルカード */}
+        <div className="flex flex-col overflow-hidden rounded-lg border border-[#e5e5e5] bg-[#fafafa] shadow-[0_1px_1.75px_#0000000d]">
+          {/* AIコミット中はヘッダーなしでログのみ表示 */}
+          {isCommitting ? (
+            <AiCommitProgress logLines={MOCK_COMMIT_LOG_LINES} />
+          ) : (
+            <>
+              {/* ヘッダー */}
+              <div className="flex items-center justify-between border-b border-[#e5e5e5] px-4 py-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-foreground">変更ファイル</span>
+                  <span className="text-sm text-muted-foreground">({MOCK_FILES.length})</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto px-2 py-1 text-xs text-[#e7000b]"
+                  onClick={onToggleDiscardDialog}
+                >
+                  <Trash2 className="h-4 w-4 text-[#e7000b]" />
+                  全て破棄
+                </Button>
+              </div>
+
+              {/* ファイルリスト */}
+              <div className="flex flex-col">
+                {MOCK_FILES.map((file, i) => (
+                  <GitFileRow
+                    key={file.path}
+                    status={file.status}
+                    path={file.path}
+                    isLast={i === MOCK_FILES.length - 1}
+                  />
+                ))}
+              </div>
+
+              {/* AIコミットボタン */}
+              <div className="flex justify-center p-4">
+                <Button
+                  variant="primary"
+                  className="w-full"
+                  onClick={onStartCommit}
+                  disabled={MOCK_FILES.length === 0}
+                >
+                  <Bot className="h-4 w-4" />
+                  AI コミット
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* コミット履歴 */}
+        <div className="flex flex-col rounded-lg border border-[#e5e5e5] bg-[#fafafa]">
+          <div className="flex items-center justify-between border-b border-[#e5e5e5] px-4 py-3">
+            <span className="text-sm font-semibold text-foreground">コミット履歴</span>
+          </div>
+          <div className="flex flex-col">
+            {MOCK_COMMITS.map((commit, i) => (
+              <GitCommitRow
+                key={commit.hash}
+                commit={commit}
+                isLast={i === MOCK_COMMITS.length - 1}
+              />
+            ))}
+          </div>
+        </div>
+      </main>
+
+      {/* ボトムナビ */}
+      <AppBottomNav activeItem="Git" />
+    </div>
+  )
+}
+
+// --- エクスポート ---
+
+export function GitPage() {
+  const navigate = useNavigate()
+  const [isCommitting, setIsCommitting] = useState(false)
+  const [showMergeModal, setShowMergeModal] = useState(false)
+  const [showNewBranchModal, setShowNewBranchModal] = useState(false)
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false)
+
+  const handleNavigate = (path: string) => navigate(path)
+  const handleStartCommit = () => setIsCommitting((v) => !v)
+  const handleToggleMergeModal = () => setShowMergeModal((v) => !v)
+  const handleToggleNewBranchModal = () => setShowNewBranchModal((v) => !v)
+  const handleToggleDiscardDialog = () => setShowDiscardDialog((v) => !v)
+
+  const viewProps: GitPageViewProps = {
+    onNavigate: handleNavigate,
+    isCommitting,
+    onStartCommit: handleStartCommit,
+    onToggleMergeModal: handleToggleMergeModal,
+    onToggleNewBranchModal: handleToggleNewBranchModal,
+    onToggleDiscardDialog: handleToggleDiscardDialog,
+  }
+
+  return (
+    <>
+      {/* PC版: md以上で表示 */}
+      <div className="hidden md:block">
+        <PCGitPage {...viewProps} />
+      </div>
+      {/* SP版: md未満で表示 */}
+      <div className="md:hidden">
+        <SPGitPage {...viewProps} />
+      </div>
+
+      {/* モーダルは一度だけレンダリング */}
+      <MergeModal open={showMergeModal} onClose={handleToggleMergeModal} />
+      <NewBranchModal open={showNewBranchModal} onClose={handleToggleNewBranchModal} />
+      <ConfirmDialog
+        open={showDiscardDialog}
+        onConfirm={handleToggleDiscardDialog}
+        onCancel={handleToggleDiscardDialog}
+        title="全ての変更を破棄"
+        description="全ての未コミットの変更が失われます。この操作は取り消せません。"
+        confirmLabel="全て破棄"
+        cancelLabel="キャンセル"
+        variant="destructive"
+      />
+    </>
+  )
+}

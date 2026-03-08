@@ -6,11 +6,15 @@ export interface SettingsPayload {
     maxRetries: number
     steps: CiStep[] // 空配列 = 自動検出モード
   }
+  git: {
+    commitLogLimit: number
+  }
 }
 
 // Git設定
 export interface GitConfig {
   defaultBranch: string
+  commitLogLimit: number
 }
 
 // CI設定
@@ -51,6 +55,7 @@ const defaultConfig: CognacConfig = {
   host: '0.0.0.0',
   git: {
     defaultBranch: 'main',
+    commitLogLimit: 50,
   },
   ci: {
     maxRetries: 5,

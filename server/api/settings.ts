@@ -10,7 +10,10 @@ import { writeConfigFile } from '../runner/config-writer.js'
 // TaskRunnerから設定を読み書きするインターフェース
 export interface ConfigAccessor {
   getConfig(): CognacConfig
-  updateConfig(patch: { ci: { maxRetries: number; steps?: CiStep[] } }): void
+  updateConfig(patch: {
+    ci: { maxRetries: number; steps?: CiStep[] }
+    git: { commitLogLimit: number }
+  }): void
 }
 
 const ciStepSchema = z.object({
@@ -22,6 +25,9 @@ const updateSettingsSchema = z.object({
   ci: z.object({
     maxRetries: z.number().int().min(0).max(20),
     steps: z.array(ciStepSchema),
+  }),
+  git: z.object({
+    commitLogLimit: z.number().int().min(1).max(100),
   }),
 })
 
@@ -36,6 +42,9 @@ export function settingsRouter(accessor: ConfigAccessor, cwd: string) {
         maxRetries: config.ci.maxRetries,
         steps: config.ci.steps ?? [],
       },
+      git: {
+        commitLogLimit: config.git.commitLogLimit,
+      },
     }
     return c.json(payload)
   })
@@ -48,10 +57,10 @@ export function settingsRouter(accessor: ConfigAccessor, cwd: string) {
       return c.json({ error: 'バリデーションエラー', details: parsed.error.issues }, 400)
     }
 
-    const { ci } = parsed.data
+    const { ci, git } = parsed.data
 
     // 1. メモリ上のconfigを更新
-    accessor.updateConfig({ ci })
+    accessor.updateConfig({ ci, git })
 
     // 2. cognac.config.ts に書き出す（全設定値を保持）
     const fullConfig = accessor.getConfig()

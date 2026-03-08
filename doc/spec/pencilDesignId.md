@@ -35,6 +35,19 @@ IDはpencilのFrameを指しています。
    - PC：Node ID: SGKRj
    - SP：Node ID: Oroa8
 
+1. Git画面
+   - PC：Node ID: TySUT
+   - SP：Node ID: A0mek
+
+1. Git画面（AIコミット実行中）
+   - PC：Node ID: tey6p
+
+1. マージモーダル
+   - Node ID: 6MUix
+
+1. 新規ブランチ作成モーダル
+   - Node ID: MsVc8
+
 ## コンポーネント
 
 1. ALL

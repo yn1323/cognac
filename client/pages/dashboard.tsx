@@ -10,9 +10,6 @@ import {
   AlertCircle,
   Pause,
   Plus,
-  PlusCircle,
-  ListChecks,
-  Settings,
   Loader2,
 } from 'lucide-react'
 import { Sidebar } from '@/components/sidebar'
@@ -20,7 +17,8 @@ import { PageHeader } from '@/components/page-header'
 import { MetricCard } from '@/components/metric-card'
 import { TaskCard } from '@/components/task-card'
 import { SPHeader } from '@/components/sp-header'
-import { SPBottomNav, SPNavItem } from '@/components/sp-bottom-nav'
+import { AppBottomNav } from '@/components/app-bottom-nav'
+import { Fab } from '@/components/fab'
 import { SPMetric } from '@/components/sp-metric'
 import { SPTaskCard } from '@/components/sp-task-card'
 import { StatusBadge } from '@/components/status-badge'
@@ -374,18 +372,9 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry }
         )}
       </main>
 
-      {/* ボトムナビ */}
-      <SPBottomNav>
-        <SPNavItem icon={ListChecks} label="タスク" active />
-        <button
-          type="button"
-          className="flex flex-col items-center gap-1"
-          onClick={onNewTask}
-        >
-          <PlusCircle className="h-7 w-7 text-primary" />
-        </button>
-        <SPNavItem icon={Settings} label="設定" onClick={() => onNavigate('/settings')} />
-      </SPBottomNav>
+      {/* FAB + ボトムナビ */}
+      <Fab icon={Plus} onClick={onNewTask} />
+      <AppBottomNav activeItem="タスク" />
     </div>
   )
 }

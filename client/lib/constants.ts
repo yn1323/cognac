@@ -12,5 +12,6 @@ export const SP_PRIORITIES: PriorityLabel[] = ['Low', 'Normal', 'High']
 // サイドバーナビゲーションのラベル→パスマッピング
 export const NAV_MAP: Record<string, string> = {
   タスク: '/',
+  Git: '/git',
   設定: '/settings',
 }
