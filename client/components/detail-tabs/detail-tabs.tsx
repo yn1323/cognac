@@ -34,7 +34,7 @@ export function DetailTabs({
               className={cn(
                 'cursor-pointer rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors',
                 isActive
-                  ? 'bg-foreground text-background'
+                  ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
@@ -58,7 +58,7 @@ export function DetailTabs({
             className={cn(
               'cursor-pointer border-b-2 px-3 pb-2 text-sm font-medium transition-colors',
               isActive
-                ? 'border-foreground text-foreground'
+                ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground',
             )}
           >
