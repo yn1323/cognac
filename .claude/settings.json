@@ -74,7 +74,8 @@
       "mcp__playwright__playwright_fill",
       "mcp__playwright__playwright_evaluate",
       "Bash(python3 -c \":*)",
-      "Bash(python3 -m json.tool)"
+      "Bash(python3 -m json.tool)",
+      "Bash(python3 -c \"import sys,json; data=json.loads\\(sys.stdin.read\\(\\)\\); print\\(data.get\\(''result'',''no result found''\\)\\)\")"
     ],
     "deny": [],
     "additionalDirectories": [

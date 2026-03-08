@@ -88,6 +88,10 @@ export interface GitPushResponse {
   branch: string
 }
 
+export interface GitExplainResponse {
+  explanation: string
+}
+
 // --- API リクエスト型 ---
 
 export interface GitCheckoutRequest {

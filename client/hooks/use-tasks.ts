@@ -60,6 +60,14 @@ export function useCancelTask() {
   })
 }
 
+export function useStopAllTasks() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api.tasks.stopAll(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
+  })
+}
+
 export function useRetryTask() {
   const qc = useQueryClient()
   return useMutation({

@@ -4,7 +4,7 @@
 import type {
   Task, TaskImage, ExecutionLog, CreateTaskInput, UpdateTaskInput, Persona, Discussion, Plan, SettingsPayload,
   GitStatusResponse, GitLogResponse, GitBranchesResponse, GitRemoteStatusResponse,
-  GitCommitResponse, GitMergeResponse, GitPushResponse,
+  GitCommitResponse, GitMergeResponse, GitPushResponse, GitExplainResponse,
 } from '@cognac/shared'
 
 const BASE = '/api'
@@ -37,6 +37,8 @@ export const api = {
       fetchJson<{ ok: boolean }>(`/tasks/${id}`, { method: 'DELETE' }),
     cancel: (id: number) =>
       fetchJson<Task>(`/tasks/${id}/cancel`, { method: 'POST' }),
+    stopAll: () =>
+      fetchJson<{ ok: boolean; stoppedCount: number }>('/tasks/stop-all', { method: 'POST' }),
     retry: (id: number) =>
       fetchJson<Task>(`/tasks/${id}/retry`, { method: 'POST' }),
     getPersonas: (taskId: number) =>
@@ -94,5 +96,9 @@ export const api = {
     fetch: () => fetchJson<{ ok: boolean }>('/git/fetch', { method: 'POST' }),
     merge: (from: string, into: string) =>
       fetchJson<GitMergeResponse>('/git/merge', { method: 'POST', body: JSON.stringify({ from, into }) }),
+    explain: (hash: string) =>
+      fetchJson<GitExplainResponse>('/git/explain', { method: 'POST', body: JSON.stringify({ hash }) }),
+    explainWorking: () =>
+      fetchJson<GitExplainResponse>('/git/explain-working', { method: 'POST' }),
   },
 }

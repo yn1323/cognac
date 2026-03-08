@@ -31,7 +31,7 @@ import { NAV_MAP } from '@/lib/constants'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCallback, useMemo, useState } from 'react'
 import { useToast } from '@/components/toast'
-import { useTasks, useRetryTask } from '@/hooks/use-tasks'
+import { useTasks, useRetryTask, useStopAllTasks } from '@/hooks/use-tasks'
 
 // --- フィルター定義 ---
 
@@ -142,9 +142,14 @@ interface DashboardProps {
   onRetry: (taskId: number) => void
 }
 
+interface PCDashboardProps extends DashboardProps {
+  onStopAll: () => void
+  isStoppingAll: boolean
+}
+
 // --- PC版 ---
 
-function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry }: DashboardProps) {
+function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry, onStopAll, isStoppingAll }: PCDashboardProps) {
   const { activeFilters, metrics, filteredTasks, toggle } = useDashboardFilters(tasks)
 
   return (
@@ -168,8 +173,10 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry }
             <span className="h-2 w-2 rounded-full bg-[#22c55e]" />
             <span className="text-xs font-semibold text-[#166534]">実行中</span>
           </div>
-          <Button variant="outline">
-            <Pause className="mr-2 h-4 w-4" />
+          <Button variant="outline" onClick={onStopAll} disabled={isStoppingAll}>
+            {isStoppingAll
+              ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              : <Pause className="mr-2 h-4 w-4" />}
             全停止
           </Button>
           <Button
@@ -386,6 +393,7 @@ export function DashboardPage() {
   const handleNewTask = useCallback(() => navigate('?new-task=true'), [navigate])
   const { data: tasks = [], isLoading, error } = useTasks()
   const retryTask = useRetryTask()
+  const stopAllTasks = useStopAllTasks()
   const { toast } = useToast()
   const handleRetry = useCallback((taskId: number) => {
     retryTask.mutate(taskId, {
@@ -393,6 +401,12 @@ export function DashboardPage() {
       onError: () => toast('リトライに失敗しました', 'error'),
     })
   }, [retryTask, toast])
+  const handleStopAll = useCallback(() => {
+    stopAllTasks.mutate(undefined, {
+      onSuccess: (res) => toast(`${res.stoppedCount}件のタスクを停止しました`, 'success'),
+      onError: () => toast('全停止に失敗しました', 'error'),
+    })
+  }, [stopAllTasks, toast])
 
   return (
     <>
@@ -406,6 +420,8 @@ export function DashboardPage() {
           onNewTask={handleNewTask}
           onNavigate={navigate}
           onRetry={handleRetry}
+          onStopAll={handleStopAll}
+          isStoppingAll={stopAllTasks.isPending}
         />
       </div>
       {/* SP版: md未満で表示 */}

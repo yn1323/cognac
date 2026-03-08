@@ -9,7 +9,10 @@
 
 import { execSync, spawn } from 'node:child_process'
 
-const PORTS = [4000, 5173]
+const PORTS = [
+  process.env.COGNAC_SERVER_PORT ? Number(process.env.COGNAC_SERVER_PORT) : 4000,
+  process.env.COGNAC_CLIENT_PORT ? Number(process.env.COGNAC_CLIENT_PORT) : 5173,
+]
 
 // ── 古いプロセスの kill ──
 

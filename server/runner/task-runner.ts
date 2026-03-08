@@ -1,5 +1,5 @@
 import type Database from 'better-sqlite3'
-import type { CognacConfig, TaskEvent, Task, Phase, CiStep } from '@cognac/shared'
+import type { CognacConfig, CommitMessageLanguage, TaskEvent, Task, Phase, CiStep } from '@cognac/shared'
 import type { EventBus } from '../sse/event-bus.js'
 import type { RunnerStatus } from '../api/system.js'
 import * as taskQueries from '../db/queries/tasks.js'
@@ -44,7 +44,7 @@ export class TaskRunner implements RunnerStatus {
   // 設定をメモリ上でホットリロード（設定保存時に呼ばれる）
   updateConfig(patch: {
     ci: { maxRetries: number; steps?: CiStep[] }
-    git: { commitLogLimit: number }
+    git: { commitLogLimit: number; commitMessageLanguage: CommitMessageLanguage }
   }): void {
     this.config = {
       ...this.config,
@@ -87,6 +87,23 @@ export class TaskRunner implements RunnerStatus {
     console.log(`タスク ${taskId} のキャンセルシグナルを送信`)
     this.currentAbortController.abort()
     return true
+  }
+
+  // 全タスクを停止してランナーを一時停止する
+  stopAll(): number {
+    // ランナーを一時停止
+    this.paused = true
+
+    // 実行中タスクがあればabort
+    if (this.currentAbortController) {
+      console.log(`実行中タスク ${this.currentTaskId} のキャンセルシグナルを送信`)
+      this.currentAbortController.abort()
+    }
+
+    // DBの全アクティブタスクをstopped化
+    const stoppedCount = taskQueries.stopAllActiveTasks(this.db)
+    console.log(`全停止: ${stoppedCount}件のタスクを停止`)
+    return stoppedCount
   }
 
   private scheduleNextPoll(): void {
@@ -380,6 +397,11 @@ export class TaskRunner implements RunnerStatus {
         // キャンセルエラーは上位に伝搬
         if (err instanceof TaskCancelledError) {
           throw err
+        }
+
+        // abort済み（全停止など）ならDB上書きせず即終了
+        if (signal?.aborted) {
+          throw new TaskCancelledError()
         }
 
         if (err instanceof ProcessTimeoutError) {
