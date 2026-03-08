@@ -8,6 +8,7 @@
     "test": "pnpm -r --parallel test",
     "build": "pnpm -r build",
     "dev": "pnpm --parallel --filter @cognac/server --filter @cognac/client dev",
+    "dev:win": "node scripts/dev.mjs",
     "storybook": "pnpm -F @cognac/client storybook"
   },
   "devDependencies": {

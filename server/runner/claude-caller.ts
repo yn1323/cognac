@@ -87,6 +87,20 @@ function cleanupTmpFiles({ promptFile, systemFile }: TmpFiles): void {
   }
 }
 
+// ── ネストセッション防止の回避 ──
+// Claude Code は CLAUDECODE 環境変数をセットするため、
+// 子プロセスで再度 claude を起動すると「ネストされたセッション」と判定されてしまう。
+// spawn 時にこの変数を除外した env を渡す。
+function getCleanEnv(): NodeJS.ProcessEnv {
+  const env = Object.fromEntries(
+    Object.entries(process.env).filter(
+      ([key]) => key !== 'CLAUDECODE' && !key.startsWith('CLAUDE_CODE_'),
+    ),
+  ) as NodeJS.ProcessEnv
+  console.log(`[getCleanEnv] CLAUDECODE除外: 元=${process.env.CLAUDECODE} → 結果=${env.CLAUDECODE ?? '(未定義)'}`)
+  return env
+}
+
 // ── プロセス共通ヘルパー ──
 
 interface SpawnHelpers {
@@ -185,6 +199,7 @@ export async function callClaude(
       const child = spawn('claude', args, {
         stdio: ['pipe', 'pipe', 'pipe'],
         shell: true,
+        env: getCleanEnv(),
       })
 
       console.log(`[callClaude] プロセス起動 PID=${child.pid}`)
@@ -283,6 +298,7 @@ export async function callClaudePrint(
       const child = spawn('claude', args, {
         stdio: ['pipe', 'pipe', 'pipe'],
         shell: true,
+        env: getCleanEnv(),
       })
 
       console.log(`[callClaudePrint] プロセス起動 PID=${child.pid}`)
