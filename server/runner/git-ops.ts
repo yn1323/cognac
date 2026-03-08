@@ -7,7 +7,7 @@ import { slugify } from '@cognac/shared'
 // gitコマンドを実行するヘルパー
 // NOTE: argsはCognac内部のハードコード値のみ使用するためexecSyncで安全
 function git(args: string, cwd: string = process.cwd()): string {
-  return execSync(`git ${args}`, { cwd, encoding: 'utf8', timeout: 30000 }).trim()
+  return execSync(`git -c core.quotepath=false ${args}`, { cwd, encoding: 'utf8', timeout: 30000 }).trim()
 }
 
 // ブランチ名を組み立てる（task/{id}-{slug}形式、slugは最大30文字）
