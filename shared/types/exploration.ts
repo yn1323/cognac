@@ -32,6 +32,7 @@ export interface ExplorationSession {
   title: string
   request: string
   status: ExplorationStatus
+  current_phase: ExplorationPhase | null
   final_report_markdown: string | null
   issue_count: number
   paused_reason: string | null

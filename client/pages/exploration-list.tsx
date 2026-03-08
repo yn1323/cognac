@@ -20,11 +20,13 @@ import { AppBottomNav } from '@/components/app-bottom-nav'
 import { Fab } from '@/components/fab'
 import { SPMetric } from '@/components/sp-metric'
 import { SPTaskCard } from '@/components/sp-task-card'
-import { ExplorationStatusBadge } from '@/components/exploration-status-badge'
 import { Button } from '@/components/ui/button'
 import { ExplorationModal } from '@/components/exploration-modal'
 import { formatRelativeTime } from '@/lib/format'
-import { EXPLORATION_STATUS_CONFIG } from '@/lib/exploration-status-config'
+import {
+  EXPLORATION_CARD_STATUS_CONFIG,
+  getExplorationCardStatus,
+} from '@/lib/exploration-status-config'
 import { NAV_MAP } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { useExplorations } from '@/hooks/use-explorations'
@@ -117,7 +119,8 @@ function useExplorationFilters(explorations: ExplorationListItem[]) {
 // --- 探索カード（PC版） ---
 
 function ExplorationCard({ exploration }: { exploration: ExplorationListItem }) {
-  const config = EXPLORATION_STATUS_CONFIG[exploration.status]
+  const cardStatus = getExplorationCardStatus(exploration.status, exploration.current_phase)
+  const config = EXPLORATION_CARD_STATUS_CONFIG[cardStatus]
   return (
     <Link to={`/explorations/${exploration.id}`} className="block">
       <div
@@ -129,7 +132,7 @@ function ExplorationCard({ exploration }: { exploration: ExplorationListItem }) 
       >
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <div className="flex items-center gap-2">
-            <ExplorationStatusBadge status={exploration.status} />
+            <ExplorationCardBadge exploration={exploration} />
           </div>
           <span className="text-sm font-medium leading-[1.4] text-foreground">
             {exploration.title}
@@ -155,6 +158,25 @@ function ExplorationCard({ exploration }: { exploration: ExplorationListItem }) 
         </div>
       </div>
     </Link>
+  )
+}
+
+function ExplorationCardBadge({ exploration }: { exploration: ExplorationListItem }) {
+  const cardStatus = getExplorationCardStatus(exploration.status, exploration.current_phase)
+  const config = EXPLORATION_CARD_STATUS_CONFIG[cardStatus]
+
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full px-2 py-0.5',
+        config.bgColor,
+      )}
+    >
+      <span className={cn('h-1.5 w-1.5 rounded-full', config.dotColor)} />
+      <span className={cn('text-xs font-medium leading-[1.3]', config.color)}>
+        {config.label}
+      </span>
+    </span>
   )
 }
 
@@ -330,13 +352,14 @@ function SPExplorationList({
         ) : (
           <div className="flex flex-col gap-2.5">
             {filtered.map((e) => {
-              const config = EXPLORATION_STATUS_CONFIG[e.status]
+              const cardStatus = getExplorationCardStatus(e.status, e.current_phase)
+              const config = EXPLORATION_CARD_STATUS_CONFIG[cardStatus]
               return (
                 <Link key={e.id} to={`/explorations/${e.id}`} className="block">
                   <SPTaskCard
                     title={e.title}
                     subtitle={formatRelativeTime(e.started_at ?? e.created_at)}
-                    badge={<ExplorationStatusBadge status={e.status} />}
+                    badge={<ExplorationCardBadge exploration={e} />}
                     borderColor={config.borderColor || 'border-border'}
                   />
                 </Link>

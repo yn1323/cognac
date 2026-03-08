@@ -116,6 +116,8 @@ CREATE TABLE IF NOT EXISTS exploration_sessions (
   request TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'analyzing', 'completed', 'paused', 'failed')),
+  current_phase TEXT
+    CHECK (current_phase IN ('persona', 'discussion', 'explore', 'report', 'taskify') OR current_phase IS NULL),
   final_report_markdown TEXT,
   issue_count INTEGER NOT NULL DEFAULT 0,
   paused_reason TEXT,

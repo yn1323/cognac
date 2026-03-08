@@ -178,6 +178,7 @@ export function explorationsRouter(
 
     const updated = explorationQueries.updateExploration(db, id, {
       status: 'pending',
+      current_phase: null,
       paused_reason: null,
       started_at: null,
       completed_at: null,

@@ -184,6 +184,7 @@ export class ExplorationRunner implements RunnerStatus {
       const started = new Date().toISOString()
       explorationQueries.updateExploration(this.db, exploration.id, {
         status: 'analyzing',
+        current_phase: 'persona',
         started_at: started,
         paused_reason: null,
         completed_at: null,
@@ -202,6 +203,9 @@ export class ExplorationRunner implements RunnerStatus {
       this.emit(exploration.id, { type: 'persona_selected', personas: personaResult.personas })
       this.emit(exploration.id, phaseEnd('persona', personaResult.durationMs))
 
+      explorationQueries.updateExploration(this.db, exploration.id, {
+        current_phase: 'discussion',
+      })
       this.emit(exploration.id, phaseStart('discussion'))
       const discussionResult = await executeExplorationPhaseDiscussion(
         exploration,
@@ -216,6 +220,7 @@ export class ExplorationRunner implements RunnerStatus {
 
       explorationQueries.updateExploration(this.db, exploration.id, {
         status: 'analyzing',
+        current_phase: 'explore',
       })
 
       const beforeStatus = serializeGitStatus(this.cwd)
@@ -258,6 +263,9 @@ export class ExplorationRunner implements RunnerStatus {
         this.emit(exploration.id, { type: 'artifact_created', kind: 'playwright-log', path: image.file_path })
       }
 
+      explorationQueries.updateExploration(this.db, exploration.id, {
+        current_phase: 'report',
+      })
       this.emit(exploration.id, phaseStart('report'))
       const reportResult = await executeExplorationPhaseReport(
         exploration,
