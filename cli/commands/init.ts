@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync } fr
 import { join } from 'node:path'
 
 // 設定ファイルのテンプレート
-const CONFIG_TEMPLATE = `import { defineConfig } from 'cognac'
+const CONFIG_TEMPLATE = `import { defineConfig } from '@yn1323/cognac'
 
 export default defineConfig({
   port: 4000,
@@ -20,7 +20,7 @@ export default defineConfig({
   claude: {
     maxTurnsExecution: 30,
     maxTurnsDiscussion: 1,
-    stdoutTimeoutMs: 300000,
+    stdoutTimeoutMs: 600000,
     processMaxRetries: 2,
   },
 })

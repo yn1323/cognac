@@ -3,7 +3,7 @@
 
 import { Hono } from 'hono'
 import type { CognacConfig } from '@cognac/shared'
-import { callClaudePrint } from '../runner/claude-caller.js'
+import { createProvider } from '../runner/providers/index.js'
 import { z } from 'zod'
 import {
   getStatus,
@@ -25,6 +25,7 @@ import {
   commitWithMessage,
   getCommitDiff,
   getWorkingDiff,
+  getFileDiff,
 } from '../runner/git-api-ops.js'
 
 // バリデーションスキーマ
@@ -249,6 +250,23 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
     }
   })
 
+  // GET /file-diff?path=xxx — ファイル単位の未コミットdiffを取得
+  app.get('/file-diff', (c) => {
+    const filePath = c.req.query('path')
+    if (!filePath) {
+      return c.json({ error: 'pathパラメータが必要です' }, 400)
+    }
+    if (filePath.includes('..')) {
+      return c.json({ error: '不正なパスです' }, 400)
+    }
+    try {
+      const diff = getFileDiff(cwd, filePath)
+      return c.json({ path: filePath, diff })
+    } catch (err) {
+      return c.json({ error: 'diffの取得に失敗しました', detail: String(err) }, 500)
+    }
+  })
+
   // POST /explain — AIによるコミット解説
   app.post('/explain', async (c) => {
     const body = await c.req.json()
@@ -288,7 +306,7 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
   return app
 }
 
-// Claude CLI を使ってコミットの変更内容を解説する
+// CLI を使ってコミットの変更内容を解説する
 async function generateCommitExplanation(diff: string, hash: string, getConfig: () => CognacConfig): Promise<string> {
   const prompt = `以下のgitコミット (${hash}) の変更内容を日本語で簡潔に解説してください。
 
@@ -303,17 +321,18 @@ ${diff.substring(0, 8000)}
 - 全体で200文字〜400文字程度に収めてください`
 
   try {
-    const response = await callClaudePrint({ prompt }, getConfig())
+    const config = getConfig()
+    const provider = createProvider(config.provider)
+    const response = await provider.execPrint({ prompt }, config)
     const result = response.result.trim()
     return result || 'コミットの解説を生成できませんでした。'
   } catch (err) {
-    console.error('[generateCommitExplanation] Claude CLI 失敗:', err)
+    console.error('[generateCommitExplanation] CLI 失敗:', err)
     return 'コミットの解説を生成できませんでした。'
   }
 }
 
-// Claude CLI を使ってコミットメッセージを生成する
-// callClaudePrint() でtmpファイル + stdinパイプ方式を使い、長いdiffも安全に処理
+// CLI を使ってコミットメッセージを生成する
 async function generateCommitMessage(diff: string, recentLog: string, getConfig: () => CognacConfig): Promise<string> {
   const config = getConfig()
   const langRule = config.git.commitMessageLanguage === 'ja'
@@ -335,11 +354,12 @@ ${langRule}
 - 50文字程度に収めてください`
 
   try {
-    const response = await callClaudePrint({ prompt }, config)
+    const provider = createProvider(config.provider)
+    const response = await provider.execPrint({ prompt }, config)
     const result = response.result.trim()
     return result || 'chore: update files'
   } catch (err) {
-    console.error('[generateCommitMessage] Claude CLI 失敗:', err)
+    console.error('[generateCommitMessage] CLI 失敗:', err)
     return 'chore: update files'
   }
 }

@@ -1,9 +1,10 @@
 import type Database from 'better-sqlite3'
-import type { CognacConfig, CommitMessageLanguage, TaskEvent, Task, Phase, CiStep } from '@cognac/shared'
+import type { CognacConfig, ConfigPatch, TaskEvent, Task, Phase } from '@cognac/shared'
 import type { EventBus } from '../sse/event-bus.js'
 import type { RunnerStatus } from '../api/system.js'
 import * as taskQueries from '../db/queries/tasks.js'
 import * as logQueries from '../db/queries/execution-logs.js'
+import * as taskEventQueries from '../db/queries/task-events.js'
 import { buildBranchName /* createTaskBranch, resetTaskBranch, mergeTaskBranch */ } from './git-ops.js'
 import { executePhase3 } from './phase-execute.js'
 import { executePhasePersona } from './phase-persona.js'
@@ -14,6 +15,7 @@ import { invalidateContextCache } from './context-cache.js'
 import { getCiSteps, runCi } from './ci-runner.js'
 import { classifyError } from './error-classifier.js'
 import { ProcessTimeoutError, TaskCancelledError } from './claude-caller.js'
+import type { ExecutionCoordinator } from './execution-coordinator.js'
 
 export class TaskRunner implements RunnerStatus {
   private running = false
@@ -26,8 +28,9 @@ export class TaskRunner implements RunnerStatus {
 
   constructor(
     private db: Database.Database,
-    private eventBus: EventBus,
+    private eventBus: EventBus<TaskEvent>,
     private config: CognacConfig,
+    private coordinator?: ExecutionCoordinator,
   ) {}
 
   getStatus(): 'running' | 'paused' | 'idle' {
@@ -42,12 +45,10 @@ export class TaskRunner implements RunnerStatus {
   }
 
   // 設定をメモリ上でホットリロード（設定保存時に呼ばれる）
-  updateConfig(patch: {
-    ci: { maxRetries: number; steps?: CiStep[] }
-    git: { commitLogLimit: number; commitMessageLanguage: CommitMessageLanguage }
-  }): void {
+  updateConfig(patch: ConfigPatch): void {
     this.config = {
       ...this.config,
+      provider: patch.provider ?? this.config.provider,
       ci: { ...this.config.ci, ...patch.ci },
       git: { ...this.config.git, ...patch.git },
     }
@@ -125,6 +126,10 @@ export class TaskRunner implements RunnerStatus {
 
     const task = taskQueries.getNextPendingTask(this.db)
     if (task) {
+      if (this.coordinator && !this.coordinator.acquire('task', task.id)) {
+        this.scheduleNextPoll()
+        return
+      }
       this.currentTaskId = task.id
       try {
         await this.executeTask(task)
@@ -132,14 +137,16 @@ export class TaskRunner implements RunnerStatus {
         console.error(`タスク ${task.id} の実行中に予期しないエラー:`, err)
       } finally {
         this.currentTaskId = null
+        this.coordinator?.release('task', task.id)
       }
     }
 
     this.scheduleNextPoll()
   }
 
-  // タスクイベントを配信 + 蓄積するヘルパー
+  // タスクイベントを配信 + DB永続化 + 蓄積するヘルパー
   private emit(taskId: number, event: TaskEvent): void {
+    taskEventQueries.insertEvent(this.db, taskId, event.type, JSON.stringify(event))
     this.eventBus.publish(taskId, event)
     this.phaseEvents.push(event)
   }
@@ -152,8 +159,8 @@ export class TaskRunner implements RunnerStatus {
   }
 
   // メインのタスク実行パイプライン
-  // skipDiscussion=true:  pending → executing → testing → completed（ブートストラップ）
-  // skipDiscussion=false: pending → discussing → planned → executing → testing → completed（フル）
+  // skipDiscussion=true:  pending → executing → reviewing → completed（ブートストラップ）
+  // skipDiscussion=false: pending → discussing → executing → reviewing → completed（フル）
   private async executeTask(task: Task): Promise<void> {
     const { id } = task
     let currentPhase: Phase = 'execute'
@@ -208,8 +215,6 @@ export class TaskRunner implements RunnerStatus {
         this.emit(id, { type: 'phase_start', phase: 'plan', timestamp: new Date().toISOString() })
         const planResult = await executePhasePlan(task, discResult.discussions, personaResult.personas, this.db, this.config, onEvent, signal)
         this.emit(id, { type: 'phase_end', phase: 'plan', timestamp: new Date().toISOString(), durationMs: planResult.durationMs })
-        taskQueries.updateTask(this.db, id, { status: 'planned' })
-
         // キャンセルチェック
         if (signal.aborted) return
 
@@ -314,7 +319,7 @@ export class TaskRunner implements RunnerStatus {
         })
 
         // --- CI実行 ---
-        taskQueries.updateTask(this.db, id, { status: 'testing' })
+        taskQueries.updateTask(this.db, id, { status: 'reviewing' })
         this.emit(id, { type: 'phase_start', phase: 'ci', timestamp: new Date().toISOString() })
 
         const ciSteps = getCiSteps(this.db, this.config)
@@ -365,7 +370,7 @@ export class TaskRunner implements RunnerStatus {
           taskQueries.updateTask(this.db, id, {
             status: 'paused',
             paused_reason: errorOutput,
-            paused_phase: 'testing',
+            paused_phase: 'reviewing',
           })
           this.emit(id, { type: 'paused', reason: errorOutput, phase: 'ci' })
           return
@@ -443,7 +448,7 @@ export class TaskRunner implements RunnerStatus {
     // 最大リトライ到達 → stopped
     taskQueries.updateTask(this.db, id, {
       status: 'stopped',
-      paused_phase: 'testing',
+      paused_phase: 'reviewing',
     })
     this.emit(id, {
       type: 'error',

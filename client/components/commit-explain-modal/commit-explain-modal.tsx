@@ -43,16 +43,16 @@ export function CommitExplainModal({
       >
         {/* Header */}
         <div className="flex items-start justify-between p-6 pb-3">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#eff6ff]">
               <Bot className="h-5 w-5 text-[#2563eb]" />
             </div>
-            <div className="flex flex-col gap-0.5">
+            <div className="flex min-w-0 flex-col gap-0.5">
               <h2 className="text-lg font-semibold text-foreground">
                 AI コミット解説
               </h2>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="font-medium text-[#1d4ed8]">{commitHash}</span>
+              <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+                <span className="shrink-0 font-medium text-[#1d4ed8]">{commitHash}</span>
                 <span className="truncate">{commitMessage}</span>
               </div>
             </div>

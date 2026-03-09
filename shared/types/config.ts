@@ -3,15 +3,27 @@ import type { CiStep } from './events.js'
 // コミットメッセージ言語
 export type CommitMessageLanguage = 'ja' | 'en'
 
-// 設定更新ペイロード（API用）
-export interface SettingsPayload {
+// CLIプロバイダー種別
+export type CliProvider = 'claude' | 'codex'
+
+// 設定ホットリロード用の差分
+export interface ConfigPatch {
+  provider: CliProvider
   ci: {
     maxRetries: number
-    steps: CiStep[] // 空配列 = 自動検出モード
+    steps?: CiStep[]
   }
   git: {
     commitLogLimit: number
     commitMessageLanguage: CommitMessageLanguage
+  }
+}
+
+// 設定更新ペイロード（API用）
+export interface SettingsPayload extends ConfigPatch {
+  ci: {
+    maxRetries: number
+    steps: CiStep[] // 空配列 = 自動検出モード
   }
 }
 
@@ -48,6 +60,7 @@ export interface ClaudeConfig {
 export interface CognacConfig {
   port: number
   host: string
+  provider: CliProvider
   git: GitConfig
   ci: CiConfig
   discussion: DiscussionConfig
@@ -58,6 +71,7 @@ export interface CognacConfig {
 const defaultConfig: CognacConfig = {
   port: 4000,
   host: '0.0.0.0',
+  provider: 'claude',
   git: {
     defaultBranch: 'main',
     commitLogLimit: 50,
@@ -75,7 +89,7 @@ const defaultConfig: CognacConfig = {
   claude: {
     maxTurnsExecution: 30,
     maxTurnsDiscussion: 1,
-    stdoutTimeoutMs: 300000,
+    stdoutTimeoutMs: 600000,
     processMaxRetries: 2,
   },
 }

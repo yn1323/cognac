@@ -2,11 +2,11 @@
  * B-07: Claude Code stream-json 出力パーサー
  *
  * `claude -p --output-format stream-json` の各行JSONをパースし、
- * TaskEvent に変換する。
+ * AgentStreamEvent に変換する。
  * 不明なチャンクタイプはスキップ（warn出すだけ、throwしない）。
  */
 
-import type { TaskEvent } from '@cognac/shared'
+import type { AgentStreamEvent } from '@cognac/shared'
 
 // ── Claude CLIが吐くstream-jsonの型 ──
 
@@ -83,10 +83,10 @@ export class StreamParser {
   private lastToolName: string | null = null
 
   /**
-   * 1行分のJSONをパースして TaskEvent を返す。
+   * 1行分のJSONをパースして AgentStreamEvent を返す。
    * 該当なし or 不明タイプなら null。
    */
-  parse(line: string): TaskEvent | null {
+  parse(line: string): AgentStreamEvent | null {
     if (!line.trim()) return null
 
     let chunk: StreamChunk
@@ -125,7 +125,7 @@ export class StreamParser {
 
   // ── 内部ハンドラ ──
 
-  private handleAssistant(chunk: AssistantChunk): TaskEvent | null {
+  private handleAssistant(chunk: AssistantChunk): AgentStreamEvent | null {
     const blocks = chunk.message?.content
     if (!blocks || blocks.length === 0) return null
 
@@ -138,12 +138,12 @@ export class StreamParser {
     return null
   }
 
-  private blockToEvent(block: ContentBlock): TaskEvent | null {
+  private blockToEvent(block: ContentBlock): AgentStreamEvent | null {
     switch (block.type) {
       case 'text':
         this.lastToolName = null
         return {
-          type: 'claude_output',
+          type: 'agent_output',
           content: (block as TextBlock).text,
         }
 
@@ -164,7 +164,7 @@ export class StreamParser {
     }
   }
 
-  private handleToolUse(block: ToolUseBlock): TaskEvent | null {
+  private handleToolUse(block: ToolUseBlock): AgentStreamEvent | null {
     const { name, input } = block
     this.lastToolName = name
 
@@ -197,7 +197,7 @@ export class StreamParser {
     }
   }
 
-  private handleResult(chunk: ResultChunk): TaskEvent | null {
+  private handleResult(chunk: ResultChunk): AgentStreamEvent | null {
     this.resultData = {
       result: chunk.result ?? '',
       sessionId: chunk.session_id ?? '',

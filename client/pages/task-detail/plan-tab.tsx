@@ -62,18 +62,6 @@ export function PCPlanTab({ task }: { task: Task }) {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* ステータスバナー */}
-      <div className="flex items-center gap-3 rounded-lg border border-[#2563eb30] bg-[#eff6ff] px-4 py-3">
-        <FileText className="h-[18px] w-[18px] shrink-0 text-[#2563eb]" />
-        <span className="text-[13px] font-medium leading-[1.4] text-[#1e40af]">
-          ディスカッションの合意からプランを生成しました。実行準備完了。
-        </span>
-        {complexityStyle && (
-          <span className={`ml-auto rounded-full px-2.5 py-0.5 text-xs font-medium ${complexityStyle.bg} ${complexityStyle.text}`}>
-            複雑度: {plan.estimated_complexity}
-          </span>
-        )}
-      </div>
 
       {/* Implementation Plan カード */}
       <Card className="overflow-hidden">

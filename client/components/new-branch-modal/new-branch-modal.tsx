@@ -67,6 +67,7 @@ export function NewBranchModal({ open, onClose, branches, onCreate }: NewBranchM
               ブランチ名
             </label>
             <Input
+              className="bg-white"
               value={branchName}
               onChange={(e) => setBranchName(e.target.value)}
               placeholder="feature/my-new-branch"

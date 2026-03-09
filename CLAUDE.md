@@ -62,10 +62,26 @@ React 19 + Vite 6 + TailwindCSS v4 + React Router v7 + TanStack Query v5。コ�
 ### タスク状態マシン
 
 ```
-pending → discussing → planned → executing → testing → completed
-                                    ↓
-                                 paused (infraエラー) / stopped (リトライ上限到達)
+pending → discussing → executing → reviewing → completed
+              ↓            ↓
+           paused / stopped (infraエラー / リトライ上限到達)
 ```
+
+- `discussing`: ペルソナ選定 → ディスカッション → プラン策定（Phase 2全体）
+- `executing`: コード実行（Phase 3）
+- `reviewing`: CI実行
+
+### 探索状態マシン
+
+```
+pending → discussing → executing → reviewing → completed
+              ↓            ↓           ↓
+           paused / stopped (infraエラー / リトライ上限到達)
+```
+
+- `discussing`: ペルソナ選定 → ディスカッション
+- `executing`: 探索実行（Claude/Codex エージェント）
+- `reviewing`: レポート生成
 
 ### AIワークフローフェーズ
 
@@ -78,7 +94,7 @@ pending → discussing → planned → executing → testing → completed
 - **ブランチ命名**: `task/<task-id>-<slugified-title>` (slug部分は最大30文字)
 - **Node.js 22**必須 (CIでNode 22を使用)
 - **`packageManager: pnpm@10.6.2`** — npm/yarnではなくpnpmを使用
-- **画面名とpencil NodeIDの紐づけ** — `doc/spec/pencilDesignId.md`
+- **画面名とpencil NodeIDの紐づけ** — `doc/design/index.md`
 
 ## CI
 
@@ -142,3 +158,4 @@ pushトリガーの4つのGitHub Actionsワークフロー: `build.yml`、`lint.
 ## CLI設計
 
 - IMPORTANT: Windonws, Mac両方で正常に動作すること
+- IMPORTANT: Claude Cli, Codex Cli を設定画面から選択して利用可能。実装、修正時は両方考慮すること。

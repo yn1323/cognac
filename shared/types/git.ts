@@ -92,6 +92,11 @@ export interface GitExplainResponse {
   explanation: string
 }
 
+export interface GitFileDiffResponse {
+  path: string
+  diff: string
+}
+
 // --- API リクエスト型 ---
 
 export interface GitCheckoutRequest {

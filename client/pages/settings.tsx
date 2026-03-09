@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, X, ChevronUp, ChevronDown } from 'lucide-react'
-import type { CiStep, CommitMessageLanguage } from '@cognac/shared'
+import type { CiStep, CliProvider, CommitMessageLanguage } from '@cognac/shared'
 import { Sidebar } from '@/components/sidebar'
 import { NAV_MAP } from '@/lib/constants'
 import { AppBottomNav } from '@/components/app-bottom-nav'
@@ -107,6 +107,8 @@ function CiCommandsEditor({
 // --- 共通パネルProps ---
 
 interface SettingsPanelProps {
+  provider: CliProvider
+  setProvider: (v: CliProvider) => void
   maxRetries: string
   setMaxRetries: (v: string) => void
   commitLogLimit: string
@@ -123,6 +125,8 @@ interface SettingsPanelProps {
 // --- PC版 ---
 
 function PCSettings({
+  provider,
+  setProvider,
   maxRetries,
   setMaxRetries,
   commitLogLimit,
@@ -168,6 +172,22 @@ function PCSettings({
             </p>
           </CardHeader>
           <CardContent className="flex flex-col gap-5 p-6 pt-0">
+            <div>
+              <label className="text-sm font-medium leading-[1.4] text-foreground">
+                CLIプロバイダー
+              </label>
+              <select
+                className="mt-1.5 flex h-9 w-48 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={provider}
+                onChange={(e) => setProvider(e.target.value as CliProvider)}
+              >
+                <option value="claude">Claude Code</option>
+                <option value="codex">Codex CLI</option>
+              </select>
+              <p className="mt-1 text-[12px] text-muted-foreground">
+                タスク実行に使用するAI CLIツール
+              </p>
+            </div>
             <div>
               <label className="text-sm font-medium leading-[1.4] text-foreground">
                 最大リトライ回数
@@ -277,6 +297,8 @@ function PCSettings({
 // --- SP版 ---
 
 function SPSettings({
+  provider,
+  setProvider,
   maxRetries,
   setMaxRetries,
   commitLogLimit,
@@ -308,6 +330,22 @@ function SPSettings({
             </p>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 px-4 pb-4 pt-0">
+            <div>
+              <label className="text-sm font-medium leading-[1.4] text-foreground">
+                CLIプロバイダー
+              </label>
+              <select
+                className="mt-1.5 flex h-9 w-44 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={provider}
+                onChange={(e) => setProvider(e.target.value as CliProvider)}
+              >
+                <option value="claude">Claude Code</option>
+                <option value="codex">Codex CLI</option>
+              </select>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                タスク実行に使用するAI CLIツール
+              </p>
+            </div>
             <div>
               <label className="text-sm font-medium leading-[1.4] text-foreground">
                 最大リトライ回数
@@ -421,6 +459,7 @@ function SPSettings({
 // --- エクスポート ---
 
 export function SettingsPage() {
+  const [provider, setProvider] = useState<CliProvider>('claude')
   const [maxRetries, setMaxRetries] = useState('5')
   const [commitLogLimit, setCommitLogLimit] = useState('50')
   const [commitMessageLanguage, setCommitMessageLanguage] = useState<CommitMessageLanguage>('ja')
@@ -435,6 +474,7 @@ export function SettingsPage() {
   useEffect(() => {
     if (settings && !initialized.current) {
       initialized.current = true
+      setProvider(settings.provider)
       setMaxRetries(String(settings.ci.maxRetries))
       setCommitLogLimit(String(settings.git.commitLogLimit))
       setCommitMessageLanguage(settings.git.commitMessageLanguage)
@@ -449,6 +489,7 @@ export function SettingsPage() {
     if (Number.isNaN(commitLogLimitNum) || commitLogLimitNum < 1) return
 
     updateSettings.mutate({
+      provider,
       ci: {
         maxRetries: maxRetriesNum,
         steps: ciSteps.filter((s) => s.name.trim() && s.command.trim()),
@@ -468,6 +509,8 @@ export function SettingsPage() {
   }
 
   const panelProps: SettingsPanelProps = {
+    provider,
+    setProvider,
     maxRetries,
     setMaxRetries,
     commitLogLimit,
@@ -496,9 +539,9 @@ export function SettingsPage() {
         open={showDbDeleteConfirm}
         onConfirm={handleDeleteDatabase}
         onCancel={() => setShowDbDeleteConfirm(false)}
-        title="データベースを削除する？"
-        description="この操作は取り消せません。すべてのタスク・ログ・実行履歴が完全に削除されます。"
-        confirmLabel="削除する"
+        title="データベースを再初期化する？"
+        description="この操作は取り消せません。既存データを削除して、最新スキーマでデータベースを作り直します。"
+        confirmLabel="再初期化する"
         variant="destructive"
         isLoading={deleteDatabase.isPending}
       />

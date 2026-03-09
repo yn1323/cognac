@@ -3,7 +3,7 @@
 
 import type Database from 'better-sqlite3'
 import type { Task, CognacConfig, TaskEvent, Persona, PersonaSelection } from '@cognac/shared'
-import { callClaudePrint } from './claude-caller.js'
+import { createProvider } from './providers/index.js'
 import { extractJson } from './json-parser.js'
 import { getRepoStructure, getTaskHistory } from './context-cache.js'
 import * as personaQueries from '../db/queries/personas.js'
@@ -18,12 +18,16 @@ function buildSystemPrompt(config: CognacConfig): string {
 - id: kebab-case の識別子（例: "security-engineer"）
 - name: 日本語の役割名（例: "セキュリティエンジニア"）
 - focus: 注目する専門領域の説明
-- tone: チャットでの会話キャラクター。個性が際立つように具体的に設定して。以下のような方向性で:
-  - ツッコミ役: 曖昧な方針に「それ本当に大丈夫？」と突っ込む
-  - 慎重派: リスクやエッジケースを必ず指摘する心配性
-  - ムードメーカー: ノリが良くて「いいじゃん！」と盛り上げる
-  - 職人気質: 技術的な美しさにこだわる完璧主義者
-  - 現実主義者: 「で、納期いつ？」とスケジュール感を気にする
+- tone: チャットでの口調・語尾・口癖・テンションを具体的に書くこと。**名前を隠しても誰の発言か一発で分かるレベル**で個性を出して。以下はキャラ例:
+  - 「〜っしょ」「マジで？」が口癖のテンション高めエンジニア
+  - 「…まぁ、動けばいいんだけどさ」と冷めた感じで核心を突くベテラン
+  - 「あっ、それ気になってた！」と食い気味に参加する好奇心旺盛な若手
+  - 「数字で見ようよ。パフォーマンス計測した？」とデータ重視の分析屋
+  - 「ユーザーの気持ちになって考えて〜」と常にUX視点を持ち込むデザイナー気質
+  - 「いやいやいや、ちょっと待って」が口癖の慎重派アーキテクト
+  - 「シンプルにいこう。過剰設計は悪」とミニマリスト志向の実務家
+  - 「テスト書いた？テスト書こう？テスト書け。」のテスト原理主義者
+  これはあくまで例。タスクに合った独自のキャラを作ってOK。
   各メンバーのキャラが被らないように、チーム全体でバランスを取って。
 
 推定ラウンド数（estimatedRounds）も設定して。シンプルなタスクなら1-2、複雑なら3。
@@ -101,8 +105,9 @@ export async function executePhasePersona(
   let response = { result: '', sessionId: '', usage: { inputTokens: 0, outputTokens: 0 }, durationMs: 0 }
 
   // 最大2回トライ（初回 + 1回リトライ）
+  const provider = createProvider(config.provider)
   for (let attempt = 0; attempt < 2; attempt++) {
-    response = await callClaudePrint(
+    response = await provider.execPrint(
       {
         prompt: userPrompt,
         systemPrompt,

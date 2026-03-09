@@ -23,12 +23,11 @@ import { SPMetric } from '@/components/sp-metric'
 import { SPTaskCard } from '@/components/sp-task-card'
 import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { TaskModal } from '@/components/task-modal'
 import { formatRelativeTime } from '@/lib/format'
 import { ACTIVE_STATUSES, RETRYABLE_STATUSES, STATUS_CONFIG } from '@/lib/status-config'
 import { NAV_MAP } from '@/lib/constants'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useCallback, useMemo, useState } from 'react'
 import { useToast } from '@/components/toast'
 import { useTasks, useRetryTask, useStopAllTasks } from '@/hooks/use-tasks'
@@ -39,7 +38,7 @@ type FilterCategory = 'pending' | 'executing' | 'completed' | 'failed'
 
 const FILTER_CATEGORY_STATUSES: Record<FilterCategory, TaskStatus[]> = {
   pending: ['pending'],
-  executing: ['discussing', 'planned', 'executing', 'testing'],
+  executing: ['discussing', 'executing', 'reviewing'],
   completed: ['completed'],
   failed: ['paused', 'stopped'],
 }
@@ -140,6 +139,7 @@ interface DashboardProps {
   onNewTask: () => void
   onNavigate: (path: string) => void
   onRetry: (taskId: number) => void
+  isTaskModalOpen?: boolean
 }
 
 interface PCDashboardProps extends DashboardProps {
@@ -168,11 +168,6 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry, 
           title="タスク"
           subtitle="AI駆動の開発タスクを管理・監視します"
         >
-          {/* Runner Status */}
-          <div className="flex items-center gap-1.5 rounded-full bg-[#dcfce7] px-3 py-1.5">
-            <span className="h-2 w-2 rounded-full bg-[#22c55e]" />
-            <span className="text-xs font-semibold text-[#166534]">実行中</span>
-          </div>
           <Button variant="outline" onClick={onStopAll} disabled={isStoppingAll}>
             {isStoppingAll
               ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -280,7 +275,7 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry, 
 
 // --- SP版 ---
 
-function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry }: DashboardProps) {
+function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry, isTaskModalOpen }: DashboardProps) {
   const { activeFilters, metrics, filteredTasks, toggle } = useDashboardFilters(tasks)
 
   return (
@@ -288,12 +283,11 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry }
       <SPHeader />
 
       <main className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 pb-20">
-        {/* タイトル + Running バッジ */}
+        {/* タイトル */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold leading-[1.3] text-foreground">
             タスク
           </h1>
-          <Badge className="bg-[#16a34a] text-white">実行中</Badge>
         </div>
 
         {/* メトリクス（フィルター兼用） */}
@@ -380,7 +374,7 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry }
       </main>
 
       {/* FAB + ボトムナビ */}
-      <Fab icon={Plus} onClick={onNewTask} />
+      {!isTaskModalOpen && <Fab icon={Plus} onClick={onNewTask} />}
       <AppBottomNav activeItem="タスク" />
     </div>
   )
@@ -389,7 +383,9 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry }
 // --- エクスポート ---
 
 export function DashboardPage() {
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const isTaskModalOpen = searchParams.get('new-task') === 'true'
   const handleNewTask = useCallback(() => navigate('?new-task=true'), [navigate])
   const { data: tasks = [], isLoading, error } = useTasks()
   const retryTask = useRetryTask()
@@ -433,6 +429,7 @@ export function DashboardPage() {
           onNewTask={handleNewTask}
           onNavigate={navigate}
           onRetry={handleRetry}
+          isTaskModalOpen={isTaskModalOpen}
         />
       </div>
     </>

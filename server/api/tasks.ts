@@ -7,6 +7,7 @@ import type Database from 'better-sqlite3'
 import * as taskQueries from '../db/queries/tasks.js'
 import * as taskImageQueries from '../db/queries/task-images.js'
 import * as logQueries from '../db/queries/execution-logs.js'
+import * as taskEventQueries from '../db/queries/task-events.js'
 import * as personaQueries from '../db/queries/personas.js'
 import * as discussionQueries from '../db/queries/discussions.js'
 import * as planQueries from '../db/queries/plans.js'
@@ -194,6 +195,17 @@ export function tasksRouter(db: Database.Database, canceller?: TaskCanceller) {
     return c.json(logs)
   })
 
+  // タスクイベント一覧（個別イベントの永続化データ）
+  app.get('/:id/events', (c) => {
+    const id = Number(c.req.param('id'))
+    const task = taskQueries.getTask(db, id)
+    if (!task) {
+      return c.json({ error: 'タスクが見つからない' }, 404)
+    }
+    const events = taskEventQueries.getEventsByTaskId(db, id)
+    return c.json(events.map((row) => JSON.parse(row.event_data)))
+  })
+
   // タスク更新
   app.put('/:id', async (c) => {
     const id = Number(c.req.param('id'))
@@ -222,7 +234,7 @@ export function tasksRouter(db: Database.Database, canceller?: TaskCanceller) {
     if (!task) {
       return c.json({ error: 'タスクが見つからない' }, 404)
     }
-    if (!['executing', 'testing', 'discussing', 'planned'].includes(task.status)) {
+    if (!['discussing', 'executing', 'reviewing'].includes(task.status)) {
       return c.json({ error: 'キャンセルできないステータス' }, 400)
     }
     // 実行中プロセスを停止
@@ -244,6 +256,13 @@ export function tasksRouter(db: Database.Database, canceller?: TaskCanceller) {
     if (!['stopped', 'paused'].includes(task.status)) {
       return c.json({ error: 'リトライできないステータス' }, 400)
     }
+    // 前回のディスカッション・ペルソナ・プラン・ログ・イベントを削除
+    personaQueries.deletePersonasByTaskId(db, id)
+    discussionQueries.deleteDiscussionsByTaskId(db, id)
+    planQueries.deletePlanByTaskId(db, id)
+    logQueries.deleteLogsByTaskId(db, id)
+    taskEventQueries.deleteEventsByTaskId(db, id)
+
     const updated = taskQueries.updateTask(db, id, {
       status: 'pending',
       retry_count: 0,
@@ -264,7 +283,7 @@ export function tasksRouter(db: Database.Database, canceller?: TaskCanceller) {
     if (!task) {
       return c.json({ error: 'タスクが見つからない' }, 404)
     }
-    if (!['pending', 'stopped', 'completed'].includes(task.status)) {
+    if (!['pending', 'completed', 'paused', 'stopped'].includes(task.status)) {
       return c.json({ error: '実行中のタスクは削除できない' }, 400)
     }
     taskQueries.deleteTask(db, id)

@@ -84,14 +84,6 @@ export function PCOverviewTab({ task }: { task: Task }) {
           </div>
           <div className="flex items-center gap-2">
             <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
-              ブランチ
-            </span>
-            <span className="text-[13px] text-[#2563eb]">
-              {task.branch_name ?? '-'}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
               作成日時
             </span>
             <span className="text-[13px] text-foreground">
@@ -102,7 +94,7 @@ export function PCOverviewTab({ task }: { task: Task }) {
             <span className="text-[13px] font-medium text-muted-foreground">
               説明
             </span>
-            <p className="text-[13px] leading-[1.6] text-foreground">
+            <p className="whitespace-pre-wrap text-[13px] leading-[1.6] text-foreground">
               {task.description ?? '説明なし'}
             </p>
           </div>
@@ -134,19 +126,11 @@ export function SPOverviewTab({ task }: { task: Task }) {
               {STATUS_CONFIG[task.status].label}
             </Badge>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
-              ブランチ
-            </span>
-            <span className="text-xs text-[#2563eb]">
-              {task.branch_name ?? '-'}
-            </span>
-          </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs font-medium text-muted-foreground">
               説明
             </span>
-            <p className="text-xs leading-[1.5] text-foreground">
+            <p className="whitespace-pre-wrap text-xs leading-[1.5] text-foreground">
               {task.description ?? '説明なし'}
             </p>
           </div>

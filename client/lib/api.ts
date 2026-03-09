@@ -2,9 +2,14 @@
 // fetchのラッパー。ベースURLはvite proxyで /api にマッピングされてるから相対パスでOK
 
 import type {
-  Task, TaskImage, ExecutionLog, CreateTaskInput, UpdateTaskInput, Persona, Discussion, Plan, SettingsPayload,
+  Task, TaskImage, TaskEvent, ExecutionLog, CreateTaskInput, UpdateTaskInput, Persona, Discussion, Plan, SettingsPayload,
   GitStatusResponse, GitLogResponse, GitBranchesResponse, GitRemoteStatusResponse,
-  GitCommitResponse, GitMergeResponse, GitPushResponse, GitExplainResponse,
+  GitCommitResponse, GitMergeResponse, GitPushResponse, GitExplainResponse, GitFileDiffResponse,
+  ConsoleCommandListItem, ConsoleCommand, ConsoleRun, ConsoleLogResponse,
+  CreateConsoleCommandInput, UpdateConsoleCommandInput,
+  ExplorationListItem, ExplorationSession, ExplorationImage, ExplorationPersona, ExplorationEvent,
+  ExplorationDiscussion, ExplorationLog, ExplorationArtifact, ExplorationTaskifyJob,
+  CreateExplorationInput,
 } from '@cognac/shared'
 
 const BASE = '/api'
@@ -49,6 +54,8 @@ export const api = {
       fetchJson<Plan | null>(`/tasks/${taskId}/plan`),
     getLogs: (taskId: number) =>
       fetchJson<ExecutionLog[]>(`/tasks/${taskId}/logs`),
+    getEvents: (taskId: number) =>
+      fetchJson<TaskEvent[]>(`/tasks/${taskId}/events`),
     getImages: (taskId: number) =>
       fetchJson<TaskImage[]>(`/tasks/${taskId}/images`),
     deleteImage: (taskId: number, imageId: number) =>
@@ -79,6 +86,70 @@ export const api = {
         body: JSON.stringify(data),
       }),
   },
+  console: {
+    listCommands: () => fetchJson<ConsoleCommandListItem[]>('/console/commands'),
+    createCommand: (data: CreateConsoleCommandInput) =>
+      fetchJson<ConsoleCommand>('/console/commands', { method: 'POST', body: JSON.stringify(data) }),
+    updateCommand: (id: number, data: UpdateConsoleCommandInput) =>
+      fetchJson<ConsoleCommand>(`/console/commands/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteCommand: (id: number) =>
+      fetchJson<{ ok: boolean }>(`/console/commands/${id}`, { method: 'DELETE' }),
+    runCommand: (id: number) =>
+      fetchJson<{ command: ConsoleCommand; run: ConsoleRun }>(`/console/commands/${id}/run`, { method: 'POST' }),
+    stopCommand: (id: number) =>
+      fetchJson<{ ok: boolean; run: ConsoleRun | null }>(`/console/commands/${id}/stop`, { method: 'POST' }),
+    listRuns: (commandId: number) =>
+      fetchJson<ConsoleRun[]>(`/console/commands/${commandId}/runs`),
+    getRunLog: (runId: number) =>
+      fetchJson<ConsoleLogResponse>(`/console/runs/${runId}/log`),
+  },
+  explorations: {
+    list: () => fetchJson<ExplorationListItem[]>('/explorations'),
+    get: (id: number) =>
+      fetchJson<ExplorationSession & { latestTaskifyJob: ExplorationTaskifyJob | null }>(`/explorations/${id}`),
+    create: (data: CreateExplorationInput) =>
+      fetchJson<ExplorationSession>('/explorations', { method: 'POST', body: JSON.stringify(data) }),
+    createWithImages: async (data: CreateExplorationInput, files: File[]): Promise<ExplorationSession> => {
+      const formData = new FormData()
+      formData.append('title', data.title)
+      formData.append('request', data.request)
+      for (const file of files) {
+        formData.append('images', file)
+      }
+      const res = await fetch(`${BASE}/explorations`, {
+        method: 'POST',
+        body: formData,
+      })
+      await throwIfNotOk(res)
+      return res.json() as Promise<ExplorationSession>
+    },
+    getImages: (id: number) =>
+      fetchJson<ExplorationImage[]>(`/explorations/${id}/images`),
+    getPersonas: (id: number) =>
+      fetchJson<ExplorationPersona[]>(`/explorations/${id}/personas`),
+    getDiscussions: (id: number) =>
+      fetchJson<ExplorationDiscussion[]>(`/explorations/${id}/discussions`),
+    getLogs: (id: number) =>
+      fetchJson<ExplorationLog[]>(`/explorations/${id}/logs`),
+    getEvents: (id: number) =>
+      fetchJson<ExplorationEvent[]>(`/explorations/${id}/events`),
+    getArtifacts: (id: number) =>
+      fetchJson<ExplorationArtifact[]>(`/explorations/${id}/artifacts`),
+    getReport: (id: number) =>
+      fetchJson<{ markdown: string | null; issueCount: number; evidenceImages: ExplorationArtifact[] }>(`/explorations/${id}/report`),
+    retry: (id: number) =>
+      fetchJson<ExplorationSession>(`/explorations/${id}/retry`, { method: 'POST' }),
+    cancel: (id: number) =>
+      fetchJson<ExplorationSession>(`/explorations/${id}/cancel`, { method: 'POST' }),
+    update: (id: number, data: { title?: string; request?: string }) =>
+      fetchJson<ExplorationSession>(`/explorations/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    taskify: (id: number) =>
+      fetchJson<ExplorationTaskifyJob>(`/explorations/${id}/taskify`, { method: 'POST' }),
+    delete: (id: number) =>
+      fetchJson<{ ok: boolean }>(`/explorations/${id}`, { method: 'DELETE' }),
+    deleteImage: (id: number, imageId: number) =>
+      fetchJson<{ ok: boolean }>(`/explorations/${id}/images/${imageId}`, { method: 'DELETE' }),
+  },
   git: {
     status: () => fetchJson<GitStatusResponse>('/git/status'),
     log: (limit = 20) => fetchJson<GitLogResponse>(`/git/log?limit=${limit}`),
@@ -100,5 +171,7 @@ export const api = {
       fetchJson<GitExplainResponse>('/git/explain', { method: 'POST', body: JSON.stringify({ hash }) }),
     explainWorking: () =>
       fetchJson<GitExplainResponse>('/git/explain-working', { method: 'POST' }),
+    fileDiff: (path: string) =>
+      fetchJson<GitFileDiffResponse>(`/git/file-diff?path=${encodeURIComponent(path)}`),
   },
 }

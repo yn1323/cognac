@@ -12,6 +12,7 @@ import { DropZone } from '@/components/ui/drop-zone'
 import { ImagePreviewList } from '@/components/ui/image-preview-list'
 import { PriorityRadioGroup } from '@/components/ui/priority-radio-group'
 import { Textarea } from '@/components/ui/textarea'
+import { MobileModalFooter } from '@/components/mobile-modal-footer'
 import { useToast } from '@/components/toast'
 import { useUpdateTask, useTaskImages, useUploadTaskImages, useDeleteTaskImage } from '@/hooks/use-tasks'
 import { PRIORITY_MAP, PRIORITY_REVERSE, PC_PRIORITIES, SP_PRIORITIES } from '@/lib/constants'
@@ -275,13 +276,11 @@ function SPEditModal({
           <ImagePreviewList files={newFiles} onRemove={onNewFileRemove} />
         </div>
 
-        <div className="flex-1" />
-
-        <div className="flex gap-3">
+        <MobileModalFooter>
           <Button
             type="button"
             variant="outline"
-            className="flex-1"
+            className="flex-1 h-auto min-h-10 whitespace-normal px-4 py-2 text-center"
             onClick={onClose}
             disabled={isSubmitting}
           >
@@ -289,7 +288,7 @@ function SPEditModal({
           </Button>
           <Button
             type="submit"
-            className="flex-1 bg-blue-600 text-white hover:bg-blue-700"
+            className="flex-1 h-auto min-h-10 whitespace-normal bg-blue-600 px-4 py-2 text-center text-white hover:bg-blue-700"
             disabled={isSubmitting}
           >
             {isSubmitting ? (
@@ -301,7 +300,7 @@ function SPEditModal({
               '変更を保存'
             )}
           </Button>
-        </div>
+        </MobileModalFooter>
       </form>
     </div>
   )

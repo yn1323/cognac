@@ -2,9 +2,8 @@
 export type TaskStatus =
   | 'pending'
   | 'discussing'
-  | 'planned'
   | 'executing'
-  | 'testing'
+  | 'reviewing'
   | 'completed'
   | 'paused'
   | 'stopped'

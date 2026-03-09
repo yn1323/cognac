@@ -10,7 +10,7 @@ import type {
   Discussion,
   DiscussionRound,
 } from '@cognac/shared'
-import { callClaudePrint } from './claude-caller.js'
+import { createProvider } from './providers/index.js'
 import { extractJson } from './json-parser.js'
 import { getRepoStructure } from './context-cache.js'
 import * as discussionQueries from '../db/queries/discussions.js'
@@ -39,12 +39,20 @@ ${formatPersonas(personas)}
 - 1人が長々と話すのではなく、相手の発言にリアクションしながら会話を進める
 - 「それいいね」「なるほど〜」「ちょっと待って、それだと〜」のような自然な相槌・反応を入れる
 - 各メンバーは自分の専門領域の視点から発言する
-- 意見が割れるところは遠慮なく突っ込む（ただし建設的に）
-- 各メンバーのtoneに設定されたキャラクター性を発言に反映する
+- 各メンバーのtoneに設定されたキャラクター性（口調・語尾・口癖）を発言に必ず反映する
 - 社内Slackみたいなノリで、絵文字をどんどん使ってOK！（😊🎉💡🤔👍🔥✨😅💪 など）
 - 発言の最初にリアクション絵文字を置いたり、文末に添えたり、自然に散りばめる
 - 長めの発言（2文以上）は途中で改行（\\n）を入れて読みやすくする
 - 1ラウンドで合計8〜15メッセージ程度のやり取りをする
+
+## 会話の自然さを出すためのルール
+- 発言順序を毎回変えること。同じ人が連続で話してもOK（リアクション→本題のように）
+- 2人以上が同時に反応する場面を入れる（「え、マジ？」「それな！」のように短い連続リアクション）
+- 必ず1回以上、意見が割れるポイントを作る。全員賛成は不自然
+- 誰かの発言を途中で遮る・補足する場面を入れる（「あ、それで思い出したんだけど」）
+- 話が脱線しかけて戻る、みたいな自然な流れもOK
+- 全員が均等に話す必要はない。その話題に詳しい人が多めに発言して自然
+- メッセージの長さにもバラつきを出す（「わかる」「それな」だけの一言リアクションも自然）
 
 必ず以下のJSONフォーマットだけを返して。余計な説明はいらない。
 
@@ -89,7 +97,7 @@ ${repoStructure}
 `
 
   if (round === 1) {
-    prompt += '\nタスクについてチャットで話し合って。各メンバーの初見の反応から始めて。'
+    prompt += '\nタスクについてチャットで話し合って。いきなり本題に切り込んでOK。全員が順番に自己紹介的に発言するのではなく、誰かの問題提起に他のメンバーが反応する形で始めて。最初の発言者はランダムに選んで。'
   } else {
     // 前ラウンドの会話をチャットログ形式で含める
     prompt += '\n### これまでの会話\n\n'
@@ -148,9 +156,10 @@ export async function executePhaseDiscussion(
 
     // 最大2回トライ（初回 + 1回リトライ）
     let response = { result: '', sessionId: '', usage: { inputTokens: 0, outputTokens: 0 }, durationMs: 0 }
+    const provider = createProvider(config.provider)
 
     for (let attempt = 0; attempt < 2; attempt++) {
-      response = await callClaudePrint(
+      response = await provider.execPrint(
         {
           prompt: userPrompt,
           systemPrompt,

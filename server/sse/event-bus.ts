@@ -1,14 +1,12 @@
-import type { TaskEvent } from '@cognac/shared'
-
 // SSEイベントの購読者
-type Subscriber = (event: TaskEvent) => void
+type Subscriber<T> = (event: T) => void
 
 // タスクIDごとのイベント配信を管理するバス
-export class EventBus {
-  private subscribers = new Map<number, Set<Subscriber>>()
+export class EventBus<T> {
+  private subscribers = new Map<number, Set<Subscriber<T>>>()
 
   // タスクのイベントを購読する。返り値はunsubscribe関数
-  subscribe(taskId: number, fn: Subscriber): () => void {
+  subscribe(taskId: number, fn: Subscriber<T>): () => void {
     if (!this.subscribers.has(taskId)) {
       this.subscribers.set(taskId, new Set())
     }
@@ -26,7 +24,7 @@ export class EventBus {
   }
 
   // タスクのイベントを全購読者に配信する
-  publish(taskId: number, event: TaskEvent): void {
+  publish(taskId: number, event: T): void {
     const subs = this.subscribers.get(taskId)
     if (subs) {
       for (const fn of subs) {

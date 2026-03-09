@@ -13,11 +13,13 @@ export function useGitStatus() {
   })
 }
 
-export function useGitLog(limit = 20) {
+export function useGitLog(limit?: number) {
+  const resolvedLimit = limit ?? 20
   return useQuery({
-    queryKey: ['git', 'log', limit],
-    queryFn: () => api.git.log(limit),
+    queryKey: ['git', 'log', resolvedLimit],
+    queryFn: () => api.git.log(resolvedLimit),
     refetchInterval: 5000,
+    enabled: limit !== undefined,
   })
 }
 
@@ -33,6 +35,14 @@ export function useGitRemoteStatus() {
     queryKey: ['git', 'remote-status'],
     queryFn: api.git.remoteStatus,
     refetchInterval: 10000,
+  })
+}
+
+export function useGitFileDiff(path: string | null) {
+  return useQuery({
+    queryKey: ['git', 'file-diff', path],
+    queryFn: () => api.git.fileDiff(path!),
+    enabled: path !== null,
   })
 }
 

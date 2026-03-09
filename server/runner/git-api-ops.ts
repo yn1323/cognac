@@ -11,7 +11,7 @@ import type { GitFile, GitFileStatus, GitBranch, GitCommit, GitRemoteStatus, Com
 // gitコマンドを実行するヘルパー（cwd必須）
 // NOTE: argsはCognac内部のハードコード値 or バリデーション済みの値のみ使用するためexecSyncで安全
 function git(args: string, cwd: string): string {
-  return execSync(`git ${args}`, { cwd, encoding: 'utf8', timeout: 30000 }).trimEnd()
+  return execSync(`git -c core.quotepath=false ${args}`, { cwd, encoding: 'utf8', timeout: 30000 }).trimEnd()
 }
 
 // ブランチ名のバリデーション（コマンドインジェクション防止）
@@ -234,6 +234,16 @@ export function validateCommitHash(hash: string): boolean {
   return /^[0-9a-f]{4,40}$/i.test(hash)
 }
 
+// 指定ファイルの未コミットdiff（staged + unstaged）を取得する
+export function getFileDiff(cwd: string, filePath: string): string {
+  try {
+    return git(`diff HEAD -- "${filePath}"`, cwd)
+  } catch {
+    // HEAD が存在しない場合（初回コミット前）
+    return git(`diff --cached -- "${filePath}"`, cwd)
+  }
+}
+
 // 特定コミットのdiffを取得する（AI解説用）
 export function getCommitDiff(cwd: string, hash: string): string {
   if (!validateCommitHash(hash)) throw new Error('不正なコミットハッシュです')
@@ -244,6 +254,7 @@ export function getCommitDiff(cwd: string, hash: string): string {
 export function commitWithMessage(cwd: string, message: string): CommitResult {
   // spawnSyncで引数配列として渡し、シェル解釈を回避（Win/Mac両対応）
   const commitResult = spawnSync('git', [
+    '-c', 'i18n.commitEncoding=utf-8',
     'commit',
     '--author=Claude <noreply@anthropic.com>',
     '-m',

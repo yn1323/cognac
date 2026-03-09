@@ -2,7 +2,7 @@
 // PC: サイドバー + メインコンテンツ(2カラム) / SP: ヘッダー + ボディ + ボトムナビ
 // デザイン design.pen PC=TySUT, SP=A0mek に準拠
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   GitBranch,
@@ -10,6 +10,8 @@ import {
   GitMerge,
   RefreshCw,
   Upload,
+  Loader2,
+  Check,
   Trash2,
   Bot,
   ChevronDown,
@@ -24,12 +26,14 @@ import { AppBottomNav } from '@/components/app-bottom-nav'
 import { Button } from '@/components/ui/button'
 import { GitFileRow } from '@/components/git-file-row'
 import { GitCommitRow } from '@/components/git-commit-row'
+import { GitDiffView } from '@/components/git-diff-view'
 import { AiCommitProgress } from '@/components/ai-commit-progress'
 import { MergeModal } from '@/components/merge-modal'
 import { NewBranchModal } from '@/components/new-branch-modal'
 import { CommitExplainModal } from '@/components/commit-explain-modal'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useToast } from '@/components/toast'
+import { useSettings } from '@/hooks/use-system'
 import { NAV_MAP } from '@/lib/constants'
 import {
   useGitStatus,
@@ -45,6 +49,7 @@ import {
   useCreateBranch,
   useExplainCommit,
   useExplainWorking,
+  useGitFileDiff,
 } from '@/hooks/use-git'
 // AIコミット実行中に表示するプレースホルダーログ
 const COMMIT_IN_PROGRESS_LOG = [
@@ -77,7 +82,7 @@ function BranchSelector({ branches, currentBranch, onCheckout, disabled, classNa
         type="button"
         onClick={() => setOpen(!open)}
         disabled={disabled}
-        className="flex items-center gap-2 rounded-md border border-[#e5e5e5] bg-[#fafafa] px-3 py-2 text-sm disabled:opacity-50"
+        className="flex items-center gap-2 rounded-md border border-[#e5e5e5] bg-[#fafafa] px-3 py-2 text-sm disabled:opacity-50 disabled:pointer-events-none"
       >
         <GitBranch className="h-4 w-4 text-[#1d4ed8]" />
         <span className="font-semibold text-foreground">{currentBranch}</span>
@@ -176,9 +181,14 @@ interface GitPageViewProps {
   onFetch: () => void
   isPushing: boolean
   isFetching: boolean
+  pushPhase: 'idle' | 'pushing' | 'success'
   onExplainCommit: (hash: string, message: string) => void
   onExplainWorking: () => void
   isExplainWorkingLoading: boolean
+  selectedFilePath: string | null
+  onFileSelect: (path: string) => void
+  fileDiff: string | null
+  isFileDiffLoading: boolean
 }
 
 // --- PC版 ---
@@ -201,9 +211,14 @@ function PCGitPage({
   onFetch,
   isPushing,
   isFetching,
+  pushPhase,
   onExplainCommit,
   onExplainWorking,
   isExplainWorkingLoading,
+  selectedFilePath,
+  onFileSelect,
+  fileDiff,
+  isFileDiffLoading,
 }: GitPageViewProps) {
   return (
     <div className="flex h-screen bg-[#fafafa]">
@@ -231,9 +246,21 @@ function PCGitPage({
             <GitMerge className="h-4 w-4" />
             マージ
           </Button>
-          <Button variant="primary" size="sm" onClick={onPush} disabled={isPushing}>
-            <Upload className="h-4 w-4" />
-            Push
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={onPush}
+            disabled={pushPhase !== 'idle'}
+            className={pushPhase === 'success' ? 'bg-green-600 hover:bg-green-600' : ''}
+          >
+            {pushPhase === 'pushing' ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : pushPhase === 'success' ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Upload className="h-4 w-4" />
+            )}
+            {pushPhase === 'pushing' ? 'Pushing...' : pushPhase === 'success' ? 'Pushed!' : 'Push'}
           </Button>
         </PageHeader>
 
@@ -244,6 +271,7 @@ function PCGitPage({
               branches={branches}
               currentBranch={currentBranch}
               onCheckout={onCheckout}
+              disabled={pushPhase !== 'idle'}
             />
           </div>
           <Button variant="outline" size="sm" onClick={onToggleNewBranchModal}>
@@ -289,6 +317,8 @@ function PCGitPage({
                         status={file.status}
                         path={file.path}
                         isLast={i === files.length - 1}
+                        selected={file.path === selectedFilePath}
+                        onClick={() => onFileSelect(file.path)}
                       />
                     ))}
                   </div>
@@ -299,7 +329,7 @@ function PCGitPage({
                       variant="primary"
                       className="flex-1"
                       onClick={onStartCommit}
-                      disabled={files.length === 0}
+                      disabled={files.length === 0 || pushPhase !== 'idle'}
                     >
                       <Bot className="h-4 w-4" />
                       AI コミット
@@ -319,23 +349,32 @@ function PCGitPage({
             </div>
           </div>
 
-          {/* 右カラム: コミット履歴 */}
+          {/* 右カラム: ファイルdiff or コミット履歴 */}
           <div className="flex flex-1 flex-col gap-4">
-            <div className="flex flex-col overflow-hidden rounded-lg border border-[#e5e5e5] bg-[#fafafa] shadow-[0_1px_1.75px_#0000000d]">
-              <div className="border-b border-[#e5e5e5] px-4 py-4">
-                <span className="text-sm font-semibold text-foreground">コミット履歴</span>
+            {selectedFilePath ? (
+              <GitDiffView
+                path={selectedFilePath}
+                diff={fileDiff}
+                isLoading={isFileDiffLoading}
+                onClose={() => onFileSelect(selectedFilePath)}
+              />
+            ) : (
+              <div className="flex flex-col overflow-hidden rounded-lg border border-[#e5e5e5] bg-[#fafafa] shadow-[0_1px_1.75px_#0000000d]">
+                <div className="border-b border-[#e5e5e5] px-4 py-4">
+                  <span className="text-sm font-semibold text-foreground">コミット履歴</span>
+                </div>
+                <div className="flex flex-col">
+                  {commits.map((commit, i) => (
+                    <GitCommitRow
+                      key={commit.hash}
+                      commit={commit}
+                      isLast={i === commits.length - 1}
+                      onExplain={() => onExplainCommit(commit.hash, commit.message)}
+                    />
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-col">
-                {commits.map((commit, i) => (
-                  <GitCommitRow
-                    key={commit.hash}
-                    commit={commit}
-                    isLast={i === commits.length - 1}
-                    onExplain={() => onExplainCommit(commit.hash, commit.message)}
-                  />
-                ))}
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -363,9 +402,14 @@ function SPGitPage({
   onFetch,
   isPushing,
   isFetching,
+  pushPhase,
   onExplainCommit,
   onExplainWorking,
   isExplainWorkingLoading,
+  selectedFilePath,
+  onFileSelect,
+  fileDiff,
+  isFileDiffLoading,
 }: GitPageViewProps) {
   return (
     <div className="flex min-h-screen flex-col bg-[#fafafa]">
@@ -387,8 +431,20 @@ function SPGitPage({
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={onToggleMergeModal}>
               <GitMerge className="h-4 w-4" />
             </Button>
-            <Button variant="primary" size="icon" className="h-8 w-8" onClick={onPush} disabled={isPushing}>
-              <Upload className="h-4 w-4" />
+            <Button
+              variant="primary"
+              size="icon"
+              className={`h-8 w-8 ${pushPhase === 'success' ? 'bg-green-600 hover:bg-green-600' : ''}`}
+              onClick={onPush}
+              disabled={pushPhase !== 'idle'}
+            >
+              {pushPhase === 'pushing' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : pushPhase === 'success' ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>
@@ -400,6 +456,7 @@ function SPGitPage({
               branches={branches}
               currentBranch={currentBranch}
               onCheckout={onCheckout}
+              disabled={pushPhase !== 'idle'}
               className="w-full [&>button]:w-full"
             />
           </div>
@@ -439,6 +496,8 @@ function SPGitPage({
                     status={file.status}
                     path={file.path}
                     isLast={i === files.length - 1}
+                    selected={file.path === selectedFilePath}
+                    onClick={() => onFileSelect(file.path)}
                   />
                 ))}
               </div>
@@ -449,7 +508,7 @@ function SPGitPage({
                   variant="primary"
                   className="flex-1"
                   onClick={onStartCommit}
-                  disabled={files.length === 0}
+                  disabled={files.length === 0 || pushPhase !== 'idle'}
                 >
                   <Bot className="h-4 w-4" />
                   AI コミット
@@ -467,6 +526,22 @@ function SPGitPage({
             </>
           )}
         </div>
+
+        {/* SP版: ファイルdiffモーダル */}
+        {selectedFilePath && (
+          <>
+            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+            <div className="fixed inset-0 z-40 bg-black/50" onClick={() => onFileSelect(selectedFilePath)} />
+            <div className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-xl bg-background">
+              <GitDiffView
+                path={selectedFilePath}
+                diff={fileDiff}
+                isLoading={isFileDiffLoading}
+                onClose={() => onFileSelect(selectedFilePath)}
+              />
+            </div>
+          </>
+        )}
 
         {/* コミット履歴 */}
         <div className="flex flex-col rounded-lg border border-[#e5e5e5] bg-[#fafafa]">
@@ -499,17 +574,28 @@ export function GitPage() {
   const [showMergeModal, setShowMergeModal] = useState(false)
   const [showNewBranchModal, setShowNewBranchModal] = useState(false)
   const [showDiscardDialog, setShowDiscardDialog] = useState(false)
+  const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null)
   const [explainTarget, setExplainTarget] = useState<
     | { type: 'commit'; hash: string; message: string }
     | { type: 'working' }
     | null
   >(null)
+  const [pushPhase, setPushPhase] = useState<'idle' | 'pushing' | 'success'>('idle')
+  const pushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (pushTimerRef.current) clearTimeout(pushTimerRef.current)
+    }
+  }, [])
 
   // データ取得フック
+  const { data: settings } = useSettings()
   const { data: statusData } = useGitStatus()
-  const { data: logData } = useGitLog()
+  const { data: logData } = useGitLog(settings?.git?.commitLogLimit)
   const { data: branchData } = useGitBranches()
   const { data: remoteStatus } = useGitRemoteStatus()
+  const { data: fileDiffData, isLoading: isFileDiffLoading } = useGitFileDiff(selectedFilePath)
 
   const { toast } = useToast()
 
@@ -524,7 +610,19 @@ export function GitPage() {
   const explainMutation = useExplainCommit()
   const explainWorkingMutation = useExplainWorking()
 
+  // 選択中ファイルが一覧から消えたらリセット
   const files = statusData?.files ?? []
+  useEffect(() => {
+    if (selectedFilePath && !files.some((f) => f.path === selectedFilePath)) {
+      setSelectedFilePath(null)
+    }
+  }, [files, selectedFilePath])
+
+  const handleFileSelect = (path: string) => {
+    setSelectedFilePath((prev) => (prev === path ? null : path))
+  }
+
+  // derived
   const commits = logData?.commits ?? []
   const branches = branchData?.branches ?? []
   const currentBranch = statusData?.currentBranch ?? ''
@@ -543,10 +641,20 @@ export function GitPage() {
     onSuccess: () => toast('ブランチを切り替えました', 'success'),
     onError: () => toast('ブランチの切り替えに失敗しました', 'error'),
   })
-  const handlePush = () => pushMutation.mutate(undefined, {
-    onSuccess: () => toast('Pushしました', 'success'),
-    onError: () => toast('Pushに失敗しました', 'error'),
-  })
+  const handlePush = () => {
+    setPushPhase('pushing')
+    pushMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast('Pushしました', 'success')
+        setPushPhase('success')
+        pushTimerRef.current = setTimeout(() => setPushPhase('idle'), 1500)
+      },
+      onError: () => {
+        toast('Pushに失敗しました', 'error')
+        setPushPhase('idle')
+      },
+    })
+  }
   const handleFetch = () => fetchMutation.mutate(undefined, {
     onSuccess: () => toast('Fetchしました', 'success'),
     onError: () => toast('Fetchに失敗しました', 'error'),
@@ -616,9 +724,14 @@ export function GitPage() {
     onFetch: handleFetch,
     isPushing: pushMutation.isPending,
     isFetching: fetchMutation.isPending,
+    pushPhase,
     onExplainCommit: handleExplainCommit,
     onExplainWorking: handleExplainWorking,
     isExplainWorkingLoading: explainWorkingMutation.isPending,
+    selectedFilePath,
+    onFileSelect: handleFileSelect,
+    fileDiff: fileDiffData?.diff ?? null,
+    isFileDiffLoading,
   }
 
   return (

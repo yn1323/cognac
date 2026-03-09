@@ -4,16 +4,17 @@
 
 import { Hono } from 'hono'
 import { z } from 'zod'
-import type { CognacConfig, CiStep, CommitMessageLanguage, SettingsPayload } from '@cognac/shared'
+import type { CognacConfig, ConfigPatch, SettingsPayload } from '@cognac/shared'
 import { writeConfigFile } from '../runner/config-writer.js'
 
-// TaskRunnerから設定を読み書きするインターフェース
-export interface ConfigAccessor {
+// 設定APIから現在値を読む代表ソース
+export interface ConfigSource {
   getConfig(): CognacConfig
-  updateConfig(patch: {
-    ci: { maxRetries: number; steps?: CiStep[] }
-    git: { commitLogLimit: number; commitMessageLanguage: CommitMessageLanguage }
-  }): void
+}
+
+// 設定APIからホットリロードを受ける更新先
+export interface ConfigAccessor {
+  updateConfig(patch: ConfigPatch): void
 }
 
 const ciStepSchema = z.object({
@@ -22,6 +23,7 @@ const ciStepSchema = z.object({
 })
 
 const updateSettingsSchema = z.object({
+  provider: z.enum(['claude', 'codex']),
   ci: z.object({
     maxRetries: z.number().int().min(0).max(20),
     steps: z.array(ciStepSchema),
@@ -32,13 +34,14 @@ const updateSettingsSchema = z.object({
   }),
 })
 
-export function settingsRouter(accessor: ConfigAccessor, cwd: string) {
+export function settingsRouter(configSource: ConfigSource, accessors: ConfigAccessor[], cwd: string) {
   const app = new Hono()
 
   // 現在の設定を返す
   app.get('/', (c) => {
-    const config = accessor.getConfig()
+    const config = configSource.getConfig()
     const payload: SettingsPayload = {
+      provider: config.provider,
       ci: {
         maxRetries: config.ci.maxRetries,
         steps: config.ci.steps ?? [],
@@ -59,13 +62,17 @@ export function settingsRouter(accessor: ConfigAccessor, cwd: string) {
       return c.json({ error: 'バリデーションエラー', details: parsed.error.issues }, 400)
     }
 
-    const { ci, git } = parsed.data
+    const { provider, ci, git } = parsed.data
+
+    const patch: ConfigPatch = { provider, ci, git }
 
     // 1. メモリ上のconfigを更新
-    accessor.updateConfig({ ci, git })
+    for (const accessor of accessors) {
+      accessor.updateConfig(patch)
+    }
 
     // 2. cognac.config.ts に書き出す（全設定値を保持）
-    const fullConfig = accessor.getConfig()
+    const fullConfig = configSource.getConfig()
     await writeConfigFile(cwd, fullConfig)
 
     return c.json({ ok: true })

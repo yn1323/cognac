@@ -3,12 +3,16 @@
 
 import { cn } from '@/lib/utils'
 import { BrandLogo } from '@/components/brand-logo'
+import { useSettings } from '@/hooks/use-system'
+import { providerLabel } from '@/lib/provider'
 
 interface SPHeaderProps {
   className?: string
 }
 
 export function SPHeader({ className }: SPHeaderProps) {
+  const { data: settings } = useSettings()
+  const provider = settings?.provider ?? 'claude'
   return (
     <header
       className={cn(
@@ -20,9 +24,14 @@ export function SPHeader({ className }: SPHeaderProps) {
         <div className="flex h-7 w-7 items-center justify-center rounded-[10px] bg-cognac-dark">
           <BrandLogo size={16} />
         </div>
-        <span className="text-base font-semibold leading-[1.4] text-foreground">
-          Cognac
-        </span>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-base font-semibold leading-[1.4] text-foreground">
+            Cognac
+          </span>
+          <span className="text-xs text-muted-foreground">
+            · {providerLabel(provider)}
+          </span>
+        </div>
       </div>
     </header>
   )

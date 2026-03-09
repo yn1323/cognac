@@ -128,7 +128,7 @@ export function stopAllActiveTasks(db: Database.Database): number {
   const stmt = db.prepare(`
     UPDATE tasks
     SET status = 'stopped', paused_reason = 'ユーザーによる全停止'
-    WHERE status IN ('pending', 'discussing', 'planned', 'executing', 'testing')
+    WHERE status IN ('pending', 'discussing', 'executing', 'reviewing')
   `)
   const result = stmt.run()
   return result.changes

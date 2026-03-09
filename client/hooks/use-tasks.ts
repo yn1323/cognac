@@ -108,6 +108,14 @@ export function useTaskLogs(taskId: number, enabled = true) {
   })
 }
 
+export function useTaskEvents(taskId: number, enabled = true) {
+  return useQuery({
+    queryKey: ['tasks', taskId, 'events'],
+    queryFn: () => api.tasks.getEvents(taskId),
+    enabled: enabled && Number.isFinite(taskId),
+  })
+}
+
 export function useTaskImages(taskId: number) {
   return useQuery({
     queryKey: ['tasks', taskId, 'images'],

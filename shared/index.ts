@@ -5,14 +5,39 @@ export type { Persona, PersonaSelection } from './types/persona.js'
 export type { Discussion, DiscussionRound } from './types/discussion.js'
 export type { Plan, PlanResult } from './types/plan.js'
 export type {
+  ExplorationStatus,
+  ExplorationPhase,
+  ExplorationArtifactKind,
+  ExplorationImageSourceType,
+  ExplorationTaskifyJobStatus,
+  ExplorationSession,
+  ExplorationListItem,
+  CreateExplorationInput,
+  ExplorationImage,
+  ExplorationPersona,
+  ExplorationDiscussion,
+  ExplorationArtifact,
+  ExplorationLog,
+  ExplorationTaskifyJob,
+  ExplorationFindingResult,
+  ExplorationExecutionResult,
+  ExplorationReportResult,
+  ExplorationTaskifyResult,
+  ExplorationEvent,
+} from './types/exploration.js'
+export type { BaseLog, StoredEvent, StoredTaskEvent, StoredExplorationEvent } from './types/log.js'
+export type {
   Phase,
   ErrorType,
+  AgentStreamEvent,
   TaskEvent,
   ExecutionLog,
   CiStep,
   CiCache,
 } from './types/events.js'
 export type {
+  ConfigPatch,
+  CliProvider,
   CommitMessageLanguage,
   CognacConfig,
   GitConfig,
@@ -41,7 +66,18 @@ export type {
   GitCreateBranchRequest,
   GitMergeRequest,
   GitExplainResponse,
+  GitFileDiffResponse,
 } from './types/git.js'
+export type {
+  ConsoleRunStatus,
+  ConsoleCommand,
+  ConsoleRun,
+  ConsoleCommandListItem,
+  ConsoleLogResponse,
+  CreateConsoleCommandInput,
+  UpdateConsoleCommandInput,
+  ConsoleStreamEvent,
+} from './types/console.js'
 
 // ランタイム
 export { defineConfig } from './types/config.js'
