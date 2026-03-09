@@ -1,5 +1,13 @@
 import type Database from 'better-sqlite3'
 import type { ExplorationLog } from '@cognac/shared'
+import { toUtcIso8601 } from '../../utils/date-time.js'
+
+function normalizeLog(log: ExplorationLog): ExplorationLog {
+  return {
+    ...log,
+    created_at: toUtcIso8601(log.created_at),
+  }
+}
 
 export function createExplorationLog(
   db: Database.Database,
@@ -55,7 +63,7 @@ export function getExplorationLogsBySessionId(
     WHERE exploration_session_id = ?
     ORDER BY created_at ASC, id ASC
   `)
-  return stmt.all(explorationSessionId) as ExplorationLog[]
+  return (stmt.all(explorationSessionId) as ExplorationLog[]).map(normalizeLog)
 }
 
 export function getExplorationLog(
@@ -67,7 +75,8 @@ export function getExplorationLog(
     FROM exploration_logs
     WHERE id = ?
   `)
-  return stmt.get(id) as ExplorationLog | undefined
+  const log = stmt.get(id) as ExplorationLog | undefined
+  return log ? normalizeLog(log) : undefined
 }
 
 export function deleteExplorationLogsBySessionId(

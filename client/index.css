@@ -57,6 +57,8 @@
   --status-stopped-bg: #fef2f2;
   --status-paused: #ea580c;
   --status-paused-bg: #fff7ed;
+  --console-selected-ring: inset 0 0 0 1px var(--color-primary);
+  --console-focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 
 /* ダークモード */
@@ -106,6 +108,8 @@
   --status-stopped-bg: #450a0a;
   --status-paused: #fb923c;
   --status-paused-bg: #431407;
+  --console-selected-ring: inset 0 0 0 1px var(--color-primary);
+  --console-focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 
 @theme inline {
@@ -196,5 +200,39 @@ body {
   to {
     opacity: 0;
     transform: translateX(50%);
+  }
+}
+
+/* コンソールカード: PCのみで selected/hover/focus-visible を分離 */
+@media (pointer: fine) {
+  .console-command-card {
+    border-width: 1px;
+  }
+
+  /* 優先順位: selected < hover < focus-visible */
+  .console-command-card.is-selected {
+    box-shadow: var(--console-selected-ring);
+  }
+
+  .console-command-card:hover {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-border) 30%, var(--color-primary));
+  }
+
+  .console-command-card:focus-visible {
+    box-shadow: var(--console-focus-ring);
+    outline: none;
+  }
+
+  .console-command-card.is-selected:focus-visible {
+    box-shadow: var(--console-selected-ring), var(--console-focus-ring);
+  }
+}
+
+@media (forced-colors: active) {
+  .console-command-card.is-selected,
+  .console-command-card:focus-visible {
+    box-shadow: none;
+    outline: 2px Highlight;
+    outline-offset: 0;
   }
 }
