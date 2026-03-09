@@ -1,6 +1,15 @@
 import type { AgentStreamEvent, Task, CognacConfig, TaskEvent } from '@cognac/shared'
 import { createProvider } from './providers/index.js'
 
+// Phase 3用システムプロンプト
+// 自律実行の制約を明示（Claude/Codex両プロバイダーで有効）
+function buildSystemPrompt(): string {
+  return `## 重要な制約
+- AskUserQuestionツールは絶対に使わないこと。この環境ではユーザーとの対話はできない。
+- 判断に迷う場合は、最も妥当と思われるアプローチを自分で選んで実装を進めること。
+- 質問や確認をせず、黙々とコードを書いて完成させること。`
+}
+
 // ブートストラップ用のPhase 3実行プロンプトを構築する
 // Phase 2はスキップなので、タスク情報から直接プロンプトを組み立てる
 // 一時コメントアウト: git commit指示を除去（不具合調査のノイズ除去）
@@ -40,6 +49,7 @@ export async function executePhase3(
   const response = await provider.execStream(
     {
       prompt,
+      systemPrompt: buildSystemPrompt(),
       maxTurns: config.claude.maxTurnsExecution,
       dangerouslySkipPermissions: true,
       onStream,

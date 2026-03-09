@@ -47,6 +47,12 @@ Phase 3でClaude Codeに渡す完全な指示を生成して。以下を含め�
 - medium: 複数ファイル変更、ある程度の設計判断が必要
 - high: 大規模な変更、アーキテクチャに影響
 
+## 重要な制約
+- いかなる状況でもJSON以外のテキストを出力しないこと。会話的な前置きや補足説明は一切不要。
+- ディスカッションで未解決の論点や「ユーザーに確認が必要」な事項がある場合は、planフィールド内に「## 要確認事項」セクションとして記載すること。executionPromptでは最も妥当と思われるアプローチを採用すること。
+- executionPromptに「ユーザーに確認」「ユーザーに聞く」「確認してから進める」等の指示は絶対に含めないこと。Phase 3は完全自律実行であり、ユーザーとの対話はできない。
+- 質問や確認をテキストで返すのではなく、必ずJSONフォーマットで返すこと。
+
 必ず以下のJSONフォーマットだけを返して。余計な説明はいらない。
 
 \`\`\`json
@@ -140,9 +146,14 @@ export async function executePhasePlan(
   // 最大2回トライ（初回 + 1回リトライ）
   const provider = createProvider(config.provider)
   for (let attempt = 0; attempt < 2; attempt++) {
+    // リトライ時はJSON出力を強制する追加指示を付与
+    const promptForAttempt = attempt === 0
+      ? userPrompt
+      : `${userPrompt}\n\n【重要】前回の応答がJSONフォーマットではありませんでした。会話的な応答は不要です。必ず\`\`\`json\`\`\`ブロックで囲んだJSONだけを返してください。`
+
     response = await provider.execPrint(
       {
-        prompt: userPrompt,
+        prompt: promptForAttempt,
         systemPrompt,
         signal,
       },
