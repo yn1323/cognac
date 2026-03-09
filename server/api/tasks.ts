@@ -222,7 +222,7 @@ export function tasksRouter(db: Database.Database, canceller?: TaskCanceller) {
     if (!task) {
       return c.json({ error: 'タスクが見つからない' }, 404)
     }
-    if (!['executing', 'testing', 'discussing', 'planned'].includes(task.status)) {
+    if (!['discussing', 'executing', 'reviewing'].includes(task.status)) {
       return c.json({ error: 'キャンセルできないステータス' }, 400)
     }
     // 実行中プロセスを停止
@@ -264,7 +264,7 @@ export function tasksRouter(db: Database.Database, canceller?: TaskCanceller) {
     if (!task) {
       return c.json({ error: 'タスクが見つからない' }, 404)
     }
-    if (!['pending', 'stopped', 'completed'].includes(task.status)) {
+    if (!['pending', 'completed', 'paused', 'stopped'].includes(task.status)) {
       return c.json({ error: '実行中のタスクは削除できない' }, 400)
     }
     taskQueries.deleteTask(db, id)

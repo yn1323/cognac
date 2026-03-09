@@ -291,7 +291,7 @@ export function ExplorationDetailPage() {
   const deleteMutation = useDeleteExploration()
   const retryMutation = useRetryExploration()
 
-  // SSE: analyzing状態のときだけ接続
+  // SSE: アクティブ状態（discussing/executing/reviewing）のときだけ接続
   const isActive = exploration?.status != null && EXPLORATION_ACTIVE_STATUSES.has(exploration.status)
   const { events, connected } = useExplorationSSE(isActive ? explorationId : null)
 

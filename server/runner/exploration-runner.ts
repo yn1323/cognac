@@ -95,6 +95,7 @@ export class ExplorationRunner implements RunnerStatus {
   private running = false
   private paused = false
   private currentExecution: { kind: 'exploration' | 'taskify'; id: number } | null = null
+  private currentAbortController: AbortController | null = null
   private timer: ReturnType<typeof setTimeout> | null = null
 
   constructor(
@@ -132,6 +133,19 @@ export class ExplorationRunner implements RunnerStatus {
       clearTimeout(this.timer)
       this.timer = null
     }
+  }
+
+  cancelCurrentExploration(explorationId: number): boolean {
+    if (
+      !this.currentExecution ||
+      this.currentExecution.kind !== 'exploration' ||
+      this.currentExecution.id !== explorationId ||
+      !this.currentAbortController
+    ) {
+      return false
+    }
+    this.currentAbortController.abort()
+    return true
   }
 
   private scheduleNextPoll(): void {
@@ -180,14 +194,15 @@ export class ExplorationRunner implements RunnerStatus {
   }
 
   private async executeExploration(exploration: ExplorationSession): Promise<void> {
-    const { signal } = new AbortController()
+    const abortController = new AbortController()
+    this.currentAbortController = abortController
+    const { signal } = abortController
     let currentPhase: ExplorationPhase = 'persona'
 
     try {
       const started = new Date().toISOString()
       explorationQueries.updateExploration(this.db, exploration.id, {
-        status: 'analyzing',
-        current_phase: 'persona',
+        status: 'discussing',
         started_at: started,
         paused_reason: null,
         completed_at: null,
@@ -208,9 +223,6 @@ export class ExplorationRunner implements RunnerStatus {
       this.emit(exploration.id, phaseEnd('persona', personaResult.durationMs))
 
       currentPhase = 'discussion'
-      explorationQueries.updateExploration(this.db, exploration.id, {
-        current_phase: 'discussion',
-      })
       this.emit(exploration.id, phaseStart('discussion'))
       const discussionResult = await executeExplorationPhaseDiscussion(
         exploration,
@@ -225,8 +237,7 @@ export class ExplorationRunner implements RunnerStatus {
 
       currentPhase = 'explore'
       explorationQueries.updateExploration(this.db, exploration.id, {
-        status: 'analyzing',
-        current_phase: 'explore',
+        status: 'executing',
       })
 
       const beforeStatus = serializeGitStatus(this.cwd)
@@ -271,7 +282,7 @@ export class ExplorationRunner implements RunnerStatus {
 
       currentPhase = 'report'
       explorationQueries.updateExploration(this.db, exploration.id, {
-        current_phase: 'report',
+        status: 'reviewing',
       })
       this.emit(exploration.id, phaseStart('report'))
       const reportResult = await executeExplorationPhaseReport(
@@ -343,7 +354,7 @@ export class ExplorationRunner implements RunnerStatus {
         return
       }
 
-      explorationQueries.markExplorationFailed(this.db, exploration.id, message)
+      explorationQueries.markExplorationStopped(this.db, exploration.id, message)
       explorationLogQueries.createExplorationLog(this.db, {
         exploration_session_id: exploration.id,
         phase,
@@ -352,6 +363,8 @@ export class ExplorationRunner implements RunnerStatus {
         output_raw: outputRaw,
       })
       this.emit(exploration.id, { type: 'error', errorType: 'app', message, phase })
+    } finally {
+      this.currentAbortController = null
     }
   }
 

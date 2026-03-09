@@ -135,6 +135,10 @@ export const api = {
       fetchJson<{ markdown: string | null; issueCount: number; evidenceImages: ExplorationArtifact[] }>(`/explorations/${id}/report`),
     retry: (id: number) =>
       fetchJson<ExplorationSession>(`/explorations/${id}/retry`, { method: 'POST' }),
+    cancel: (id: number) =>
+      fetchJson<ExplorationSession>(`/explorations/${id}/cancel`, { method: 'POST' }),
+    update: (id: number, data: { title?: string; request?: string }) =>
+      fetchJson<ExplorationSession>(`/explorations/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     taskify: (id: number) =>
       fetchJson<ExplorationTaskifyJob>(`/explorations/${id}/taskify`, { method: 'POST' }),
     delete: (id: number) =>

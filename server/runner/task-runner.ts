@@ -157,8 +157,8 @@ export class TaskRunner implements RunnerStatus {
   }
 
   // メインのタスク実行パイプライン
-  // skipDiscussion=true:  pending → executing → testing → completed（ブートストラップ）
-  // skipDiscussion=false: pending → discussing → planned → executing → testing → completed（フル）
+  // skipDiscussion=true:  pending → executing → reviewing → completed（ブートストラップ）
+  // skipDiscussion=false: pending → discussing → executing → reviewing → completed（フル）
   private async executeTask(task: Task): Promise<void> {
     const { id } = task
     let currentPhase: Phase = 'execute'
@@ -213,8 +213,6 @@ export class TaskRunner implements RunnerStatus {
         this.emit(id, { type: 'phase_start', phase: 'plan', timestamp: new Date().toISOString() })
         const planResult = await executePhasePlan(task, discResult.discussions, personaResult.personas, this.db, this.config, onEvent, signal)
         this.emit(id, { type: 'phase_end', phase: 'plan', timestamp: new Date().toISOString(), durationMs: planResult.durationMs })
-        taskQueries.updateTask(this.db, id, { status: 'planned' })
-
         // キャンセルチェック
         if (signal.aborted) return
 
@@ -319,7 +317,7 @@ export class TaskRunner implements RunnerStatus {
         })
 
         // --- CI実行 ---
-        taskQueries.updateTask(this.db, id, { status: 'testing' })
+        taskQueries.updateTask(this.db, id, { status: 'reviewing' })
         this.emit(id, { type: 'phase_start', phase: 'ci', timestamp: new Date().toISOString() })
 
         const ciSteps = getCiSteps(this.db, this.config)
@@ -370,7 +368,7 @@ export class TaskRunner implements RunnerStatus {
           taskQueries.updateTask(this.db, id, {
             status: 'paused',
             paused_reason: errorOutput,
-            paused_phase: 'testing',
+            paused_phase: 'reviewing',
           })
           this.emit(id, { type: 'paused', reason: errorOutput, phase: 'ci' })
           return
@@ -448,7 +446,7 @@ export class TaskRunner implements RunnerStatus {
     // 最大リトライ到達 → stopped
     taskQueries.updateTask(this.db, id, {
       status: 'stopped',
-      paused_phase: 'testing',
+      paused_phase: 'reviewing',
     })
     this.emit(id, {
       type: 'error',

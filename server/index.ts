@@ -7,7 +7,7 @@ import type { ExplorationEvent, TaskEvent } from '@cognac/shared'
 import type Database from 'better-sqlite3'
 import { tasksRouter, type TaskCanceller } from './api/tasks.js'
 import { streamRouter } from './api/stream.js'
-import { explorationsRouter } from './api/explorations.js'
+import { explorationsRouter, type ExplorationCanceller } from './api/explorations.js'
 import { systemRouter, type RunnerStatus, type SystemStatusProvider } from './api/system.js'
 import { settingsRouter, type ConfigAccessor, type ConfigSource } from './api/settings.js'
 import { gitRouter } from './api/git.js'
@@ -21,7 +21,7 @@ export interface CreateAppOptions {
   taskEventBus: EventBus<TaskEvent>
   explorationEventBus: EventBus<ExplorationEvent>
   taskRunner: RunnerStatus & ConfigSource & ConfigAccessor & TaskCanceller
-  explorationRunner: RunnerStatus & ConfigAccessor
+  explorationRunner: RunnerStatus & ConfigAccessor & ExplorationCanceller
   systemStatusProvider: SystemStatusProvider
   consoleManager: ConsoleManager
   // ビルド済みクライアントの静的ファイルディレクトリ（パッケージモード用）
@@ -50,7 +50,7 @@ export function createApp({
   // APIルーティング
   app.route('/api/tasks', tasksRouter(db, taskRunner))
   app.route('/api/tasks', streamRouter(taskEventBus))
-  app.route('/api/explorations', explorationsRouter(db, explorationEventBus))
+  app.route('/api/explorations', explorationsRouter(db, explorationEventBus, explorationRunner))
   app.route('/api', systemRouter(systemStatusProvider, db))
   app.route('/api/settings', settingsRouter(taskRunner, [taskRunner, explorationRunner], cwd))
   app.route('/api/git', gitRouter(cwd, () => taskRunner.getConfig()))

@@ -23,26 +23,23 @@ import { SPTaskCard } from '@/components/sp-task-card'
 import { Button } from '@/components/ui/button'
 import { ExplorationModal } from '@/components/exploration-modal'
 import { formatRelativeTime } from '@/lib/format'
-import {
-  EXPLORATION_CARD_STATUS_CONFIG,
-  getExplorationCardStatus,
-} from '@/lib/exploration-status-config'
+import { EXPLORATION_STATUS_CONFIG } from '@/lib/exploration-status-config'
 import { NAV_MAP } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { useExplorations } from '@/hooks/use-explorations'
 
 // --- フィルター定義 ---
 
-type FilterCategory = 'pending' | 'analyzing' | 'completed' | 'failed'
+type FilterCategory = 'pending' | 'executing' | 'completed' | 'failed'
 
 const FILTER_CATEGORY_STATUSES: Record<FilterCategory, ExplorationStatus[]> = {
   pending: ['pending'],
-  analyzing: ['analyzing'],
+  executing: ['discussing', 'executing', 'reviewing'],
   completed: ['completed'],
-  failed: ['paused', 'failed'],
+  failed: ['paused', 'stopped'],
 }
 
-const INITIAL_FILTERS = new Set<FilterCategory>(['pending', 'analyzing', 'completed', 'failed'])
+const INITIAL_FILTERS = new Set<FilterCategory>(['pending', 'executing', 'completed', 'failed'])
 
 const FILTER_STYLES: Record<
   FilterCategory,
@@ -51,7 +48,7 @@ const FILTER_STYLES: Record<
     sp: { activeTextColor: string; activeBgColor: string; activeBorderColor: string }
   }
 > = {
-  analyzing: {
+  executing: {
     pc: { activeBg: 'bg-[#eff6ff]', activeBorder: 'border-[#2563eb]', activeLabelColor: 'text-[#2563eb]', activeValueColor: 'text-[#2563eb]', activeIconColor: 'text-[#2563eb]' },
     sp: { activeTextColor: 'text-[#2563eb]', activeBgColor: 'bg-[#eff6ff]', activeBorderColor: 'border-[#2563eb]' },
   },
@@ -88,12 +85,12 @@ function useMetrics(explorations: ExplorationListItem[]) {
       explorations.reduce(
         (acc, e) => {
           if (e.status === 'pending') acc.pending++
-          else if (e.status === 'analyzing') acc.analyzing++
+          else if (e.status === 'discussing' || e.status === 'executing' || e.status === 'reviewing') acc.executing++
           else if (e.status === 'completed') acc.completed++
-          else if (e.status === 'paused' || e.status === 'failed') acc.failed++
+          else if (e.status === 'paused' || e.status === 'stopped') acc.failed++
           return acc
         },
-        { pending: 0, analyzing: 0, completed: 0, failed: 0 },
+        { pending: 0, executing: 0, completed: 0, failed: 0 },
       ),
     [explorations],
   )
@@ -119,8 +116,7 @@ function useExplorationFilters(explorations: ExplorationListItem[]) {
 // --- 探索カード（PC版） ---
 
 function ExplorationCard({ exploration }: { exploration: ExplorationListItem }) {
-  const cardStatus = getExplorationCardStatus(exploration.status, exploration.current_phase)
-  const config = EXPLORATION_CARD_STATUS_CONFIG[cardStatus]
+  const config = EXPLORATION_STATUS_CONFIG[exploration.status]
   return (
     <Link to={`/explorations/${exploration.id}`} className="block">
       <div
@@ -162,8 +158,7 @@ function ExplorationCard({ exploration }: { exploration: ExplorationListItem }) 
 }
 
 function ExplorationCardBadge({ exploration }: { exploration: ExplorationListItem }) {
-  const cardStatus = getExplorationCardStatus(exploration.status, exploration.current_phase)
-  const config = EXPLORATION_CARD_STATUS_CONFIG[cardStatus]
+  const config = EXPLORATION_STATUS_CONFIG[exploration.status]
 
   return (
     <span
@@ -222,12 +217,12 @@ function PCExplorationList({
             {...FILTER_STYLES.pending.pc}
           />
           <MetricCard
-            label="Analyzing"
-            value={metrics.analyzing}
+            label="Executing"
+            value={metrics.executing}
             icon={Loader}
-            active={activeFilters.has('analyzing')}
-            onClick={() => toggle('analyzing')}
-            {...FILTER_STYLES.analyzing.pc}
+            active={activeFilters.has('executing')}
+            onClick={() => toggle('executing')}
+            {...FILTER_STYLES.executing.pc}
           />
           <MetricCard
             label="Completed"
@@ -319,11 +314,11 @@ function SPExplorationList({
             {...FILTER_STYLES.pending.sp}
           />
           <SPMetric
-            value={metrics.analyzing}
+            value={metrics.executing}
             label="実行中"
-            active={activeFilters.has('analyzing')}
-            onClick={() => toggle('analyzing')}
-            {...FILTER_STYLES.analyzing.sp}
+            active={activeFilters.has('executing')}
+            onClick={() => toggle('executing')}
+            {...FILTER_STYLES.executing.sp}
           />
           <SPMetric
             value={metrics.completed}
@@ -352,8 +347,7 @@ function SPExplorationList({
         ) : (
           <div className="flex flex-col gap-2.5">
             {filtered.map((e) => {
-              const cardStatus = getExplorationCardStatus(e.status, e.current_phase)
-              const config = EXPLORATION_CARD_STATUS_CONFIG[cardStatus]
+              const config = EXPLORATION_STATUS_CONFIG[e.status]
               return (
                 <Link key={e.id} to={`/explorations/${e.id}`} className="block">
                   <SPTaskCard

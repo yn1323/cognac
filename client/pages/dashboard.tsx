@@ -38,7 +38,7 @@ type FilterCategory = 'pending' | 'executing' | 'completed' | 'failed'
 
 const FILTER_CATEGORY_STATUSES: Record<FilterCategory, TaskStatus[]> = {
   pending: ['pending'],
-  executing: ['discussing', 'planned', 'executing', 'testing'],
+  executing: ['discussing', 'executing', 'reviewing'],
   completed: ['completed'],
   failed: ['paused', 'stopped'],
 }

@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils'
 function getPhaseText(task: Task): string | null {
   if (task.status === 'discussing') return 'Discussing'
   if (task.status === 'executing') return 'Phase 3 Executing'
-  if (task.status === 'testing') return 'Testing'
+  if (task.status === 'reviewing') return 'Reviewing'
   return null
 }
 

@@ -1,7 +1,6 @@
 import type Database from 'better-sqlite3'
 import type {
   ExplorationListItem,
-  ExplorationPhase,
   ExplorationSession,
   ExplorationStatus,
 } from '@cognac/shared'
@@ -10,7 +9,6 @@ type UpdateExplorationData = Partial<{
   title: string
   request: string
   status: ExplorationStatus
-  current_phase: ExplorationPhase | null
   final_report_markdown: string | null
   issue_count: number
   paused_reason: string | null
@@ -139,13 +137,13 @@ export function markExplorationPaused(
   })
 }
 
-export function markExplorationFailed(
+export function markExplorationStopped(
   db: Database.Database,
   id: number,
   reason: string,
 ): ExplorationSession | undefined {
   return updateExploration(db, id, {
-    status: 'failed',
+    status: 'stopped',
     paused_reason: reason,
   })
 }

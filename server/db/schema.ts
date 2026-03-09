@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   title TEXT NOT NULL,
   description TEXT,
   status TEXT NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending', 'discussing', 'planned', 'executing', 'testing', 'completed', 'paused', 'stopped')),
+    CHECK (status IN ('pending', 'discussing', 'executing', 'reviewing', 'completed', 'paused', 'stopped')),
   priority INTEGER NOT NULL DEFAULT 0,
   queue_order INTEGER,
   branch_name TEXT,
@@ -115,9 +115,7 @@ CREATE TABLE IF NOT EXISTS exploration_sessions (
   title TEXT NOT NULL,
   request TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending', 'analyzing', 'completed', 'paused', 'failed')),
-  current_phase TEXT
-    CHECK (current_phase IN ('persona', 'discussion', 'explore', 'report', 'taskify') OR current_phase IS NULL),
+    CHECK (status IN ('pending', 'discussing', 'executing', 'reviewing', 'completed', 'paused', 'stopped')),
   final_report_markdown TEXT,
   issue_count INTEGER NOT NULL DEFAULT 0,
   paused_reason TEXT,

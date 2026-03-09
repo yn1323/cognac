@@ -87,7 +87,6 @@ function resetExplorationForRetry(
 
     return explorationQueries.updateExploration(db, explorationId, {
       status: 'pending',
-      current_phase: null,
       final_report_markdown: null,
       issue_count: 0,
       paused_reason: null,
@@ -99,9 +98,19 @@ function resetExplorationForRetry(
   return resetInTransaction()
 }
 
+export interface ExplorationCanceller {
+  cancelCurrentExploration(explorationId: number): boolean
+}
+
+const updateExplorationSchema = z.object({
+  title: z.string().min(2, 'タイトルは2文字以上で入力してね').max(200, 'タイトルは200文字以内にしてね').optional(),
+  request: z.string().min(2, '本文は2文字以上で入力してね').optional(),
+})
+
 export function explorationsRouter(
   db: Database.Database,
   eventBus: EventBus<ExplorationEvent>,
+  canceller?: ExplorationCanceller,
 ) {
   const app = new Hono()
 
@@ -201,7 +210,7 @@ export function explorationsRouter(
     const id = Number(c.req.param('id'))
     const exploration = explorationQueries.getExploration(db, id)
     if (!exploration) return c.json({ error: '探索が見つからない' }, 404)
-    const retryableStatuses: ExplorationStatus[] = ['paused', 'failed']
+    const retryableStatuses: ExplorationStatus[] = ['paused', 'stopped']
     if (!retryableStatuses.includes(exploration.status)) {
       return c.json({ error: 'リトライできないステータス' }, 400)
     }
@@ -231,7 +240,8 @@ export function explorationsRouter(
     const id = Number(c.req.param('id'))
     const exploration = explorationQueries.getExploration(db, id)
     if (!exploration) return c.json({ error: '探索が見つからない' }, 404)
-    if (exploration.status === 'analyzing') {
+    const activeStatuses: ExplorationStatus[] = ['discussing', 'executing', 'reviewing']
+    if (activeStatuses.includes(exploration.status)) {
       return c.json({ error: '実行中の探索は削除できない' }, 400)
     }
     if (explorationTaskifyJobQueries.hasActiveExplorationTaskifyJob(db, id)) {
@@ -262,6 +272,40 @@ export function explorationsRouter(
 
     db.prepare('DELETE FROM exploration_images WHERE id = ?').run(imageId)
     return c.json({ ok: true })
+  })
+
+  app.post('/:id/cancel', (c) => {
+    const id = Number(c.req.param('id'))
+    const exploration = explorationQueries.getExploration(db, id)
+    if (!exploration) return c.json({ error: '探索が見つからない' }, 404)
+    const cancelableStatuses: ExplorationStatus[] = ['discussing', 'executing', 'reviewing']
+    if (!cancelableStatuses.includes(exploration.status)) {
+      return c.json({ error: 'キャンセルできないステータス' }, 400)
+    }
+    canceller?.cancelCurrentExploration(id)
+    const updated = explorationQueries.updateExploration(db, id, {
+      status: 'stopped',
+      paused_reason: 'ユーザーによるキャンセル',
+    })
+    return c.json(updated)
+  })
+
+  app.put('/:id', async (c) => {
+    const id = Number(c.req.param('id'))
+    const exploration = explorationQueries.getExploration(db, id)
+    if (!exploration) return c.json({ error: '探索が見つからない' }, 404)
+    const editableStatuses: ExplorationStatus[] = ['pending', 'completed', 'paused', 'stopped']
+    if (!editableStatuses.includes(exploration.status)) {
+      return c.json({ error: '実行中の探索は編集できない' }, 400)
+    }
+    const body = await c.req.json()
+    const parsed = updateExplorationSchema.safeParse(body)
+    if (!parsed.success) {
+      return c.json({ error: 'バリデーションエラー', details: parsed.error.issues }, 400)
+    }
+    const updated = explorationQueries.updateExploration(db, id, parsed.data)
+    if (!updated) return c.json({ error: '更新に失敗した' }, 500)
+    return c.json(updated)
   })
 
   app.get('/:id/stream', (c) => {

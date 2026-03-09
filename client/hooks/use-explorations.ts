@@ -60,6 +60,29 @@ export function useRetryExploration() {
   })
 }
 
+export function useCancelExploration() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => api.explorations.cancel(id),
+    onSuccess: (_res, id) => {
+      qc.invalidateQueries({ queryKey: ['explorations'], exact: true })
+      qc.invalidateQueries({ queryKey: ['explorations', id] })
+    },
+  })
+}
+
+export function useUpdateExploration() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: { title?: string; request?: string } }) =>
+      api.explorations.update(id, data),
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: ['explorations'], exact: true })
+      qc.invalidateQueries({ queryKey: ['explorations', vars.id] })
+    },
+  })
+}
+
 export function useTaskifyExploration() {
   const qc = useQueryClient()
   return useMutation({

@@ -49,10 +49,8 @@
   --status-discussing-bg: #fef3c7;
   --status-pending: #737373;
   --status-pending-bg: #f5f5f5;
-  --status-planned: #7c3aed;
-  --status-planned-bg: #ede9fe;
-  --status-testing: #ca8a04;
-  --status-testing-bg: #fef3c7;
+  --status-reviewing: #ca8a04;
+  --status-reviewing-bg: #fef3c7;
   --status-completed: #16a34a;
   --status-completed-bg: #dcfce7;
   --status-stopped: #ef4444;
@@ -100,10 +98,8 @@
   --status-discussing-bg: #422006;
   --status-pending: #a3a3a3;
   --status-pending-bg: #262626;
-  --status-planned: #a78bfa;
-  --status-planned-bg: #2e1065;
-  --status-testing: #facc15;
-  --status-testing-bg: #422006;
+  --status-reviewing: #facc15;
+  --status-reviewing-bg: #422006;
   --status-completed: #4ade80;
   --status-completed-bg: #052e16;
   --status-stopped: #f87171;
@@ -158,10 +154,8 @@
   --color-status-discussing-bg: var(--status-discussing-bg);
   --color-status-pending: var(--status-pending);
   --color-status-pending-bg: var(--status-pending-bg);
-  --color-status-planned: var(--status-planned);
-  --color-status-planned-bg: var(--status-planned-bg);
-  --color-status-testing: var(--status-testing);
-  --color-status-testing-bg: var(--status-testing-bg);
+  --color-status-reviewing: var(--status-reviewing);
+  --color-status-reviewing-bg: var(--status-reviewing-bg);
   --color-status-completed: var(--status-completed);
   --color-status-completed-bg: var(--status-completed-bg);
   --color-status-stopped: var(--status-stopped);
