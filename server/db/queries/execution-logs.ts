@@ -3,6 +3,9 @@
 
 import type Database from 'better-sqlite3'
 import type { ExecutionLog } from '@cognac/shared'
+import { insertLog, selectLogsByParentId, selectLogById, type LogTableConfig } from './log-helpers.js'
+
+const CONFIG: LogTableConfig = { tableName: 'execution_logs', parentColumn: 'task_id' }
 
 /**
  * 実行ログを作成する
@@ -24,32 +27,7 @@ export function createLog(
     error_message?: string
   },
 ): ExecutionLog {
-  const stmt = db.prepare(`
-    INSERT INTO execution_logs (
-      task_id, phase, session_id, input_summary, output_raw, output_summary,
-      token_input, token_output, duration_ms, error_type, error_message
-    )
-    VALUES (
-      @task_id, @phase, @session_id, @input_summary, @output_raw, @output_summary,
-      @token_input, @token_output, @duration_ms, @error_type, @error_message
-    )
-  `)
-
-  const result = stmt.run({
-    task_id: data.task_id,
-    phase: data.phase,
-    session_id: data.session_id ?? null,
-    input_summary: data.input_summary ?? null,
-    output_raw: data.output_raw ?? null,
-    output_summary: data.output_summary ?? null,
-    token_input: data.token_input ?? null,
-    token_output: data.token_output ?? null,
-    duration_ms: data.duration_ms ?? null,
-    error_type: data.error_type ?? null,
-    error_message: data.error_message ?? null,
-  })
-
-  return getLog(db, Number(result.lastInsertRowid))!
+  return insertLog<ExecutionLog>(db, CONFIG, { parentId: data.task_id, ...data })
 }
 
 /**
@@ -60,12 +38,7 @@ export function getLogsByTaskId(
   db: Database.Database,
   taskId: number,
 ): ExecutionLog[] {
-  const stmt = db.prepare(`
-    SELECT * FROM execution_logs
-    WHERE task_id = ?
-    ORDER BY created_at ASC
-  `)
-  return stmt.all(taskId) as ExecutionLog[]
+  return selectLogsByParentId<ExecutionLog>(db, CONFIG, taskId)
 }
 
 /**
@@ -75,6 +48,5 @@ export function getLog(
   db: Database.Database,
   id: number,
 ): ExecutionLog | undefined {
-  const stmt = db.prepare(`SELECT * FROM execution_logs WHERE id = ?`)
-  return stmt.get(id) as ExecutionLog | undefined
+  return selectLogById<ExecutionLog>(db, CONFIG, id)
 }

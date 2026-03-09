@@ -97,21 +97,8 @@ export interface ExplorationArtifact {
   created_at: string
 }
 
-export interface ExplorationLog {
-  id: number
-  exploration_session_id: number
-  phase: ExplorationPhase
-  session_id: string | null
-  input_summary: string | null
-  output_raw: string | null
-  output_summary: string | null
-  token_input: number | null
-  token_output: number | null
-  duration_ms: number | null
-  error_type: 'app' | 'infra' | 'process' | null
-  error_message: string | null
-  created_at: string
-}
+// 探索ログ（BaseLogから派生）
+export type { ExplorationLog } from './log.js'
 
 export interface ExplorationTaskifyJob {
   id: number

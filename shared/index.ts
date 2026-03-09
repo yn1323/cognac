@@ -25,6 +25,7 @@ export type {
   ExplorationTaskifyResult,
   ExplorationEvent,
 } from './types/exploration.js'
+export type { BaseLog } from './types/log.js'
 export type {
   Phase,
   ErrorType,

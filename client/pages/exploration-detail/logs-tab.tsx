@@ -1,9 +1,12 @@
 // 探索詳細ページ — ログタブ
 // DB の永続ログを主表示にして、実行中だけ SSE イベントを補助表示する
 
-import { useMemo } from 'react'
-import type { ExplorationSession, ExplorationEvent, ExplorationLog } from '@cognac/shared'
+import { useMemo, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import type { ExplorationSession, ExplorationEvent } from '@cognac/shared'
 import { useExplorationLogs } from '@/hooks/use-explorations'
+import { LogEntry } from '@/components/log-entry'
+import { getLivePhaseEvents } from '@/lib/live-phase-events'
 import { EXPLORATION_ACTIVE_STATUSES } from '@/lib/exploration-status-config'
 
 interface LogLine {
@@ -107,70 +110,25 @@ function ExplorationLogView({ events }: { events: ExplorationEvent[] }) {
   )
 }
 
-function ExplorationLogEntry({ log }: { log: ExplorationLog }) {
-  const hasError = log.error_type != null
-
-  return (
-    <div className="flex gap-2 border-b border-border/50 py-1">
-      <span className="w-16 shrink-0 font-mono text-xs font-semibold text-blue-600">
-        [{log.phase}]
-      </span>
-      <div className="flex-1 font-mono text-xs">
-        {hasError ? (
-          <span className={log.error_type === 'infra' ? 'text-orange-600' : 'text-red-600'}>
-            {log.error_type}: {log.error_message}
-          </span>
-        ) : (
-          <span className="text-foreground">
-            {log.output_summary ?? '完了'}
-            {log.duration_ms != null && (
-              <span className="ml-2 text-muted-foreground">({log.duration_ms}ms)</span>
-            )}
-            {log.token_input != null && (
-              <span className="ml-2 text-muted-foreground">
-                tokens: {log.token_input}→{log.token_output}
-              </span>
-            )}
-          </span>
-        )}
-      </div>
-      <span className="shrink-0 font-mono text-xs text-muted-foreground">
-        {log.created_at}
-      </span>
-    </div>
-  )
-}
-
-function getLivePhaseEvents(events: ExplorationEvent[], isActive: boolean): ExplorationEvent[] {
-  if (!isActive || events.length === 0) return []
-
-  let lastPhaseStartIndex = -1
-  for (let index = events.length - 1; index >= 0; index -= 1) {
-    if (events[index]?.type === 'phase_start') {
-      lastPhaseStartIndex = index
-      break
-    }
-  }
-
-  if (lastPhaseStartIndex === -1) return events
-
-  const lastPhaseStart = events[lastPhaseStartIndex]
-  if (lastPhaseStart.type !== 'phase_start') return events
-
-  const liveEvents = events.slice(lastPhaseStartIndex)
-  const hasPhaseEnd = liveEvents.some(
-    (event) => event.type === 'phase_end' && event.phase === lastPhaseStart.phase,
-  )
-
-  return hasPhaseEnd ? [] : liveEvents
-}
-
-function useExplorationLogState(exploration: ExplorationSession, events: ExplorationEvent[]) {
-  const { data: logs, isLoading } = useExplorationLogs(exploration.id)
+function useExplorationLogState(exploration: ExplorationSession, sseEvents: ExplorationEvent[]) {
   const isActive = EXPLORATION_ACTIVE_STATUSES.has(exploration.status)
+  const qc = useQueryClient()
+  const { data: logs, isLoading } = useExplorationLogs(exploration.id)
+
+  // SSEで phase_end を受信したらDBログを再取得（新しいログ行が書き込まれたため）
+  useEffect(() => {
+    if (sseEvents.length === 0) return
+    const last = sseEvents[sseEvents.length - 1]
+    if (last?.type === 'phase_end') {
+      setTimeout(() => {
+        qc.invalidateQueries({ queryKey: ['explorations', exploration.id, 'logs'] })
+      }, 500)
+    }
+  }, [sseEvents, exploration.id, qc])
+
   const liveEvents = useMemo(
-    () => getLivePhaseEvents(events, isActive),
-    [events, isActive],
+    () => getLivePhaseEvents(sseEvents, isActive),
+    [sseEvents, isActive],
   )
 
   return {
@@ -213,7 +171,7 @@ function ExplorationLogsBody({
       {hasLogs ? (
         <div className="space-y-0">
           {logs.map((log) => (
-            <ExplorationLogEntry key={log.id} log={log} />
+            <LogEntry key={log.id} log={log} />
           ))}
         </div>
       ) : null}
