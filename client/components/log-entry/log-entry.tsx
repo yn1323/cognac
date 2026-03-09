@@ -7,7 +7,7 @@ export function LogEntry({ log }: { log: BaseLog }) {
   const hasError = log.error_type != null
   return (
     <div className="flex gap-2 border-b border-border/50 py-1">
-      <span className="w-16 shrink-0 font-mono text-xs font-semibold text-blue-600">
+      <span className="w-24 shrink-0 font-mono text-xs font-semibold text-blue-600">
         [{log.phase}]
       </span>
       <div className="flex-1 font-mono text-xs">

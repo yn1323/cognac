@@ -2,7 +2,7 @@ import { defineConfig } from 'cognac'
 
 export default defineConfig({
   port: 4000,
-  provider: "codex",
+  provider: "claude",
   git: {
     defaultBranch: "main",
     commitMessageLanguage: "ja",
