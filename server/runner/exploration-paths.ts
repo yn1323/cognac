@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
-import { isAbsolute, relative, resolve } from 'node:path'
+import { isAbsolute, relative, resolve, sep } from 'node:path'
 
 export function getCognacRoot(cwd = process.cwd()): string {
   return resolve(cwd, '.cognac')
@@ -43,7 +43,7 @@ export function toCognacRelativePath(
   const absolutePath = isAbsolute(inputPath) ? inputPath : resolve(cwd, inputPath)
   const rel = relative(cognacRoot, absolutePath)
   if (!rel || rel.startsWith('..')) return null
-  return rel.split('\\').join('/')
+  return rel.split(sep).join('/')
 }
 
 export function resolveCognacPath(

@@ -16,7 +16,7 @@ function formatSteps(steps: CognacConfig['ci']['steps']): string {
 
 // メモリ上の設定を cognac.config.ts に書き出す
 export async function writeConfigFile(cwd: string, config: CognacConfig): Promise<void> {
-  const content = `import { defineConfig } from 'cognac'
+  const content = `import { defineConfig } from '@yn1323/cognac'
 
 export default defineConfig({
   port: ${config.port},

@@ -54,6 +54,7 @@ jobs:
       - name: Bump version
         if: steps.check-label.outputs.release_type != 'none'
         id: bump-version
+        working-directory: cli
         run: |
           NEW_VERSION=$(npm version ${{ steps.check-label.outputs.release_type }} --no-git-tag-version)
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
@@ -61,7 +62,7 @@ jobs:
       - name: Commit and push
         if: steps.check-label.outputs.release_type != 'none'
         run: |
-          git add package.json
+          git add cli/package.json
           git commit -m "chore: release ${{ steps.bump-version.outputs.new_version }}"
           git tag ${{ steps.bump-version.outputs.new_version }}
           git push origin main --tags
@@ -72,4 +73,5 @@ jobs:
 
       - name: Publish to npm
         if: steps.check-label.outputs.release_type != 'none'
+        working-directory: cli
         run: npm publish --provenance --access public

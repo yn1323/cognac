@@ -1,11 +1,9 @@
-import { defineConfig } from 'cognac'
+import { defineConfig } from '@yn1323/cognac'
 
 export default defineConfig({
-  port: 4000,
-  provider: "claude",
+  port: 3333,
   git: {
-    defaultBranch: "main",
-    commitMessageLanguage: "ja",
+    defaultBranch: 'main',
   },
   ci: {
     maxRetries: 5,
@@ -14,7 +12,6 @@ export default defineConfig({
     maxRounds: 3,
     minPersonas: 2,
     maxPersonas: 4,
-    skipDiscussion: false,
   },
   claude: {
     maxTurnsExecution: 30,

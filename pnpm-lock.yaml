@@ -14,15 +14,9 @@ importers:
 
   cli:
     dependencies:
-      '@cognac/server':
-        specifier: workspace:*
-        version: link:../server
-      '@cognac/shared':
-        specifier: workspace:*
-        version: link:../shared
-      '@hono/node-server':
-        specifier: ^1.13.8
-        version: 1.19.10(hono@4.12.4)
+      better-sqlite3:
+        specifier: ^11.8.1
+        version: 11.10.0
       commander:
         specifier: ^12.1.0
         version: 12.1.0
@@ -33,6 +27,18 @@ importers:
       '@cognac/client':
         specifier: workspace:*
         version: link:../client
+      '@cognac/server':
+        specifier: workspace:*
+        version: link:../server
+      '@cognac/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@hono/node-server':
+        specifier: ^1.13.8
+        version: 1.19.10(hono@4.12.4)
+      '@types/better-sqlite3':
+        specifier: ^7.6.12
+        version: 7.6.13
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.13

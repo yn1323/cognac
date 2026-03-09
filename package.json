@@ -9,7 +9,10 @@
     "build": "pnpm -r build",
     "dev": "pnpm --parallel --filter @cognac/server --filter @cognac/client dev",
     "dev:win": "node scripts/dev.mjs",
-    "storybook": "pnpm -F @cognac/client storybook"
+    "storybook": "pnpm -F @cognac/client storybook",
+    "pack": "pnpm build && pnpm -C cli pack",
+    "link:global": "pnpm build && pnpm -C cli link --global",
+    "unlink:global": "pnpm -C cli unlink --global"
   },
   "devDependencies": {
     "typescript": "^5.7.3"

@@ -1,4 +1,4 @@
-import { extname } from 'node:path'
+import { basename, extname } from 'node:path'
 import type Database from 'better-sqlite3'
 import type {
   AgentStreamEvent,
@@ -160,7 +160,7 @@ export async function executeExplorationPhaseExplore(
           exploration_session_id: exploration.id,
           source_type: 'playwright',
           file_path: existing.relativePath,
-          original_name: existing.relativePath.split('/').pop() ?? null,
+          original_name: basename(existing.relativePath) ?? null,
           mime_type: 'image/' + extname(existing.relativePath).replace('.', '').replace('jpg', 'jpeg'),
         })
       }
@@ -170,7 +170,7 @@ export async function executeExplorationPhaseExplore(
     artifactQueries.createExplorationArtifact(db, {
       exploration_session_id: exploration.id,
       kind: 'playwright-log',
-      title: existing.relativePath.split('/').pop() ?? existing.relativePath,
+      title: basename(existing.relativePath) ?? existing.relativePath,
       file_path: existing.relativePath,
     })
   }
