@@ -16,6 +16,10 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yn1323/cognac"
+  },
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
