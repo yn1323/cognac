@@ -19,8 +19,13 @@ import * as taskImageQueries from '../db/queries/task-images.js'
 import { getCognacRoot, resolveCognacPath } from './exploration-paths.js'
 
 function buildSystemPrompt(): string {
-  return `あなたは探索レポートを実装タスクへ分解する担当だ。
-課題を粒度よく分けて、各タスクに必要な画像だけを選んで。
+  return `あなたは探索レポートを実装タスクへ変換する担当だ。
+
+## 重要ルール
+- **基本は1タスクにまとめる。** 探索で見つかった課題は1つのタスクの description に全て含める。
+- タスク分割するのは、技術領域がまったく異なる（例: フロントとインフラ）など、1つにまとめると実行困難な場合のみ。
+- 迷ったら分割しない。
+- 各タスクに必要な画像だけを選んで。
 
 JSONだけを返して。
 
@@ -29,7 +34,7 @@ JSONだけを返して。
   "tasks": [
     {
       "title": "タスクタイトル",
-      "description": "タスク説明",
+      "description": "タスク説明（探索で見つかった課題・対応方針を全て含める）",
       "priority": 1,
       "selectedImageIds": [1],
       "sourceFindingTitles": ["課題タイトル"]
@@ -58,7 +63,7 @@ ${findings.map((artifact) => `- ${artifact.title}: ${artifact.content_text ?? ''
 ## 利用可能な画像
 ${images.map((image) => `- id=${image.id} path=${image.file_path}`).join('\n') || 'なし'}
 
-複数タスクに分解して。priority は 0〜3 で返して。`
+基本は1タスクにまとめて。技術領域がまったく異なる場合のみ分割して。priority は 0〜3 で返して。`
 }
 
 function getFallbackTaskifyResult(exploration: ExplorationSession): ExplorationTaskifyResult {
