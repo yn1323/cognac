@@ -10,6 +10,7 @@ import {
   Clock,
   XCircle,
   Plus,
+  RefreshCw,
 } from 'lucide-react'
 import type { ExplorationStatus, ExplorationListItem } from '@cognac/shared'
 import { Sidebar } from '@/components/sidebar'
@@ -23,10 +24,11 @@ import { SPTaskCard } from '@/components/sp-task-card'
 import { Button } from '@/components/ui/button'
 import { ExplorationModal } from '@/components/exploration-modal'
 import { formatRelativeTime } from '@/lib/format'
-import { EXPLORATION_STATUS_CONFIG } from '@/lib/exploration-status-config'
+import { EXPLORATION_STATUS_CONFIG, EXPLORATION_RETRYABLE_STATUSES } from '@/lib/exploration-status-config'
 import { NAV_MAP } from '@/lib/constants'
 import { cn } from '@/lib/utils'
-import { useExplorations } from '@/hooks/use-explorations'
+import { useExplorations, useRetryExploration } from '@/hooks/use-explorations'
+import { useToast } from '@/components/toast'
 
 // --- フィルター定義 ---
 
@@ -115,7 +117,7 @@ function useExplorationFilters(explorations: ExplorationListItem[]) {
 
 // --- 探索カード（PC版） ---
 
-function ExplorationCard({ exploration }: { exploration: ExplorationListItem }) {
+function ExplorationCard({ exploration, onRetry }: { exploration: ExplorationListItem; onRetry?: (id: number) => void }) {
   const config = EXPLORATION_STATUS_CONFIG[exploration.status]
   return (
     <Link to={`/explorations/${exploration.id}`} className="block">
@@ -149,6 +151,19 @@ function ExplorationCard({ exploration }: { exploration: ExplorationListItem }) 
             )}
           </div>
         </div>
+        {EXPLORATION_RETRYABLE_STATUSES.has(exploration.status) && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-auto self-center px-2.5 py-1 text-xs"
+            onClick={(e) => {
+              e.preventDefault()
+              onRetry?.(exploration.id)
+            }}
+          >
+            リトライ
+          </Button>
+        )}
         <div className="flex flex-col items-center self-center">
           <config.icon className={cn('h-5 w-5', config.color)} />
         </div>
@@ -181,10 +196,12 @@ function PCExplorationList({
   explorations,
   onNewExploration,
   onNavigate,
+  onRetry,
 }: {
   explorations: ExplorationListItem[]
   onNewExploration: () => void
   onNavigate: (path: string) => void
+  onRetry: (id: number) => void
 }) {
   const { activeFilters, metrics, filtered, toggle } = useExplorationFilters(explorations)
 
@@ -269,7 +286,7 @@ function PCExplorationList({
           ) : (
             <div className="flex flex-col gap-2">
               {filtered.map((e) => (
-                <ExplorationCard key={e.id} exploration={e} />
+                <ExplorationCard key={e.id} exploration={e} onRetry={onRetry} />
               ))}
             </div>
           )}
@@ -285,11 +302,13 @@ function SPExplorationList({
   explorations,
   onNewExploration,
   onNavigate,
+  onRetry,
   isModalOpen,
 }: {
   explorations: ExplorationListItem[]
   onNewExploration: () => void
   onNavigate: (path: string) => void
+  onRetry: (id: number) => void
   isModalOpen: boolean
 }) {
   const { activeFilters, metrics, filtered, toggle } = useExplorationFilters(explorations)
@@ -355,6 +374,21 @@ function SPExplorationList({
                     subtitle={formatRelativeTime(e.started_at ?? e.created_at)}
                     badge={<ExplorationCardBadge exploration={e} />}
                     borderColor={config.borderColor || 'border-border'}
+                    actions={
+                      EXPLORATION_RETRYABLE_STATUSES.has(e.status) ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-auto px-2.5 py-1 text-xs"
+                          onClick={(ev) => {
+                            ev.preventDefault()
+                            onRetry(e.id)
+                          }}
+                        >
+                          リトライ
+                        </Button>
+                      ) : undefined
+                    }
                   />
                 </Link>
               )
@@ -378,6 +412,15 @@ export function ExplorationListPage() {
   const handleNew = useCallback(() => navigate('?new-exploration=true'), [navigate])
 
   const { data: explorations = [] } = useExplorations()
+  const retryMutation = useRetryExploration()
+  const { toast } = useToast()
+
+  const handleRetry = (id: number) => {
+    retryMutation.mutate(id, {
+      onSuccess: () => toast('探索を最初から再実行する状態に戻しました', 'success'),
+      onError: (err) => toast(err.message, 'error'),
+    })
+  }
 
   return (
     <>
@@ -387,6 +430,7 @@ export function ExplorationListPage() {
           explorations={explorations}
           onNewExploration={handleNew}
           onNavigate={navigate}
+          onRetry={handleRetry}
         />
       </div>
       <div className="md:hidden">
@@ -394,6 +438,7 @@ export function ExplorationListPage() {
           explorations={explorations}
           onNewExploration={handleNew}
           onNavigate={navigate}
+          onRetry={handleRetry}
           isModalOpen={isModalOpen}
         />
       </div>
