@@ -234,6 +234,16 @@ export function validateCommitHash(hash: string): boolean {
   return /^[0-9a-f]{4,40}$/i.test(hash)
 }
 
+// 指定ファイルの未コミットdiff（staged + unstaged）を取得する
+export function getFileDiff(cwd: string, filePath: string): string {
+  try {
+    return git(`diff HEAD -- "${filePath}"`, cwd)
+  } catch {
+    // HEAD が存在しない場合（初回コミット前）
+    return git(`diff --cached -- "${filePath}"`, cwd)
+  }
+}
+
 // 特定コミットのdiffを取得する（AI解説用）
 export function getCommitDiff(cwd: string, hash: string): string {
   if (!validateCommitHash(hash)) throw new Error('不正なコミットハッシュです')

@@ -65,6 +65,7 @@ export type {
   GitCreateBranchRequest,
   GitMergeRequest,
   GitExplainResponse,
+  GitFileDiffResponse,
 } from './types/git.js'
 export type {
   ConsoleRunStatus,

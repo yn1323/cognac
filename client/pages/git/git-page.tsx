@@ -26,6 +26,7 @@ import { AppBottomNav } from '@/components/app-bottom-nav'
 import { Button } from '@/components/ui/button'
 import { GitFileRow } from '@/components/git-file-row'
 import { GitCommitRow } from '@/components/git-commit-row'
+import { GitDiffView } from '@/components/git-diff-view'
 import { AiCommitProgress } from '@/components/ai-commit-progress'
 import { MergeModal } from '@/components/merge-modal'
 import { NewBranchModal } from '@/components/new-branch-modal'
@@ -48,6 +49,7 @@ import {
   useCreateBranch,
   useExplainCommit,
   useExplainWorking,
+  useGitFileDiff,
 } from '@/hooks/use-git'
 // AIコミット実行中に表示するプレースホルダーログ
 const COMMIT_IN_PROGRESS_LOG = [
@@ -183,6 +185,10 @@ interface GitPageViewProps {
   onExplainCommit: (hash: string, message: string) => void
   onExplainWorking: () => void
   isExplainWorkingLoading: boolean
+  selectedFilePath: string | null
+  onFileSelect: (path: string) => void
+  fileDiff: string | null
+  isFileDiffLoading: boolean
 }
 
 // --- PC版 ---
@@ -209,6 +215,10 @@ function PCGitPage({
   onExplainCommit,
   onExplainWorking,
   isExplainWorkingLoading,
+  selectedFilePath,
+  onFileSelect,
+  fileDiff,
+  isFileDiffLoading,
 }: GitPageViewProps) {
   return (
     <div className="flex h-screen bg-[#fafafa]">
@@ -307,6 +317,8 @@ function PCGitPage({
                         status={file.status}
                         path={file.path}
                         isLast={i === files.length - 1}
+                        selected={file.path === selectedFilePath}
+                        onClick={() => onFileSelect(file.path)}
                       />
                     ))}
                   </div>
@@ -337,23 +349,32 @@ function PCGitPage({
             </div>
           </div>
 
-          {/* 右カラム: コミット履歴 */}
+          {/* 右カラム: ファイルdiff or コミット履歴 */}
           <div className="flex flex-1 flex-col gap-4">
-            <div className="flex flex-col overflow-hidden rounded-lg border border-[#e5e5e5] bg-[#fafafa] shadow-[0_1px_1.75px_#0000000d]">
-              <div className="border-b border-[#e5e5e5] px-4 py-4">
-                <span className="text-sm font-semibold text-foreground">コミット履歴</span>
+            {selectedFilePath ? (
+              <GitDiffView
+                path={selectedFilePath}
+                diff={fileDiff}
+                isLoading={isFileDiffLoading}
+                onClose={() => onFileSelect(selectedFilePath)}
+              />
+            ) : (
+              <div className="flex flex-col overflow-hidden rounded-lg border border-[#e5e5e5] bg-[#fafafa] shadow-[0_1px_1.75px_#0000000d]">
+                <div className="border-b border-[#e5e5e5] px-4 py-4">
+                  <span className="text-sm font-semibold text-foreground">コミット履歴</span>
+                </div>
+                <div className="flex flex-col">
+                  {commits.map((commit, i) => (
+                    <GitCommitRow
+                      key={commit.hash}
+                      commit={commit}
+                      isLast={i === commits.length - 1}
+                      onExplain={() => onExplainCommit(commit.hash, commit.message)}
+                    />
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-col">
-                {commits.map((commit, i) => (
-                  <GitCommitRow
-                    key={commit.hash}
-                    commit={commit}
-                    isLast={i === commits.length - 1}
-                    onExplain={() => onExplainCommit(commit.hash, commit.message)}
-                  />
-                ))}
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -385,6 +406,10 @@ function SPGitPage({
   onExplainCommit,
   onExplainWorking,
   isExplainWorkingLoading,
+  selectedFilePath,
+  onFileSelect,
+  fileDiff,
+  isFileDiffLoading,
 }: GitPageViewProps) {
   return (
     <div className="flex min-h-screen flex-col bg-[#fafafa]">
@@ -471,6 +496,8 @@ function SPGitPage({
                     status={file.status}
                     path={file.path}
                     isLast={i === files.length - 1}
+                    selected={file.path === selectedFilePath}
+                    onClick={() => onFileSelect(file.path)}
                   />
                 ))}
               </div>
@@ -499,6 +526,22 @@ function SPGitPage({
             </>
           )}
         </div>
+
+        {/* SP版: ファイルdiffモーダル */}
+        {selectedFilePath && (
+          <>
+            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+            <div className="fixed inset-0 z-40 bg-black/50" onClick={() => onFileSelect(selectedFilePath)} />
+            <div className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-xl bg-background">
+              <GitDiffView
+                path={selectedFilePath}
+                diff={fileDiff}
+                isLoading={isFileDiffLoading}
+                onClose={() => onFileSelect(selectedFilePath)}
+              />
+            </div>
+          </>
+        )}
 
         {/* コミット履歴 */}
         <div className="flex flex-col rounded-lg border border-[#e5e5e5] bg-[#fafafa]">
@@ -531,6 +574,7 @@ export function GitPage() {
   const [showMergeModal, setShowMergeModal] = useState(false)
   const [showNewBranchModal, setShowNewBranchModal] = useState(false)
   const [showDiscardDialog, setShowDiscardDialog] = useState(false)
+  const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null)
   const [explainTarget, setExplainTarget] = useState<
     | { type: 'commit'; hash: string; message: string }
     | { type: 'working' }
@@ -551,6 +595,7 @@ export function GitPage() {
   const { data: logData } = useGitLog(settings?.git?.commitLogLimit)
   const { data: branchData } = useGitBranches()
   const { data: remoteStatus } = useGitRemoteStatus()
+  const { data: fileDiffData, isLoading: isFileDiffLoading } = useGitFileDiff(selectedFilePath)
 
   const { toast } = useToast()
 
@@ -565,7 +610,19 @@ export function GitPage() {
   const explainMutation = useExplainCommit()
   const explainWorkingMutation = useExplainWorking()
 
+  // 選択中ファイルが一覧から消えたらリセット
   const files = statusData?.files ?? []
+  useEffect(() => {
+    if (selectedFilePath && !files.some((f) => f.path === selectedFilePath)) {
+      setSelectedFilePath(null)
+    }
+  }, [files, selectedFilePath])
+
+  const handleFileSelect = (path: string) => {
+    setSelectedFilePath((prev) => (prev === path ? null : path))
+  }
+
+  // derived
   const commits = logData?.commits ?? []
   const branches = branchData?.branches ?? []
   const currentBranch = statusData?.currentBranch ?? ''
@@ -671,6 +728,10 @@ export function GitPage() {
     onExplainCommit: handleExplainCommit,
     onExplainWorking: handleExplainWorking,
     isExplainWorkingLoading: explainWorkingMutation.isPending,
+    selectedFilePath,
+    onFileSelect: handleFileSelect,
+    fileDiff: fileDiffData?.diff ?? null,
+    isFileDiffLoading,
   }
 
   return (

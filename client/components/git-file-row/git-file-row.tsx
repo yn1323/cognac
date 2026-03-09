@@ -15,15 +15,22 @@ interface GitFileRowProps {
   status: GitFileStatus
   path: string
   isLast?: boolean
+  selected?: boolean
+  onClick?: () => void
 }
 
-export function GitFileRow({ status, path, isLast }: GitFileRowProps) {
+export function GitFileRow({ status, path, isLast, selected, onClick }: GitFileRowProps) {
   const style = STATUS_STYLES[status]
+  const Tag = onClick ? 'button' : 'div'
   return (
-    <div
+    <Tag
+      type={onClick ? 'button' : undefined}
+      onClick={onClick}
       className={cn(
-        'flex items-center gap-3 px-4 py-2.5',
+        'flex w-full items-center gap-3 px-4 py-2.5 text-left',
         !isLast && 'border-b border-[#e5e5e5]',
+        onClick && 'cursor-pointer hover:bg-neutral-50',
+        selected && 'border-l-2 border-l-primary bg-primary/5',
       )}
     >
       <div
@@ -35,7 +42,7 @@ export function GitFileRow({ status, path, isLast }: GitFileRowProps) {
       >
         {status}
       </div>
-      <span className="text-[13px] text-foreground">{path}</span>
-    </div>
+      <span className="truncate text-[13px] text-foreground">{path}</span>
+    </Tag>
   )
 }

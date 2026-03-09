@@ -25,6 +25,7 @@ import {
   commitWithMessage,
   getCommitDiff,
   getWorkingDiff,
+  getFileDiff,
 } from '../runner/git-api-ops.js'
 
 // バリデーションスキーマ
@@ -246,6 +247,23 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
         return c.json({ error: errMsg }, 409)
       }
       return c.json({ error: 'マージに失敗しました', detail: String(err) }, 500)
+    }
+  })
+
+  // GET /file-diff?path=xxx — ファイル単位の未コミットdiffを取得
+  app.get('/file-diff', (c) => {
+    const filePath = c.req.query('path')
+    if (!filePath) {
+      return c.json({ error: 'pathパラメータが必要です' }, 400)
+    }
+    if (filePath.includes('..')) {
+      return c.json({ error: '不正なパスです' }, 400)
+    }
+    try {
+      const diff = getFileDiff(cwd, filePath)
+      return c.json({ path: filePath, diff })
+    } catch (err) {
+      return c.json({ error: 'diffの取得に失敗しました', detail: String(err) }, 500)
     }
   })
 

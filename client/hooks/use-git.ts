@@ -38,6 +38,14 @@ export function useGitRemoteStatus() {
   })
 }
 
+export function useGitFileDiff(path: string | null) {
+  return useQuery({
+    queryKey: ['git', 'file-diff', path],
+    queryFn: () => api.git.fileDiff(path!),
+    enabled: path !== null,
+  })
+}
+
 // --- Mutation hooks（操作） ---
 
 export function useDiscardAll() {

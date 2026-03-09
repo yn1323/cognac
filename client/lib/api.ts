@@ -4,7 +4,7 @@
 import type {
   Task, TaskImage, ExecutionLog, CreateTaskInput, UpdateTaskInput, Persona, Discussion, Plan, SettingsPayload,
   GitStatusResponse, GitLogResponse, GitBranchesResponse, GitRemoteStatusResponse,
-  GitCommitResponse, GitMergeResponse, GitPushResponse, GitExplainResponse,
+  GitCommitResponse, GitMergeResponse, GitPushResponse, GitExplainResponse, GitFileDiffResponse,
   ConsoleCommandListItem, ConsoleCommand, ConsoleRun, ConsoleLogResponse,
   CreateConsoleCommandInput, UpdateConsoleCommandInput,
   ExplorationListItem, ExplorationSession, ExplorationImage, ExplorationPersona,
@@ -167,5 +167,7 @@ export const api = {
       fetchJson<GitExplainResponse>('/git/explain', { method: 'POST', body: JSON.stringify({ hash }) }),
     explainWorking: () =>
       fetchJson<GitExplainResponse>('/git/explain-working', { method: 'POST' }),
+    fileDiff: (path: string) =>
+      fetchJson<GitFileDiffResponse>(`/git/file-diff?path=${encodeURIComponent(path)}`),
   },
 }
