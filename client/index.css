@@ -9,7 +9,7 @@
   }
 }
 
-/* Shadcn UI テーマ変数（Light / Neutral base） */
+/* Shadcn UI 繝・・繝槫､画焚・・ight / Neutral base・・*/
 :root {
   --background: #fafafa;
   --foreground: #0a0a0a;
@@ -32,7 +32,7 @@
   --ring: #a3a3a3;
   --radius: 0.625rem;
 
-  /* サイドバー */
+  /* 繧ｵ繧､繝峨ヰ繝ｼ */
   --sidebar: #fafafa;
   --sidebar-foreground: #09090b;
   --sidebar-accent: #2563eb15;
@@ -42,7 +42,7 @@
   --sidebar-primary-foreground: #fafafa;
   --sidebar-ring: #71717a;
 
-  /* ステータスカラー */
+  /* 繧ｹ繝・・繧ｿ繧ｹ繧ｫ繝ｩ繝ｼ */
   --status-executing: #2563eb;
   --status-executing-bg: #dbeafe;
   --status-discussing: #d97706;
@@ -59,9 +59,68 @@
   --status-paused-bg: #fff7ed;
   --console-selected-ring: inset 0 0 0 1px var(--color-primary);
   --console-focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-primary) 40%, transparent);
+
+  /* diff theme: default = 鬮倥さ繝ｳ繝医Λ繧ｹ繝域｡・ */
+  --diff-theme-soft: 0;
+
+  /* diff.added.* */
+  --diff-added-bg: #dff3e7;
+  --diff-added-hover-bg: #d2ebdd;
+  --diff-added-text: #0f3d29;
+  --diff-added-border: #2f8f5b;
+  --diff-added-line-number: #235d41;
+  --diff-added-badge-bg: #1f7a4d;
+  --diff-added-badge-text: #ffffff;
+
+  /* diff.removed.* */
+  --diff-removed-bg: #f8e2e2;
+  --diff-removed-hover-bg: #f3d5d5;
+  --diff-removed-text: #4a1717;
+  --diff-removed-border: #b54747;
+  --diff-removed-line-number: #7a2c2c;
+  --diff-removed-badge-bg: #a33434;
+  --diff-removed-badge-text: #ffffff;
+
+  /* diff.neutral.* */
+  --diff-neutral-bg: #f3f4f6;
+  --diff-neutral-hover-bg: #e9ebef;
+  --diff-neutral-text: #1f2937;
+  --diff-neutral-border: #9ca3af;
+  --diff-neutral-line-number: #4b5563;
+  --diff-neutral-badge-bg: #6b7280;
+  --diff-neutral-badge-text: #ffffff;
+  --diff-neutral-hunk-bg: #e5e7eb;
+  --diff-neutral-hunk-text: #374151;
+
+  /* diff theme soft (譌｢蟄倥ヨ繝ｼ繝ｳ譯・) */
+  --diff-soft-added-bg: #ecfdf5;
+  --diff-soft-added-hover-bg: #dcfce7;
+  --diff-soft-added-text: #166534;
+  --diff-soft-added-border: #86efac;
+  --diff-soft-added-line-number: #15803d;
+  --diff-soft-added-badge-bg: #22c55e;
+  --diff-soft-added-badge-text: #ffffff;
+
+  --diff-soft-removed-bg: #fef2f2;
+  --diff-soft-removed-hover-bg: #fee2e2;
+  --diff-soft-removed-text: #991b1b;
+  --diff-soft-removed-border: #fca5a5;
+  --diff-soft-removed-line-number: #b91c1c;
+  --diff-soft-removed-badge-bg: #ef4444;
+  --diff-soft-removed-badge-text: #ffffff;
+
+  --diff-soft-neutral-bg: #fafafa;
+  --diff-soft-neutral-hover-bg: #f5f5f5;
+  --diff-soft-neutral-text: #262626;
+  --diff-soft-neutral-border: #d4d4d4;
+  --diff-soft-neutral-line-number: #737373;
+  --diff-soft-neutral-badge-bg: #a3a3a3;
+  --diff-soft-neutral-badge-text: #ffffff;
+  --diff-soft-neutral-hunk-bg: #f5f5f5;
+  --diff-soft-neutral-hunk-text: #525252;
 }
 
-/* ダークモード */
+/* 繝繝ｼ繧ｯ繝｢繝ｼ繝・*/
 .dark {
   --background: #0a0a0a;
   --foreground: #fafafa;
@@ -83,7 +142,7 @@
   --input: #ffffff1a;
   --ring: #737373;
 
-  /* サイドバー（dark） */
+  /* 繧ｵ繧､繝峨ヰ繝ｼ・・ark・・*/
   --sidebar: #18181b;
   --sidebar-foreground: #fafafa;
   --sidebar-accent: #60a5fa20;
@@ -93,7 +152,7 @@
   --sidebar-primary-foreground: #fafafa;
   --sidebar-ring: #71717a;
 
-  /* ステータスカラー（dark） */
+  /* 繧ｹ繝・・繧ｿ繧ｹ繧ｫ繝ｩ繝ｼ・・ark・・*/
   --status-executing: #60a5fa;
   --status-executing-bg: #1e3a5f;
   --status-discussing: #fbbf24;
@@ -110,12 +169,71 @@
   --status-paused-bg: #431407;
   --console-selected-ring: inset 0 0 0 1px var(--color-primary);
   --console-focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-primary) 40%, transparent);
+
+  /* diff theme: default = 鬮倥さ繝ｳ繝医Λ繧ｹ繝域｡・ (dark) */
+  --diff-theme-soft: 0;
+
+  /* diff.added.* */
+  --diff-added-bg: #123223;
+  --diff-added-hover-bg: #17432e;
+  --diff-added-text: #d6f8e4;
+  --diff-added-border: #4fb37f;
+  --diff-added-line-number: #9de6c1;
+  --diff-added-badge-bg: #48a56f;
+  --diff-added-badge-text: #f0fff7;
+
+  /* diff.removed.* */
+  --diff-removed-bg: #3a1717;
+  --diff-removed-hover-bg: #4a1f1f;
+  --diff-removed-text: #ffe2e2;
+  --diff-removed-border: #d96a6a;
+  --diff-removed-line-number: #ffb8b8;
+  --diff-removed-badge-bg: #cc5454;
+  --diff-removed-badge-text: #fff7f7;
+
+  /* diff.neutral.* */
+  --diff-neutral-bg: #1b1b1c;
+  --diff-neutral-hover-bg: #242426;
+  --diff-neutral-text: #f5f5f5;
+  --diff-neutral-border: #6b7280;
+  --diff-neutral-line-number: #c4c9d0;
+  --diff-neutral-badge-bg: #7a818c;
+  --diff-neutral-badge-text: #f5f7fa;
+  --diff-neutral-hunk-bg: #2a2a2e;
+  --diff-neutral-hunk-text: #d7dbe1;
+
+  /* diff theme soft (dark) */
+  --diff-soft-added-bg: #052e16;
+  --diff-soft-added-hover-bg: #14532d;
+  --diff-soft-added-text: #86efac;
+  --diff-soft-added-border: #22c55e;
+  --diff-soft-added-line-number: #4ade80;
+  --diff-soft-added-badge-bg: #16a34a;
+  --diff-soft-added-badge-text: #f0fdf4;
+
+  --diff-soft-removed-bg: #450a0a;
+  --diff-soft-removed-hover-bg: #7f1d1d;
+  --diff-soft-removed-text: #fca5a5;
+  --diff-soft-removed-border: #ef4444;
+  --diff-soft-removed-line-number: #f87171;
+  --diff-soft-removed-badge-bg: #dc2626;
+  --diff-soft-removed-badge-text: #fef2f2;
+
+  --diff-soft-neutral-bg: #171717;
+  --diff-soft-neutral-hover-bg: #262626;
+  --diff-soft-neutral-text: #e5e5e5;
+  --diff-soft-neutral-border: #525252;
+  --diff-soft-neutral-line-number: #a3a3a3;
+  --diff-soft-neutral-badge-bg: #737373;
+  --diff-soft-neutral-badge-text: #fafafa;
+  --diff-soft-neutral-hunk-bg: #262626;
+  --diff-soft-neutral-hunk-text: #d4d4d4;
 }
 
 @theme inline {
   --font-sans: 'Noto Sans Variable', 'Noto Sans JP Variable', sans-serif;
 
-  /* 基本カラー */
+  /* 蝓ｺ譛ｬ繧ｫ繝ｩ繝ｼ */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -136,7 +254,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* サイドバー */
+  /* 繧ｵ繧､繝峨ヰ繝ｼ */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
@@ -146,12 +264,12 @@
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* ブランドカラー */
+  /* 繝悶Λ繝ｳ繝峨き繝ｩ繝ｼ */
   --color-cognac: #B56B1F;
   --color-cognac-light: #D4943A;
   --color-cognac-dark: #1A2744;
 
-  /* ステータス */
+  /* 繧ｹ繝・・繧ｿ繧ｹ */
   --color-status-executing: var(--status-executing);
   --color-status-executing-bg: var(--status-executing-bg);
   --color-status-discussing: var(--status-discussing);
@@ -167,7 +285,34 @@
   --color-status-paused: var(--status-paused);
   --color-status-paused-bg: var(--status-paused-bg);
 
-  /* 半径 */
+  /* diff colors */
+  --color-diff-added-bg: var(--diff-added-bg);
+  --color-diff-added-hover-bg: var(--diff-added-hover-bg);
+  --color-diff-added-text: var(--diff-added-text);
+  --color-diff-added-border: var(--diff-added-border);
+  --color-diff-added-line-number: var(--diff-added-line-number);
+  --color-diff-added-badge-bg: var(--diff-added-badge-bg);
+  --color-diff-added-badge-text: var(--diff-added-badge-text);
+
+  --color-diff-removed-bg: var(--diff-removed-bg);
+  --color-diff-removed-hover-bg: var(--diff-removed-hover-bg);
+  --color-diff-removed-text: var(--diff-removed-text);
+  --color-diff-removed-border: var(--diff-removed-border);
+  --color-diff-removed-line-number: var(--diff-removed-line-number);
+  --color-diff-removed-badge-bg: var(--diff-removed-badge-bg);
+  --color-diff-removed-badge-text: var(--diff-removed-badge-text);
+
+  --color-diff-neutral-bg: var(--diff-neutral-bg);
+  --color-diff-neutral-hover-bg: var(--diff-neutral-hover-bg);
+  --color-diff-neutral-text: var(--diff-neutral-text);
+  --color-diff-neutral-border: var(--diff-neutral-border);
+  --color-diff-neutral-line-number: var(--diff-neutral-line-number);
+  --color-diff-neutral-badge-bg: var(--diff-neutral-badge-bg);
+  --color-diff-neutral-badge-text: var(--diff-neutral-badge-text);
+  --color-diff-neutral-hunk-bg: var(--diff-neutral-hunk-bg);
+  --color-diff-neutral-hunk-text: var(--diff-neutral-hunk-text);
+
+  /* 蜊雁ｾ・*/
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -180,7 +325,7 @@ body {
   font-family: 'Noto Sans Variable', 'Noto Sans JP Variable', sans-serif;
 }
 
-/* Toast アニメーション */
+/* Toast 繧｢繝九Γ繝ｼ繧ｷ繝ｧ繝ｳ */
 @keyframes toast-slide-in {
   from {
     transform: translateX(100%);
@@ -203,13 +348,13 @@ body {
   }
 }
 
-/* コンソールカード: PCのみで selected/hover/focus-visible を分離 */
+/* 繧ｳ繝ｳ繧ｽ繝ｼ繝ｫ繧ｫ繝ｼ繝・ PC縺ｮ縺ｿ縺ｧ selected/hover/focus-visible 繧貞・髮｢ */
 @media (pointer: fine) {
   .console-command-card {
     border-width: 1px;
   }
 
-  /* 優先順位: selected < hover < focus-visible */
+  /* 蜆ｪ蜈磯・ｽ・ selected < hover < focus-visible */
   .console-command-card.is-selected {
     box-shadow: var(--console-selected-ring);
   }

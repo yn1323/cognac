@@ -1,10 +1,11 @@
 // Git diff 表示コンポーネント
-// unified diff をパースして色付きで表示する
+// unified diff をパースして行ごとに表示する
 
 import { X, Loader2, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type DiffLineType = 'hunk' | 'addition' | 'deletion' | 'context'
+type GitDiffTheme = 'default' | 'soft'
 
 interface ParsedLine {
   type: DiffLineType
@@ -31,7 +32,7 @@ function parseDiffLines(diff: string): ParsedLine[] {
     }
 
     if (raw.startsWith('@@')) {
-      // ハンクヘッダーから行番号を抽出
+      // ハンクヘッダーから開始行を抽出
       const match = raw.match(/@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/)
       if (match) {
         oldNum = Number.parseInt(match[1], 10)
@@ -45,7 +46,7 @@ function parseDiffLines(diff: string): ParsedLine[] {
       lines.push({ type: 'deletion', content: raw.slice(1), oldNum: oldNum, newNum: null })
       oldNum++
     } else {
-      // コンテキスト行（先頭スペース or 空行）
+      // コンテキスト行（空白スペース or 通常行）
       const content = raw.startsWith(' ') ? raw.slice(1) : raw
       lines.push({ type: 'context', content, oldNum: oldNum, newNum: newNum })
       oldNum++
@@ -57,10 +58,32 @@ function parseDiffLines(diff: string): ParsedLine[] {
 }
 
 const LINE_STYLES: Record<DiffLineType, string> = {
-  hunk: 'bg-muted text-muted-foreground',
-  addition: 'bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-300',
-  deletion: 'bg-red-50 text-red-800 dark:bg-red-950/30 dark:text-red-300',
-  context: '',
+  hunk: 'bg-diff-neutral-hunk-bg text-diff-neutral-hunk-text',
+  addition:
+    'bg-diff-added-bg text-diff-added-text hover:bg-diff-added-hover-bg',
+  deletion:
+    'bg-diff-removed-bg text-diff-removed-text hover:bg-diff-removed-hover-bg',
+  context:
+    'bg-diff-neutral-bg text-diff-neutral-text hover:bg-diff-neutral-hover-bg',
+}
+
+const BORDER_STYLES: Record<Exclude<DiffLineType, 'hunk'>, string> = {
+  addition: 'border-l border-diff-added-border',
+  deletion: 'border-l border-diff-removed-border',
+  context: 'border-l border-diff-neutral-border',
+}
+
+const LINE_NUMBER_STYLES: Record<Exclude<DiffLineType, 'hunk'>, string> = {
+  addition: 'text-diff-added-line-number',
+  deletion: 'text-diff-removed-line-number',
+  context: 'text-diff-neutral-line-number',
+}
+
+const BADGE_STYLES: Record<'addition' | 'deletion', string> = {
+  addition:
+    'mr-2 inline-flex h-4 w-4 items-center justify-center rounded-full bg-diff-added-badge-bg text-[10px] font-bold leading-none text-diff-added-badge-text',
+  deletion:
+    'mr-2 inline-flex h-4 w-4 items-center justify-center rounded-sm bg-diff-removed-badge-bg text-[10px] font-bold leading-none text-diff-removed-badge-text',
 }
 
 interface GitDiffViewProps {
@@ -68,15 +91,53 @@ interface GitDiffViewProps {
   diff: string | null
   isLoading: boolean
   onClose: () => void
+  theme?: GitDiffTheme
 }
 
-export function GitDiffView({ path, diff, isLoading, onClose }: GitDiffViewProps) {
+export function GitDiffView({
+  path,
+  diff,
+  isLoading,
+  onClose,
+  theme = 'default',
+}: GitDiffViewProps) {
   const lines = diff ? parseDiffLines(diff) : []
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-[#e5e5e5] bg-[#fafafa] shadow-[0_1px_1.75px_#0000000d]">
+    <div
+      data-theme={theme}
+      className={cn(
+        'flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm',
+        theme === 'soft' && [
+          '[--diff-theme-soft:1]',
+          '[--diff-added-bg:var(--diff-soft-added-bg)]',
+          '[--diff-added-hover-bg:var(--diff-soft-added-hover-bg)]',
+          '[--diff-added-text:var(--diff-soft-added-text)]',
+          '[--diff-added-border:var(--diff-soft-added-border)]',
+          '[--diff-added-line-number:var(--diff-soft-added-line-number)]',
+          '[--diff-added-badge-bg:var(--diff-soft-added-badge-bg)]',
+          '[--diff-added-badge-text:var(--diff-soft-added-badge-text)]',
+          '[--diff-removed-bg:var(--diff-soft-removed-bg)]',
+          '[--diff-removed-hover-bg:var(--diff-soft-removed-hover-bg)]',
+          '[--diff-removed-text:var(--diff-soft-removed-text)]',
+          '[--diff-removed-border:var(--diff-soft-removed-border)]',
+          '[--diff-removed-line-number:var(--diff-soft-removed-line-number)]',
+          '[--diff-removed-badge-bg:var(--diff-soft-removed-badge-bg)]',
+          '[--diff-removed-badge-text:var(--diff-soft-removed-badge-text)]',
+          '[--diff-neutral-bg:var(--diff-soft-neutral-bg)]',
+          '[--diff-neutral-hover-bg:var(--diff-soft-neutral-hover-bg)]',
+          '[--diff-neutral-text:var(--diff-soft-neutral-text)]',
+          '[--diff-neutral-border:var(--diff-soft-neutral-border)]',
+          '[--diff-neutral-line-number:var(--diff-soft-neutral-line-number)]',
+          '[--diff-neutral-badge-bg:var(--diff-soft-neutral-badge-bg)]',
+          '[--diff-neutral-badge-text:var(--diff-soft-neutral-badge-text)]',
+          '[--diff-neutral-hunk-bg:var(--diff-soft-neutral-hunk-bg)]',
+          '[--diff-neutral-hunk-text:var(--diff-soft-neutral-hunk-text)]',
+        ],
+      )}
+    >
       {/* ヘッダー */}
-      <div className="flex items-center justify-between border-b border-[#e5e5e5] px-4 py-3">
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2 overflow-hidden">
           <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
           <span className="truncate text-sm font-semibold text-foreground">{path}</span>
@@ -84,7 +145,7 @@ export function GitDiffView({ path, diff, isLoading, onClose }: GitDiffViewProps
         <button
           type="button"
           onClick={onClose}
-          className="ml-2 shrink-0 rounded p-1 text-muted-foreground hover:bg-neutral-100 hover:text-foreground"
+          className="ml-2 shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <X className="h-4 w-4" />
         </button>
@@ -98,7 +159,7 @@ export function GitDiffView({ path, diff, isLoading, onClose }: GitDiffViewProps
           </div>
         ) : !diff ? (
           <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
-            差分なし
+            差分はないよ
           </div>
         ) : (
           <table className="w-full border-collapse font-mono text-[13px] leading-6">
@@ -106,6 +167,7 @@ export function GitDiffView({ path, diff, isLoading, onClose }: GitDiffViewProps
               {lines.map((line, i) => (
                 <tr
                   key={i}
+                  data-line-type={line.type}
                   className={cn(LINE_STYLES[line.type])}
                 >
                   {line.type === 'hunk' ? (
@@ -114,16 +176,35 @@ export function GitDiffView({ path, diff, isLoading, onClose }: GitDiffViewProps
                     </td>
                   ) : (
                     <>
-                      <td className="w-[1px] whitespace-nowrap border-r border-[#e5e5e5] px-2 py-0.5 text-right text-muted-foreground/60 select-none">
+                      <td
+                        className={cn(
+                          'w-[1px] whitespace-nowrap border-r border-diff-neutral-border px-2 py-0.5 text-right select-none',
+                          BORDER_STYLES[line.type],
+                          LINE_NUMBER_STYLES[line.type],
+                        )}
+                      >
                         {line.oldNum ?? ''}
                       </td>
-                      <td className="w-[1px] whitespace-nowrap border-r border-[#e5e5e5] px-2 py-0.5 text-right text-muted-foreground/60 select-none">
+                      <td
+                        className={cn(
+                          'w-[1px] whitespace-nowrap border-r border-diff-neutral-border px-2 py-0.5 text-right select-none',
+                          LINE_NUMBER_STYLES[line.type],
+                        )}
+                      >
                         {line.newNum ?? ''}
                       </td>
                       <td className="whitespace-pre px-3 py-0.5">
-                        {line.type === 'addition' && <span className="select-none text-green-500">+</span>}
-                        {line.type === 'deletion' && <span className="select-none text-red-500">-</span>}
-                        {line.type === 'context' && <span className="select-none"> </span>}
+                        {line.type === 'addition' && (
+                          <span className={cn('select-none', BADGE_STYLES.addition)}>+</span>
+                        )}
+                        {line.type === 'deletion' && (
+                          <span className={cn('select-none', BADGE_STYLES.deletion)}>-</span>
+                        )}
+                        {line.type === 'context' && (
+                          <span className="mr-2 inline-flex h-4 w-4 select-none items-center justify-center rounded-sm bg-diff-neutral-badge-bg text-[10px] font-bold leading-none text-diff-neutral-badge-text">
+                            ·
+                          </span>
+                        )}
                         {line.content}
                       </td>
                     </>
