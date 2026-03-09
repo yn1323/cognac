@@ -14,6 +14,7 @@ import * as explorationDiscussionQueries from '../db/queries/exploration-discuss
 import * as explorationArtifactQueries from '../db/queries/exploration-artifacts.js'
 import * as explorationLogQueries from '../db/queries/exploration-logs.js'
 import * as explorationTaskifyJobQueries from '../db/queries/exploration-taskify-jobs.js'
+import * as explorationEventQueries from '../db/queries/exploration-events.js'
 import {
   getExplorationArtifactDir,
   getExplorationUploadDir,
@@ -83,6 +84,7 @@ function resetExplorationForRetry(
     explorationArtifactQueries.deleteExplorationArtifactsBySessionId(db, explorationId)
     explorationLogQueries.deleteExplorationLogsBySessionId(db, explorationId)
     explorationTaskifyJobQueries.deleteExplorationTaskifyJobsBySessionId(db, explorationId)
+    explorationEventQueries.deleteEventsByExplorationId(db, explorationId)
     explorationImageQueries.deleteExplorationImagesBySourceType(db, explorationId, 'playwright')
 
     return explorationQueries.updateExploration(db, explorationId, {
@@ -186,6 +188,15 @@ export function explorationsRouter(
     const exploration = explorationQueries.getExploration(db, id)
     if (!exploration) return c.json({ error: '探索が見つからない' }, 404)
     return c.json(explorationLogQueries.getExplorationLogsBySessionId(db, id))
+  })
+
+  // 探索イベント一覧（個別イベントの永続化データ）
+  app.get('/:id/events', (c) => {
+    const id = Number(c.req.param('id'))
+    const exploration = explorationQueries.getExploration(db, id)
+    if (!exploration) return c.json({ error: '探索が見つからない' }, 404)
+    const events = explorationEventQueries.getEventsByExplorationId(db, id)
+    return c.json(events.map((row) => JSON.parse(row.event_data)))
   })
 
   app.get('/:id/artifacts', (c) => {
@@ -314,16 +325,33 @@ export function explorationsRouter(
     return streamSSE(c, async (stream) => {
       const { promise, resolve } = Promise.withResolvers<void>()
 
+      // リプレイ中のライブイベントをバッファリング
+      const liveBuffer: ExplorationEvent[] = []
+      let buffering = true
+
       const unsubscribe = eventBus.subscribe(explorationId, (event) => {
-        stream.writeSSE({
-          data: JSON.stringify(event),
-          event: event.type,
-        })
+        if (buffering) {
+          liveBuffer.push(event)
+        } else {
+          stream.writeSSE({ data: JSON.stringify(event), event: event.type })
+        }
 
         if (event.type === 'completed' || event.type === 'error') {
           resolve()
         }
       })
+
+      // DB既存イベントをリプレイ送信（JSON parse不要、event_dataをそのまま使用）
+      const existingEvents = explorationEventQueries.getEventsByExplorationId(db, explorationId)
+      for (const row of existingEvents) {
+        await stream.writeSSE({ data: row.event_data, event: row.event_type })
+      }
+
+      // バッファリング終了 → バッファ内のライブイベントをフラッシュ
+      buffering = false
+      for (const event of liveBuffer) {
+        await stream.writeSSE({ data: JSON.stringify(event), event: event.type })
+      }
 
       stream.onAbort(() => {
         unsubscribe()

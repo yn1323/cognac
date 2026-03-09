@@ -4,6 +4,7 @@ import type { EventBus } from '../sse/event-bus.js'
 import type { RunnerStatus } from '../api/system.js'
 import * as taskQueries from '../db/queries/tasks.js'
 import * as logQueries from '../db/queries/execution-logs.js'
+import * as taskEventQueries from '../db/queries/task-events.js'
 import { buildBranchName /* createTaskBranch, resetTaskBranch, mergeTaskBranch */ } from './git-ops.js'
 import { executePhase3 } from './phase-execute.js'
 import { executePhasePersona } from './phase-persona.js'
@@ -143,8 +144,9 @@ export class TaskRunner implements RunnerStatus {
     this.scheduleNextPoll()
   }
 
-  // タスクイベントを配信 + 蓄積するヘルパー
+  // タスクイベントを配信 + DB永続化 + 蓄積するヘルパー
   private emit(taskId: number, event: TaskEvent): void {
+    taskEventQueries.insertEvent(this.db, taskId, event.type, JSON.stringify(event))
     this.eventBus.publish(taskId, event)
     this.phaseEvents.push(event)
   }

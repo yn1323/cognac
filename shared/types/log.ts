@@ -23,3 +23,19 @@ export interface ExecutionLog extends BaseLog<Phase | 'retry'> {
 export interface ExplorationLog extends BaseLog<ExplorationPhase> {
   exploration_session_id: number
 }
+
+// 個別イベントのDB永続化レコード
+export interface StoredEvent {
+  id: number
+  event_type: string
+  event_data: string
+  created_at: string
+}
+
+export interface StoredTaskEvent extends StoredEvent {
+  task_id: number
+}
+
+export interface StoredExplorationEvent extends StoredEvent {
+  exploration_session_id: number
+}

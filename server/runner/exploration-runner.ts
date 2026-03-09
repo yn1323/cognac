@@ -18,6 +18,7 @@ import * as explorationDiscussionQueries from '../db/queries/exploration-discuss
 import * as explorationArtifactQueries from '../db/queries/exploration-artifacts.js'
 import * as explorationLogQueries from '../db/queries/exploration-logs.js'
 import * as explorationTaskifyJobQueries from '../db/queries/exploration-taskify-jobs.js'
+import * as explorationEventQueries from '../db/queries/exploration-events.js'
 import { classifyError } from './error-classifier.js'
 import { ExplorationPhaseError } from './exploration-output.js'
 import { ProcessTimeoutError, TaskCancelledError } from './providers/types.js'
@@ -154,6 +155,7 @@ export class ExplorationRunner implements RunnerStatus {
   }
 
   private emit(explorationId: number, event: ExplorationEvent): void {
+    explorationEventQueries.insertEvent(this.db, explorationId, event.type, JSON.stringify(event))
     this.eventBus.publish(explorationId, event)
   }
 

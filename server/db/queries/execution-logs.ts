@@ -3,7 +3,7 @@
 
 import type Database from 'better-sqlite3'
 import type { ExecutionLog } from '@cognac/shared'
-import { insertLog, selectLogsByParentId, selectLogById, type LogTableConfig } from './log-helpers.js'
+import { insertLog, selectLogsByParentId, selectLogById, deleteLogsByParentId, type LogTableConfig } from './log-helpers.js'
 
 const CONFIG: LogTableConfig = { tableName: 'execution_logs', parentColumn: 'task_id' }
 
@@ -49,4 +49,14 @@ export function getLog(
   id: number,
 ): ExecutionLog | undefined {
   return selectLogById<ExecutionLog>(db, CONFIG, id)
+}
+
+/**
+ * タスクIDで実行ログを全削除する（リトライ時のクリーンアップ用）
+ */
+export function deleteLogsByTaskId(
+  db: Database.Database,
+  taskId: number,
+): number {
+  return deleteLogsByParentId(db, CONFIG, taskId)
 }

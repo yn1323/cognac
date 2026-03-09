@@ -11,6 +11,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { BrandLogo } from '@/components/brand-logo'
+import { useSettings } from '@/hooks/use-system'
+import { providerLabel } from '@/lib/provider'
 
 interface NavItem {
   icon: LucideIcon
@@ -33,6 +35,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeItem = 'タスク', onItemClick, className }: SidebarProps) {
+  const { data: settings } = useSettings()
+  const provider = settings?.provider ?? 'claude'
   const renderNavButton = (item: NavItem) => {
     const isActive = item.label === activeItem
 
@@ -71,6 +75,9 @@ export function Sidebar({ activeItem = 'タスク', onItemClick, className }: Si
             <div className="flex flex-col">
               <span className="text-sm font-semibold leading-[1.4] text-sidebar-foreground">
                 Cognac
+              </span>
+              <span className="text-xs leading-tight text-sidebar-foreground/60">
+                {providerLabel(provider)}
               </span>
             </div>
           </div>

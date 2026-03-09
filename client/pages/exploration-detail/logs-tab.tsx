@@ -1,13 +1,12 @@
 // 探索詳細ページ — ログタブ
-// DB の永続ログを主表示にして、実行中だけ SSE イベントを補助表示する
+// SSEイベント（リプレイ含む）をExplorationLogViewで一本化表示
+// 非アクティブ探索はAPI経由で永続化イベントを取得
 
-import { useMemo, useEffect } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import type { ExplorationSession, ExplorationEvent } from '@cognac/shared'
-import { useExplorationLogs } from '@/hooks/use-explorations'
-import { LogEntry } from '@/components/log-entry'
-import { getLivePhaseEvents } from '@/lib/live-phase-events'
+import { useExplorationEvents } from '@/hooks/use-explorations'
 import { EXPLORATION_ACTIVE_STATUSES } from '@/lib/exploration-status-config'
+import { cn } from '@/lib/utils'
+import { formatNumber } from '@/lib/format'
 
 interface LogLine {
   label: string
@@ -84,7 +83,7 @@ function formatExplorationEvent(event: ExplorationEvent): LogLine {
     case 'completed':
       return {
         label: '[done]',
-        detail: `${event.summary} (${Math.round(event.totalDurationMs / 1000)}s)`,
+        detail: `${event.summary} (${formatNumber(Math.round(event.totalDurationMs / 1000))}s)`,
         color: 'text-green-600',
       }
   }
@@ -97,7 +96,7 @@ function ExplorationLogView({ events }: { events: ExplorationEvent[] }) {
         const line = formatExplorationEvent(event)
         return (
           <div key={index} className="flex gap-2 py-0.5">
-            <span className={`shrink-0 font-mono text-xs font-semibold ${line.color}`}>
+            <span className={cn('shrink-0 font-mono text-xs font-semibold', line.color)}>
               {line.label}
             </span>
             <span className="min-w-0 flex-1 font-mono text-xs text-foreground">
@@ -110,35 +109,6 @@ function ExplorationLogView({ events }: { events: ExplorationEvent[] }) {
   )
 }
 
-function useExplorationLogState(exploration: ExplorationSession, sseEvents: ExplorationEvent[]) {
-  const isActive = EXPLORATION_ACTIVE_STATUSES.has(exploration.status)
-  const qc = useQueryClient()
-  const { data: logs, isLoading } = useExplorationLogs(exploration.id)
-
-  // SSEで phase_end を受信したらDBログを再取得（新しいログ行が書き込まれたため）
-  useEffect(() => {
-    if (sseEvents.length === 0) return
-    const last = sseEvents[sseEvents.length - 1]
-    if (last?.type === 'phase_end') {
-      setTimeout(() => {
-        qc.invalidateQueries({ queryKey: ['explorations', exploration.id, 'logs'] })
-      }, 500)
-    }
-  }, [sseEvents, exploration.id, qc])
-
-  const liveEvents = useMemo(
-    () => getLivePhaseEvents(sseEvents, isActive),
-    [sseEvents, isActive],
-  )
-
-  return {
-    logs: logs ?? [],
-    isLoading,
-    isActive,
-    liveEvents,
-  }
-}
-
 interface LogsTabProps {
   exploration: ExplorationSession
   events: ExplorationEvent[]
@@ -147,13 +117,18 @@ interface LogsTabProps {
 
 function ExplorationLogsBody({
   exploration,
-  events,
+  events: sseEvents,
   connected,
   compact = false,
 }: LogsTabProps & { compact?: boolean }) {
-  const { logs, isLoading, isActive, liveEvents } = useExplorationLogState(exploration, events)
-  const hasLogs = logs.length > 0
-  const hasLiveEvents = liveEvents.length > 0
+  const isActive = EXPLORATION_ACTIVE_STATUSES.has(exploration.status)
+
+  // 非アクティブ時はSSE接続がないのでAPIからイベント取得
+  const { data: dbEvents, isLoading } = useExplorationEvents(exploration.id, !isActive)
+
+  // アクティブ時はSSE（リプレイ+新規）、非アクティブ時はAPIから
+  const events = isActive ? sseEvents : (dbEvents ?? [])
+  const hasEvents = events.length > 0
 
   return (
     <>
@@ -168,25 +143,13 @@ function ExplorationLogsBody({
         </div>
       )}
 
-      {hasLogs ? (
-        <div className="space-y-0">
-          {logs.map((log) => (
-            <LogEntry key={log.id} log={log} />
-          ))}
-        </div>
-      ) : null}
-
-      {hasLiveEvents ? (
-        <div className={hasLogs ? 'mt-4 border-t border-border/50 pt-4' : ''}>
-          <ExplorationLogView events={liveEvents} />
-        </div>
-      ) : null}
-
-      {!hasLogs && !hasLiveEvents ? (
+      {hasEvents ? (
+        <ExplorationLogView events={events} />
+      ) : (
         <div className="py-8 text-center text-sm text-muted-foreground">
           {isLoading ? 'ログを読み込み中...' : isActive ? 'イベントを待ってるよ...' : '実行ログがまだないよ'}
         </div>
-      ) : null}
+      )}
     </>
   )
 }

@@ -125,6 +125,14 @@ export function useExplorationLogs(explorationId: number) {
   })
 }
 
+export function useExplorationEvents(explorationId: number, enabled = true) {
+  return useQuery({
+    queryKey: ['explorations', explorationId, 'events'],
+    queryFn: () => api.explorations.getEvents(explorationId),
+    enabled: enabled && Number.isFinite(explorationId),
+  })
+}
+
 export function useExplorationArtifacts(explorationId: number) {
   return useQuery({
     queryKey: ['explorations', explorationId, 'artifacts'],

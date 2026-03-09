@@ -1,7 +1,7 @@
 // DB履歴ログの1行表示（タスク・探索共通）
 
 import type { BaseLog } from '@cognac/shared'
-import { formatLogTime } from '../../lib/format'
+import { formatLogTime, formatNumber } from '../../lib/format'
 
 export function LogEntry({ log }: { log: BaseLog }) {
   const hasError = log.error_type != null
@@ -19,7 +19,7 @@ export function LogEntry({ log }: { log: BaseLog }) {
           <span className="text-foreground">
             {log.output_summary ?? '完了'}
             {log.duration_ms != null && (
-              <span className="ml-2 text-muted-foreground">({log.duration_ms}ms)</span>
+              <span className="ml-2 text-muted-foreground">({formatNumber(log.duration_ms)}ms)</span>
             )}
             {log.token_input != null && (
               <span className="ml-2 text-muted-foreground">

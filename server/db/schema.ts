@@ -211,6 +211,28 @@ CREATE TABLE IF NOT EXISTS exploration_taskify_jobs (
   FOREIGN KEY (exploration_session_id) REFERENCES exploration_sessions(id) ON DELETE CASCADE
 )`
 
+// タスクイベントテーブル（個別イベントの永続化）
+const CREATE_TASK_EVENTS = `
+CREATE TABLE IF NOT EXISTS task_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  task_id INTEGER NOT NULL,
+  event_type TEXT NOT NULL,
+  event_data TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+)`
+
+// 探索イベントテーブル（個別イベントの永続化）
+const CREATE_EXPLORATION_EVENTS = `
+CREATE TABLE IF NOT EXISTS exploration_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  exploration_session_id INTEGER NOT NULL,
+  event_type TEXT NOT NULL,
+  event_data TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (exploration_session_id) REFERENCES exploration_sessions(id) ON DELETE CASCADE
+)`
+
 // コンソールコマンド定義
 const CREATE_CONSOLE_COMMANDS = `
 CREATE TABLE IF NOT EXISTS console_commands (
@@ -252,6 +274,8 @@ const CREATE_INDEXES = [
   `CREATE INDEX IF NOT EXISTS idx_exploration_artifacts_session_kind ON exploration_artifacts(exploration_session_id, kind)`,
   `CREATE INDEX IF NOT EXISTS idx_exploration_logs_session_phase ON exploration_logs(exploration_session_id, phase)`,
   `CREATE INDEX IF NOT EXISTS idx_exploration_taskify_jobs_session_status_requested ON exploration_taskify_jobs(exploration_session_id, status, requested_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_task_events_task_id ON task_events(task_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_exploration_events_session_id ON exploration_events(exploration_session_id)`,
   `CREATE INDEX IF NOT EXISTS idx_console_commands_updated_at ON console_commands(updated_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_console_runs_command_id ON console_runs(command_id)`,
   `CREATE INDEX IF NOT EXISTS idx_console_runs_status ON console_runs(status)`,
@@ -274,6 +298,8 @@ const TABLE_STATEMENTS = [
   CREATE_EXPLORATION_ARTIFACTS,
   CREATE_EXPLORATION_LOGS,
   CREATE_EXPLORATION_TASKIFY_JOBS,
+  CREATE_TASK_EVENTS,
+  CREATE_EXPLORATION_EVENTS,
   CREATE_CONSOLE_COMMANDS,
   CREATE_CONSOLE_RUNS,
 ]

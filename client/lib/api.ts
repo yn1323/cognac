@@ -2,12 +2,12 @@
 // fetchのラッパー。ベースURLはvite proxyで /api にマッピングされてるから相対パスでOK
 
 import type {
-  Task, TaskImage, ExecutionLog, CreateTaskInput, UpdateTaskInput, Persona, Discussion, Plan, SettingsPayload,
+  Task, TaskImage, TaskEvent, ExecutionLog, CreateTaskInput, UpdateTaskInput, Persona, Discussion, Plan, SettingsPayload,
   GitStatusResponse, GitLogResponse, GitBranchesResponse, GitRemoteStatusResponse,
   GitCommitResponse, GitMergeResponse, GitPushResponse, GitExplainResponse, GitFileDiffResponse,
   ConsoleCommandListItem, ConsoleCommand, ConsoleRun, ConsoleLogResponse,
   CreateConsoleCommandInput, UpdateConsoleCommandInput,
-  ExplorationListItem, ExplorationSession, ExplorationImage, ExplorationPersona,
+  ExplorationListItem, ExplorationSession, ExplorationImage, ExplorationPersona, ExplorationEvent,
   ExplorationDiscussion, ExplorationLog, ExplorationArtifact, ExplorationTaskifyJob,
   CreateExplorationInput,
 } from '@cognac/shared'
@@ -54,6 +54,8 @@ export const api = {
       fetchJson<Plan | null>(`/tasks/${taskId}/plan`),
     getLogs: (taskId: number) =>
       fetchJson<ExecutionLog[]>(`/tasks/${taskId}/logs`),
+    getEvents: (taskId: number) =>
+      fetchJson<TaskEvent[]>(`/tasks/${taskId}/events`),
     getImages: (taskId: number) =>
       fetchJson<TaskImage[]>(`/tasks/${taskId}/images`),
     deleteImage: (taskId: number, imageId: number) =>
@@ -129,6 +131,8 @@ export const api = {
       fetchJson<ExplorationDiscussion[]>(`/explorations/${id}/discussions`),
     getLogs: (id: number) =>
       fetchJson<ExplorationLog[]>(`/explorations/${id}/logs`),
+    getEvents: (id: number) =>
+      fetchJson<ExplorationEvent[]>(`/explorations/${id}/events`),
     getArtifacts: (id: number) =>
       fetchJson<ExplorationArtifact[]>(`/explorations/${id}/artifacts`),
     getReport: (id: number) =>

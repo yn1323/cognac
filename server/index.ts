@@ -49,7 +49,7 @@ export function createApp({
 
   // APIルーティング
   app.route('/api/tasks', tasksRouter(db, taskRunner))
-  app.route('/api/tasks', streamRouter(taskEventBus))
+  app.route('/api/tasks', streamRouter(taskEventBus, db))
   app.route('/api/explorations', explorationsRouter(db, explorationEventBus, explorationRunner))
   app.route('/api', systemRouter(systemStatusProvider, db))
   app.route('/api/settings', settingsRouter(taskRunner, [taskRunner, explorationRunner], cwd))

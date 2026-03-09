@@ -1,14 +1,11 @@
 // タスク詳細ページ — ログタブ
-// DB永続ログを常に表示し、実行中だけSSEイベントを補助表示する
+// SSEイベント（リプレイ含む）をLogViewで一本化表示
+// 非アクティブタスクはAPI経由で永続化イベントを取得
 // デザイン design.pen PC=ndNzU, SP=cZcuS に準拠
 
-import { useMemo, useEffect } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import type { Task, TaskEvent } from '@cognac/shared'
-import { useTaskLogs } from '@/hooks/use-tasks'
+import { useTaskEvents } from '@/hooks/use-tasks'
 import { LogView } from '@/components/log-view'
-import { LogEntry } from '@/components/log-entry'
-import { getLivePhaseEvents } from '@/lib/live-phase-events'
 import { ACTIVE_STATUSES } from '@/lib/status-config'
 
 interface LogsTabProps {
@@ -17,44 +14,20 @@ interface LogsTabProps {
   connected: boolean
 }
 
-function useTaskLogState(task: Task, sseEvents: TaskEvent[]) {
-  const isActive = ACTIVE_STATUSES.has(task.status)
-  const qc = useQueryClient()
-  const { data: logs, isLoading } = useTaskLogs(task.id)
-
-  // SSEで phase_end を受信したらDBログを再取得（新しいログ行が書き込まれたため）
-  useEffect(() => {
-    if (sseEvents.length === 0) return
-    const last = sseEvents[sseEvents.length - 1]
-    if (last?.type === 'phase_end') {
-      setTimeout(() => {
-        qc.invalidateQueries({ queryKey: ['tasks', task.id, 'logs'] })
-      }, 500)
-    }
-  }, [sseEvents, task.id, qc])
-
-  const liveEvents = useMemo(
-    () => getLivePhaseEvents(sseEvents, isActive),
-    [sseEvents, isActive],
-  )
-
-  return {
-    logs: logs ?? [],
-    isLoading,
-    isActive,
-    liveEvents,
-  }
-}
-
 function TaskLogsBody({
   task,
-  events,
+  events: sseEvents,
   connected,
   compact = false,
 }: LogsTabProps & { compact?: boolean }) {
-  const { logs, isLoading, isActive, liveEvents } = useTaskLogState(task, events)
-  const hasLogs = logs.length > 0
-  const hasLiveEvents = liveEvents.length > 0
+  const isActive = ACTIVE_STATUSES.has(task.status)
+
+  // 非アクティブ時はSSE接続がないのでAPIからイベント取得
+  const { data: dbEvents, isLoading } = useTaskEvents(task.id, !isActive)
+
+  // アクティブ時はSSE（リプレイ+新規）、非アクティブ時はAPIから
+  const events = isActive ? sseEvents : (dbEvents ?? [])
+  const hasEvents = events.length > 0
 
   return (
     <>
@@ -72,25 +45,13 @@ function TaskLogsBody({
         </div>
       )}
 
-      {hasLogs ? (
-        <div className="space-y-0">
-          {logs.map((log) => (
-            <LogEntry key={log.id} log={log} />
-          ))}
-        </div>
-      ) : null}
-
-      {hasLiveEvents ? (
-        <div className={hasLogs ? 'mt-4 border-t border-border/50 pt-4' : ''}>
-          <LogView events={liveEvents} />
-        </div>
-      ) : null}
-
-      {!hasLogs && !hasLiveEvents ? (
+      {hasEvents ? (
+        <LogView events={events} />
+      ) : (
         <div className="py-8 text-center text-sm text-muted-foreground">
           {isLoading ? 'ログを読み込み中...' : isActive ? 'イベントを待ってるよ...' : '実行ログがまだないよ'}
         </div>
-      ) : null}
+      )}
     </>
   )
 }
