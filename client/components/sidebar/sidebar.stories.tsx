@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { withQueryClient } from '../../.storybook/decorators'
+import { withMockFetch } from '../../.storybook/decorators'
 import { Sidebar } from './sidebar'
 
 const MOCK_SETTINGS = {
@@ -16,7 +16,7 @@ const meta = {
     layout: 'fullscreen',
   },
   decorators: [
-    withQueryClient({ '/api/settings': MOCK_SETTINGS }),
+    withMockFetch({ '/api/settings': MOCK_SETTINGS }),
     (Story) => (
       <div style={{ height: '100vh' }}>
         <Story />

@@ -1,7 +1,7 @@
 // SPHeader のストーリー
 
 import type { Meta, StoryObj } from '@storybook/react'
-import { withQueryClient } from '../../.storybook/decorators'
+import { withMockFetch } from '../../.storybook/decorators'
 import { SPHeader } from './sp-header'
 
 const MOCK_SETTINGS = {
@@ -15,7 +15,7 @@ const meta: Meta<typeof SPHeader> = {
   component: SPHeader,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },
-  decorators: [withQueryClient({ '/api/settings': MOCK_SETTINGS })],
+  decorators: [withMockFetch({ '/api/settings': MOCK_SETTINGS })],
 }
 export default meta
 

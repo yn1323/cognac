@@ -1,9 +1,9 @@
 // TaskList のストーリー
-// useTasks() を内部で使うので QueryClientProvider + fetch モックが必要
+// useTasks() を内部で使うので fetch モックが必要
 
 import type { Meta, StoryObj } from '@storybook/react'
 import { MemoryRouter } from 'react-router-dom'
-import { withQueryClient } from '../../.storybook/decorators'
+import { withMockFetch } from '../../.storybook/decorators'
 import { TaskList } from './task-list'
 import { MOCK_TASKS } from '../__mocks__/task-data'
 
@@ -12,7 +12,7 @@ const meta = {
   component: TaskList,
   tags: ['autodocs'],
   decorators: [
-    withQueryClient({ '/api/tasks': Object.values(MOCK_TASKS) }),
+    withMockFetch({ '/api/tasks': Object.values(MOCK_TASKS) }),
     (Story) => (
       <MemoryRouter>
         <div className="max-w-md">

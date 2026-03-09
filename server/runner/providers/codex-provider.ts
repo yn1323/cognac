@@ -19,7 +19,7 @@ import { TONE_RULES, writeTmpFiles, cleanupTmpFiles, setupAbortHandler, setupPro
  */
 function buildPromptWithSystem(prompt: string, systemPrompt?: string): string {
   if (!systemPrompt) return `${TONE_RULES}\n\n---\n\n${prompt}`
-  return `## システム指示\n${systemPrompt}\n\n${TONE_RULES}\n\n---\n\n${prompt}`
+  return `===== 最重要指示（以下を厳守すること） =====\n${systemPrompt}\n\n${TONE_RULES}\n===== 最重要指示ここまで =====\n\n---\n\n${prompt}`
 }
 
 export class CodexProvider implements CliProviderInterface {

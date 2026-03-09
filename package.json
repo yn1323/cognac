@@ -12,7 +12,9 @@
     "storybook": "pnpm -F @cognac/client storybook",
     "pack": "pnpm build && pnpm -C cli pack",
     "link:global": "pnpm build && pnpm -C cli link --global",
-    "unlink:global": "pnpm -C cli unlink --global"
+    "unlink:global": "pnpm -C cli unlink --global",
+    "init": "cognac init",
+    "start": "cognac start"
   },
   "devDependencies": {
     "typescript": "^5.7.3"
