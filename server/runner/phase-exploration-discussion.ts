@@ -22,31 +22,51 @@ function formatPersonas(personas: ExplorationPersona[]): string {
 }
 
 function buildSystemPrompt(personas: ExplorationPersona[]): string {
-  return `あなたは以下の専門家チーム全員をロールプレイして、探索方針をディスカッションして。
+  return `あなたは以下の専門家チーム全員をロールプレイして、チャットアプリでの会話を再現してくれ。
 
 ## チームメンバー
 ${formatPersonas(personas)}
 
 ## ルール
-- 1人1〜3文で短くテンポよく話す
+- チャットアプリでの会話のように、短い発言（1〜3文）でテンポよくやり取りする
+- 1人が長々と話すのではなく、相手の発言にリアクションしながら会話を進める
+- 「それいいね」「なるほど〜」「ちょっと待って、それだと〜」のような自然な相槌・反応を入れる
+- 各メンバーは自分の専門領域の視点から発言する
+- 意見が割れるところは遠慮なく突っ込む（ただし建設的に）
+- 各メンバーのtoneに設定されたキャラクター性を発言に反映する
+- 社内Slackみたいなノリで、絵文字をどんどん使ってOK！（😊🎉💡🤔👍🔥✨😅💪 など）
+- 発言の最初にリアクション絵文字を置いたり、文末に添えたり、自然に散りばめる
+- 長めの発言（2文以上）は途中で改行（\\n）を入れて読みやすくする
+- 1ラウンドで合計8〜15メッセージ程度のやり取りをする
+
+## 探索固有の論点
 - 何を調べるべきかを具体化する
 - Playwright MCP を使うべきかを判断する
 - 証跡として何を残すべきかを話し合う
 - 最後は課題と次アクションの粒度まで揃える
 
-必ずJSONだけを返して。
+必ず以下のJSONフォーマットだけを返して。余計な説明はいらない。
 
 \`\`\`json
 {
   "round": 1,
   "messages": [
-    { "personaId": "qa-engineer", "content": "まず再現条件を切り分けたいね" }
+    { "personaId": "ux-researcher", "content": "この画面、まずユーザーの導線から確認したいんだけど🤔" },
+    { "personaId": "qa-engineer", "content": "💡 再現条件から先に切り分けない？\\n環境差分がありそうな気がする" },
+    { "personaId": "ux-researcher", "content": "たしかに！じゃあまず再現手順を整理しよう👍" }
   ],
   "shouldContinue": true,
-  "reason": "まだ観測手段が固まっていない"
+  "reason": "まだ証跡の残し方について議論が必要"
 }
 \`\`\`
-`
+
+### shouldContinueの判定基準
+以下の場合は false にして:
+- 全メンバーが主要な論点で合意に達した
+- 新しい論点や反論が出なくなった
+- 前ラウンドと実質的に同じ議論の繰り返しになった
+
+出力がJSONフォーマットに準拠しているか確認してから返して。`
 }
 
 function buildRoundPrompt(
@@ -75,7 +95,7 @@ ${repoStructure}
   prompt += `\n## ラウンド ${round}\n`
 
   if (round === 1) {
-    prompt += '\nこの探索で調べるべきこと、Playwright MCP の必要性、残すべき証跡を議論して。'
+    prompt += '\n探索依頼についてチャットで話し合って。各メンバーの初見の反応から始めて。'
   } else {
     prompt += '\n### これまでの会話\n\n'
     const grouped = groupDiscussionsByRound(previousRounds)
@@ -84,11 +104,11 @@ ${repoStructure}
         prompt += `**${discussion.persona_name}**: ${discussion.content}\n`
       }
     }
-    prompt += '\nこの続きを話して、必要なら論点を絞って。'
+    prompt += '\nこの会話の続きをしてくれ。前の話を踏まえて、まだ決まっていない点を議論して。'
   }
 
   if (isLastRound) {
-    prompt += '\n\n**これが最終ラウンド。shouldContinue は false にして締めて。**'
+    prompt += '\n\n**注意: これが最終ラウンドだ。shouldContinueはfalseにして、結論を短くまとめるメッセージで締めてくれ。**'
   }
 
   return prompt
