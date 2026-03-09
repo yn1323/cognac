@@ -4,7 +4,7 @@
 
 import { cn } from '@/lib/utils'
 
-const TABS = ['Overview', 'Discussion', 'Plan', 'Logs', 'CI'] as const
+const TABS = ['概要', 'ディスカッション', 'プラン', 'CI', 'ログ'] as const
 
 export type Tab = (typeof TABS)[number]
 
@@ -32,9 +32,9 @@ export function DetailTabs({
               type="button"
               onClick={() => onTabChange?.(tab)}
               className={cn(
-                'rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors',
+                'cursor-pointer rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors',
                 isActive
-                  ? 'bg-foreground text-background'
+                  ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
@@ -56,9 +56,9 @@ export function DetailTabs({
             type="button"
             onClick={() => onTabChange?.(tab)}
             className={cn(
-              'border-b-2 px-3 pb-2 text-sm font-medium transition-colors',
+              'cursor-pointer border-b-2 px-3 pb-2 text-sm font-medium transition-colors',
               isActive
-                ? 'border-foreground text-foreground'
+                ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground',
             )}
           >

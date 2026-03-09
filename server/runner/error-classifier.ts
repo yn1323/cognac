@@ -21,6 +21,10 @@ const INFRA_PATTERNS: RegExp[] = [
   /rate limit/i,
   /too many requests/i,
   /429/,
+  /out of extra usage/i,
+  /usage limit/i,
+  /quota exceeded/i,
+  /insufficient quota/i,
 
   // 認証・権限
   /401 Unauthorized/i,

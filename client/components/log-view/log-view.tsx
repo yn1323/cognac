@@ -1,19 +1,23 @@
-// 実行ログのリアルタイム表示
-// SSEイベントを時系列で表示する
+// 実行ログの表示
+// SSEイベント・DB永続化イベント共通で時系列表示する
 
 import { useEffect, useRef } from 'react'
-import type { TaskEvent } from '@cognac/shared'
+import type { TaskEvent, CliProvider } from '@cognac/shared'
 import { cn } from '@/lib/utils'
+import { formatNumber } from '@/lib/format'
 
 // イベントを表示用テキストに変換する
-function formatEvent(event: TaskEvent): { label: string; detail: string; color: string } {
+function formatEvent(
+  event: TaskEvent,
+  provider?: CliProvider,
+): { label: string; detail: string; color: string } {
   switch (event.type) {
     case 'phase_start':
       return { label: 'Phase', detail: `${event.phase} 開始`, color: 'text-blue-600' }
     case 'phase_end':
-      return { label: 'Phase', detail: `${event.phase} 完了 (${event.durationMs}ms)`, color: 'text-blue-600' }
+      return { label: 'Phase', detail: `${event.phase} 完了 (${formatNumber(event.durationMs)}ms)`, color: 'text-blue-600' }
     case 'claude_output':
-      return { label: 'Claude', detail: event.content.slice(0, 200), color: 'text-foreground' }
+      return { label: provider === 'codex' ? 'Codex' : 'Claude', detail: event.content.slice(0, 200), color: 'text-foreground' }
     case 'file_changed':
       return { label: 'File', detail: `${event.toolName}: ${event.path}`, color: 'text-green-600' }
     case 'command_executed':
@@ -22,12 +26,14 @@ function formatEvent(event: TaskEvent): { label: string; detail: string; color: 
         detail: `${event.command} → exit ${event.exitCode}`,
         color: event.exitCode === 0 ? 'text-green-600' : 'text-red-600',
       }
+    case 'tool_invoked':
+      return { label: 'Tool', detail: event.toolName, color: 'text-muted-foreground' }
     case 'ci_start':
       return { label: 'CI', detail: `${event.step}: ${event.command}`, color: 'text-orange-600' }
     case 'ci_result':
       return {
         label: 'CI',
-        detail: `${event.step}: ${event.success ? '成功' : '失敗'} (${event.durationMs}ms)`,
+        detail: `${event.step}: ${event.success ? '成功' : '失敗'} (${formatNumber(event.durationMs)}ms)`,
         color: event.success ? 'text-green-600' : 'text-red-600',
       }
     case 'retry':
@@ -42,6 +48,12 @@ function formatEvent(event: TaskEvent): { label: string; detail: string; color: 
       return { label: 'Paused', detail: event.reason, color: 'text-red-600' }
     case 'git_operation':
       return { label: 'Git', detail: `${event.operation}: ${event.detail}`, color: 'text-purple-600' }
+    case 'debug_log':
+      return {
+        label: 'Debug',
+        detail: event.message,
+        color: event.level === 'error' ? 'text-red-600' : event.level === 'warn' ? 'text-yellow-600' : 'text-muted-foreground',
+      }
     case 'completed':
       return { label: 'Done', detail: event.summary, color: 'text-green-700' }
     default:
@@ -49,7 +61,12 @@ function formatEvent(event: TaskEvent): { label: string; detail: string; color: 
   }
 }
 
-export function LogView({ events }: { events: TaskEvent[] }) {
+interface LogViewProps {
+  events: TaskEvent[]
+  provider?: CliProvider
+}
+
+export function LogView({ events, provider }: LogViewProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
 
   // 新しいイベントが来たら自動スクロール
@@ -68,7 +85,7 @@ export function LogView({ events }: { events: TaskEvent[] }) {
   return (
     <div className="space-y-1 font-mono text-xs">
       {events.map((event, i) => {
-        const { label, detail, color } = formatEvent(event)
+        const { label, detail, color } = formatEvent(event, provider)
         return (
           <div key={i} className="flex gap-2 py-1 border-b border-border/50">
             <span className={cn('shrink-0 w-14 font-semibold', color)}>[{label}]</span>

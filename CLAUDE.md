@@ -62,10 +62,26 @@ React 19 + Vite 6 + TailwindCSS v4 + React Router v7 + TanStack Query v5。コ�
 ### タスク状態マシン
 
 ```
-pending → discussing → planned → executing → testing → completed
-                                    ↓
-                                 paused (infraエラー) / stopped (リトライ上限到達)
+pending → discussing → executing → reviewing → completed
+              ↓            ↓
+           paused / stopped (infraエラー / リトライ上限到達)
 ```
+
+- `discussing`: ペルソナ選定 → ディスカッション → プラン策定（Phase 2全体）
+- `executing`: コード実行（Phase 3）
+- `reviewing`: CI実行
+
+### 探索状態マシン
+
+```
+pending → discussing → executing → reviewing → completed
+              ↓            ↓           ↓
+           paused / stopped (infraエラー / リトライ上限到達)
+```
+
+- `discussing`: ペルソナ選定 → ディスカッション
+- `executing`: 探索実行（Claude/Codex エージェント）
+- `reviewing`: レポート生成
 
 ### AIワークフローフェーズ
 
@@ -78,6 +94,7 @@ pending → discussing → planned → executing → testing → completed
 - **ブランチ命名**: `task/<task-id>-<slugified-title>` (slug部分は最大30文字)
 - **Node.js 22**必須 (CIでNode 22を使用)
 - **`packageManager: pnpm@10.6.2`** — npm/yarnではなくpnpmを使用
+- **画面名とpencil NodeIDの紐づけ** — `doc/design/index.md`
 
 ## CI
 
@@ -100,6 +117,7 @@ pushトリガーの4つのGitHub Actionsワークフロー: `build.yml`、`lint.
    - `pnpm lint` (エラーがあれば修正する)
    - `pnpm typecheck`
 - 実装完了後SKILL`/simplify`を実行し、コードの品質を保ちたい
+- 未リリースのため、DB設計に変更が入った場合、テーブル全削除or sqliteDB削除して作りなおしてOK。（マイグレーションは考えなくて良い）
 
 ### トーン・文体
 
@@ -113,3 +131,31 @@ pushトリガーの4つのGitHub Actionsワークフロー: `build.yml`、`lint.
 ミスやバグは相談形式で積極報告（「ここ気になるんだけど〜、見てくれる〜？」）
 褒めるときは大げさに（「すご〜い！天才〜！」）
 フィードバックは自然に反応
+
+## デザイン
+
+- 日本語でデザイン、レイアウトすること
+- デザイン、レイアウトにはこのAIのトーン・文体を適用しないこと
+- pencil MCPは指示されたときのみ参照すること
+
+### デザイントークン
+
+`client/index.css` に全トークンを集約。TailwindCSS v4の`@theme inline`で定義し、Tailwindユーティリティクラスとして利用可能。
+
+- **基本カラー**: `--color-primary`, `--color-secondary`, `--color-muted` 等（shadcn/ui準拠）
+- **ブランドカラー**: `--color-cognac`, `--color-cognac-light`, `--color-cognac-dark`
+- **ステータスカラー**: 8状態×テキスト/背景の2変数（例: `--color-status-executing`, `--color-status-executing-bg`）
+- **サイドバー**: `--color-sidebar` 系
+- **角丸**: `--radius-sm/md/lg/xl`（基準値 `0.625rem`）
+- **フォント**: Noto Sans + Noto Sans JP
+- **ライト/ダークモード**: `:root` と `.dark` でCSS変数を切り替え
+
+### 共通コンポーネント
+
+- **`client/components/ui/`** — プリミティブUIコンポーネント（button, card, input, badge, switch, dropdown-menu, confirm-dialog 等）
+- **`client/components/`** — ドメイン寄り共通コンポーネント（layout, sidebar, page-header, toast, status-badge, metric-card 等）。コロケーションパターン（`component.tsx` + `index.ts` + `component.stories.tsx`）
+
+## CLI設計
+
+- IMPORTANT: Windonws, Mac両方で正常に動作すること
+- IMPORTANT: Claude Cli, Codex Cli を設定画面から選択して利用可能。実装、修正時は両方考慮すること。

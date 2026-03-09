@@ -1,39 +1,38 @@
 // SPヘッダー
-// モバイル用ヘッダー。メニューアイコン、ロゴ、通知アイコンを配置
+// モバイル用ヘッダー。ロゴを中央配置
 
-import { Menu, Bell, Wine } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { BrandLogo } from '@/components/brand-logo'
+import { useSettings } from '@/hooks/use-system'
+import { providerLabel } from '@/lib/provider'
 
 interface SPHeaderProps {
-  onMenuClick?: () => void
-  onNotificationClick?: () => void
   className?: string
 }
 
-export function SPHeader({ onMenuClick, onNotificationClick, className }: SPHeaderProps) {
+export function SPHeader({ className }: SPHeaderProps) {
+  const { data: settings } = useSettings()
+  const provider = settings?.provider ?? 'claude'
   return (
     <header
       className={cn(
-        'flex items-center justify-between border-b bg-background px-4 py-3',
+        'flex items-center justify-center border-b bg-background px-4 py-3',
         className,
       )}
     >
-      <button type="button" onClick={onMenuClick} className="text-foreground">
-        <Menu className="h-5 w-5" />
-      </button>
-
       <div className="flex items-center gap-2">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
-          <Wine className="h-4 w-4 text-primary-foreground" />
+        <div className="flex h-7 w-7 items-center justify-center rounded-[10px] bg-cognac-dark">
+          <BrandLogo size={16} />
         </div>
-        <span className="text-base font-semibold leading-[1.4] text-foreground">
-          Cognac
-        </span>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-base font-semibold leading-[1.4] text-foreground">
+            Cognac
+          </span>
+          <span className="text-xs text-muted-foreground">
+            · {providerLabel(provider)}
+          </span>
+        </div>
       </div>
-
-      <button type="button" onClick={onNotificationClick} className="text-foreground">
-        <Bell className="h-5 w-5" />
-      </button>
     </header>
   )
 }

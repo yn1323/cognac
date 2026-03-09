@@ -1,5 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { withMockFetch } from '../../.storybook/decorators'
 import { Sidebar } from './sidebar'
+
+const MOCK_SETTINGS = {
+  provider: 'claude',
+  ci: { maxRetries: 5, steps: [] },
+  git: { commitLogLimit: 50, commitMessageLanguage: 'ja' },
+}
 
 const meta = {
   title: 'Components/Sidebar',
@@ -9,6 +16,7 @@ const meta = {
     layout: 'fullscreen',
   },
   decorators: [
+    withMockFetch({ '/api/settings': MOCK_SETTINGS }),
     (Story) => (
       <div style={{ height: '100vh' }}>
         <Story />
@@ -23,5 +31,9 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {}
 
 export const DashboardActive: Story = {
-  args: { activeItem: 'Dashboard' },
+  args: { activeItem: 'タスク' },
+}
+
+export const SettingsActive: Story = {
+  args: { activeItem: '設定' },
 }

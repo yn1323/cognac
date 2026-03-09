@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { CiStep, CognacConfig, TaskEvent } from '@cognac/shared'
-import { hashFiles } from '@cognac/shared'
+import { hashFiles } from '@cognac/shared/utils/hash'
 import * as ciCacheQueries from '../db/queries/ci-cache.js'
 import type Database from 'better-sqlite3'
 
@@ -87,10 +87,11 @@ export function runCi(
     onEvent?.({ type: 'ci_start', step: step.name, command: step.command })
 
     const startTime = Date.now()
-    const result = spawnSync('sh', ['-c', step.command], {
+    const result = spawnSync(step.command, {
       cwd,
       encoding: 'utf8',
       timeout: 120000, // 2分/ステップ
+      shell: true,
     })
     const durationMs = Date.now() - startTime
 

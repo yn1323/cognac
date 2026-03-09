@@ -18,6 +18,7 @@ const EVENT_TYPES = [
   'claude_output',
   'file_changed',
   'command_executed',
+  'tool_invoked',
   'ci_start',
   'ci_result',
   'retry',
@@ -25,6 +26,7 @@ const EVENT_TYPES = [
   'paused',
   'git_operation',
   'completed',
+  'debug_log',
 ] as const
 
 export function useTaskSSE(taskId: number | null) {
@@ -41,11 +43,16 @@ export function useTaskSSE(taskId: number | null) {
     es.onopen = () => setConnected(true)
     es.onerror = () => setConnected(false)
 
+    const MAX_EVENTS = 500
+
     // 各イベントタイプをリッスン
     const handler = (e: Event) => {
       try {
         const data = JSON.parse((e as MessageEvent).data) as TaskEvent
-        setEvents((prev) => [...prev, data])
+        setEvents((prev) => {
+          const next = [...prev, data]
+          return next.length > MAX_EVENTS ? next.slice(-MAX_EVENTS) : next
+        })
       } catch {
         // パース失敗は無視
       }

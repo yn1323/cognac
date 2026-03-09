@@ -1,16 +1,11 @@
 // TaskDetail のストーリー
-// react-router + React Query が必要
+// react-router が必要
 
 import type { Meta, StoryObj } from '@storybook/react'
 import { MemoryRouter } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TaskDetail } from './task-detail'
 import { MOCK_TASKS } from '../__mocks__/task-data'
 import { MOCK_EVENTS } from '../__mocks__/event-data'
-
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: false } },
-})
 
 const meta = {
   title: 'Components/TaskDetail',
@@ -18,13 +13,11 @@ const meta = {
   tags: ['autodocs'],
   decorators: [
     (Story) => (
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <div className="max-w-2xl">
-            <Story />
-          </div>
-        </MemoryRouter>
-      </QueryClientProvider>
+      <MemoryRouter>
+        <div className="max-w-2xl">
+          <Story />
+        </div>
+      </MemoryRouter>
     ),
   ],
 } satisfies Meta<typeof TaskDetail>

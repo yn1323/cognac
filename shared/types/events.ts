@@ -6,6 +6,15 @@ export type Phase = 'persona' | 'discussion' | 'plan' | 'execute' | 'ci' | 'git'
 // エラー種別
 export type ErrorType = 'app' | 'infra' | 'process'
 
+// CLIストリームの低レベルイベント
+export type AgentStreamEvent =
+  | { type: 'agent_output'; content: string }
+  | { type: 'tool_invoked'; toolName: string }
+  | { type: 'command_executed'; command: string; output: string; exitCode: number }
+  | { type: 'file_changed'; path: string; toolName: 'Write' | 'Edit' }
+  | { type: 'debug_log'; message: string; level: 'info' | 'warn' | 'error' }
+  | { type: 'error'; errorType: ErrorType; message: string }
+
 // SSEで配信されるタスクイベントの全種類
 export type TaskEvent =
   // フェーズ制御
@@ -21,21 +30,18 @@ export type TaskEvent =
       personaId: string
       personaName: string
       content: string
-      keyPoints: string[]
     }
   | { type: 'discussion_round_end'; round: number; shouldContinue: boolean; reason: string }
   // Phase 2-C: プラン
   | { type: 'plan_created'; planMarkdown: string; estimatedComplexity: string }
   // Phase 3: コード実行
   | { type: 'claude_output'; content: string }
-  | { type: 'file_changed'; path: string; toolName: 'Write' | 'Edit' }
-  | { type: 'command_executed'; command: string; output: string; exitCode: number }
+  | Extract<AgentStreamEvent, { type: 'file_changed' | 'command_executed' | 'tool_invoked' | 'debug_log' | 'error' }>
   // CI
   | { type: 'ci_start'; step: string; command: string }
   | { type: 'ci_result'; step: string; success: boolean; output: string; durationMs: number }
   // エラー・リトライ
   | { type: 'retry'; errorType: 'app' | 'process'; count: number; maxRetries: number; reason: string }
-  | { type: 'error'; errorType: ErrorType; message: string }
   | { type: 'paused'; reason: string; phase: Phase }
   // Git
   | { type: 'git_operation'; operation: 'checkout' | 'commit' | 'merge' | 'push'; detail: string }
@@ -47,22 +53,8 @@ export type TaskEvent =
       tokenUsage: { input: number; output: number }
     }
 
-// 実行ログ
-export interface ExecutionLog {
-  id: number
-  task_id: number
-  phase: Phase | 'retry'
-  session_id: string | null
-  input_summary: string | null
-  output_raw: string | null
-  output_summary: string | null
-  token_input: number | null
-  token_output: number | null
-  duration_ms: number | null
-  error_type: ErrorType | null
-  error_message: string | null
-  created_at: string
-}
+// 実行ログ（BaseLogから派生）
+export type { ExecutionLog } from './log.js'
 
 // CIステップ
 export interface CiStep {

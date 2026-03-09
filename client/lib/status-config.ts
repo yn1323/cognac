@@ -2,7 +2,7 @@
 // 色・ラベル・アイコンを一元管理する
 // カラートークンは index.css の CSS変数を参照（ダークモード自動対応）
 
-import type { TaskStatus } from '@cognac/shared'
+import type { TaskStatus, Phase } from '@cognac/shared'
 import type { LucideIcon } from 'lucide-react'
 import {
   Loader,
@@ -10,10 +10,39 @@ import {
   GripVertical,
   CheckCircle,
   XCircle,
-  FlaskConical,
-  Lightbulb,
+  Eye,
   PauseCircle,
 } from 'lucide-react'
+
+// 削除可能なステータス
+export const DELETABLE_STATUSES = new Set<TaskStatus>(['pending', 'completed', 'paused', 'stopped'])
+
+// リトライ可能なステータス
+export const RETRYABLE_STATUSES = new Set<TaskStatus>(['stopped', 'paused'])
+
+// アクティブ（実行中）なステータス
+export const ACTIVE_STATUSES = new Set<TaskStatus>(['discussing', 'executing', 'reviewing'])
+
+// フェーズの日本語ラベル
+export const PHASE_LABELS: Record<Phase, string> = {
+  persona: 'ペルソナ',
+  discussion: 'ディスカッション',
+  plan: 'プラン',
+  execute: '実行',
+  ci: 'CI',
+  git: 'Git',
+}
+
+// ステータス → フェーズ表示名のマッピング
+export const STATUS_PHASE_MAP: Record<TaskStatus, string> = {
+  pending: 'Queued',
+  discussing: 'Phase 2: Discussing',
+  executing: 'Phase 3: Executing',
+  reviewing: 'Phase 4: CI Review',
+  completed: 'Completed',
+  paused: 'Paused',
+  stopped: 'Stopped',
+}
 
 export const STATUS_CONFIG: Record<
   TaskStatus,
@@ -50,21 +79,13 @@ export const STATUS_CONFIG: Record<
     borderColor: '',
     icon: GripVertical,
   },
-  planned: {
-    label: 'Planned',
-    color: 'text-status-planned',
-    dotColor: 'bg-status-planned',
-    bgColor: 'bg-status-planned-bg',
+  reviewing: {
+    label: 'Reviewing',
+    color: 'text-status-reviewing',
+    dotColor: 'bg-status-reviewing',
+    bgColor: 'bg-status-reviewing-bg',
     borderColor: '',
-    icon: Lightbulb,
-  },
-  testing: {
-    label: 'Testing',
-    color: 'text-status-testing',
-    dotColor: 'bg-status-testing',
-    bgColor: 'bg-status-testing-bg',
-    borderColor: '',
-    icon: FlaskConical,
+    icon: Eye,
   },
   completed: {
     label: 'Completed',
@@ -75,7 +96,7 @@ export const STATUS_CONFIG: Record<
     icon: CheckCircle,
   },
   stopped: {
-    label: '停止',
+    label: 'Stopped',
     color: 'text-status-stopped',
     dotColor: 'bg-status-stopped',
     bgColor: 'bg-status-stopped-bg',
@@ -83,7 +104,7 @@ export const STATUS_CONFIG: Record<
     icon: XCircle,
   },
   paused: {
-    label: '一時停止',
+    label: 'Paused',
     color: 'text-status-paused',
     dotColor: 'bg-status-paused',
     bgColor: 'bg-status-paused-bg',

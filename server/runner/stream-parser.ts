@@ -2,11 +2,11 @@
  * B-07: Claude Code stream-json 出力パーサー
  *
  * `claude -p --output-format stream-json` の各行JSONをパースし、
- * TaskEvent に変換する。
+ * AgentStreamEvent に変換する。
  * 不明なチャンクタイプはスキップ（warn出すだけ、throwしない）。
  */
 
-import type { TaskEvent } from '@cognac/shared'
+import type { AgentStreamEvent } from '@cognac/shared'
 
 // ── Claude CLIが吐くstream-jsonの型 ──
 
@@ -41,7 +41,7 @@ interface SystemChunk {
   [key: string]: unknown
 }
 
-type ContentBlock = TextBlock | ToolUseBlock | ToolResultBlock
+type ContentBlock = TextBlock | ToolUseBlock | ToolResultBlock | ThinkingBlock
 
 interface TextBlock {
   type: 'text'
@@ -58,6 +58,11 @@ interface ToolResultBlock {
   type: 'tool_result'
   content: string
   is_error?: boolean
+}
+
+interface ThinkingBlock {
+  type: 'thinking'
+  thinking: string
 }
 
 // ── パーサー結果の内部バッファ ──
@@ -78,10 +83,10 @@ export class StreamParser {
   private lastToolName: string | null = null
 
   /**
-   * 1行分のJSONをパースして TaskEvent を返す。
+   * 1行分のJSONをパースして AgentStreamEvent を返す。
    * 該当なし or 不明タイプなら null。
    */
-  parse(line: string): TaskEvent | null {
+  parse(line: string): AgentStreamEvent | null {
     if (!line.trim()) return null
 
     let chunk: StreamChunk
@@ -101,8 +106,10 @@ export class StreamParser {
       case 'result':
         return this.handleResult(chunk as ResultChunk)
 
+      case 'user':
       case 'system':
-        // system メッセージは表示不要
+      case 'rate_limit_event':
+        // user / system / rate_limit_event は表示不要
         return null
 
       default:
@@ -118,7 +125,7 @@ export class StreamParser {
 
   // ── 内部ハンドラ ──
 
-  private handleAssistant(chunk: AssistantChunk): TaskEvent | null {
+  private handleAssistant(chunk: AssistantChunk): AgentStreamEvent | null {
     const blocks = chunk.message?.content
     if (!blocks || blocks.length === 0) return null
 
@@ -131,12 +138,12 @@ export class StreamParser {
     return null
   }
 
-  private blockToEvent(block: ContentBlock): TaskEvent | null {
+  private blockToEvent(block: ContentBlock): AgentStreamEvent | null {
     switch (block.type) {
       case 'text':
         this.lastToolName = null
         return {
-          type: 'claude_output',
+          type: 'agent_output',
           content: (block as TextBlock).text,
         }
 
@@ -147,13 +154,17 @@ export class StreamParser {
         // tool_result は単体ではイベント化しない（呼び出し元のツール結果として統合）
         return null
 
+      case 'thinking':
+        // Extended Thinking の思考ブロックはイベント化不要
+        return null
+
       default:
         console.warn(`[StreamParser] 不明なブロックタイプ: ${(block as Record<string, unknown>).type}`)
         return null
     }
   }
 
-  private handleToolUse(block: ToolUseBlock): TaskEvent | null {
+  private handleToolUse(block: ToolUseBlock): AgentStreamEvent | null {
     const { name, input } = block
     this.lastToolName = name
 
@@ -178,14 +189,15 @@ export class StreamParser {
       }
     }
 
-    // その他のツール（Read, Glob, Grep など）は claude_output として扱う
+    // その他のツール（Read, Glob, Grep など）は tool_invoked として扱う
+    // claude_output にすると result 文字列にマーカーが混入してJSON抽出を妨げるため分離
     return {
-      type: 'claude_output',
-      content: `[Tool: ${name}]`,
+      type: 'tool_invoked',
+      toolName: name,
     }
   }
 
-  private handleResult(chunk: ResultChunk): TaskEvent | null {
+  private handleResult(chunk: ResultChunk): AgentStreamEvent | null {
     this.resultData = {
       result: chunk.result ?? '',
       sessionId: chunk.session_id ?? '',
