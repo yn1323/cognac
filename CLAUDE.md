@@ -62,10 +62,26 @@ React 19 + Vite 6 + TailwindCSS v4 + React Router v7 + TanStack Query v5。コ�
 ### タスク状態マシン
 
 ```
-pending → discussing → planned → executing → testing → completed
-                                    ↓
-                                 paused (infraエラー) / stopped (リトライ上限到達)
+pending → discussing → executing → reviewing → completed
+              ↓            ↓
+           paused / stopped (infraエラー / リトライ上限到達)
 ```
+
+- `discussing`: ペルソナ選定 → ディスカッション → プラン策定（Phase 2全体）
+- `executing`: コード実行（Phase 3）
+- `reviewing`: CI実行
+
+### 探索状態マシン
+
+```
+pending → discussing → executing → reviewing → completed
+              ↓            ↓           ↓
+           paused / stopped (infraエラー / リトライ上限到達)
+```
+
+- `discussing`: ペルソナ選定 → ディスカッション
+- `executing`: 探索実行（Claude/Codex エージェント）
+- `reviewing`: レポート生成
 
 ### AIワークフローフェーズ
 

@@ -20,7 +20,7 @@ export default defineConfig({
   claude: {
     maxTurnsExecution: 30,
     maxTurnsDiscussion: 1,
-    stdoutTimeoutMs: 300000,
+    stdoutTimeoutMs: 600000,
     processMaxRetries: 2,
   },
 })

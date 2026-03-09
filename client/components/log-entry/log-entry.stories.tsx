@@ -73,6 +73,33 @@ export const NoTokens: Story = {
   },
 }
 
+export const TimeAtMidnight: Story = {
+  args: {
+    log: {
+      ...baseLog,
+      created_at: '2026-03-09T00:00:00',
+    },
+  },
+}
+
+export const TimeWithZeroPadding: Story = {
+  args: {
+    log: {
+      ...baseLog,
+      created_at: '2026-03-09T09:05:03',
+    },
+  },
+}
+
+export const InvalidTimeFallback: Story = {
+  args: {
+    log: {
+      ...baseLog,
+      created_at: 'invalid-date',
+    },
+  },
+}
+
 export const MultipleEntries: StoryObj = {
   render: () => (
     <div className="max-w-2xl space-y-0">

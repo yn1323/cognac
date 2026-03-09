@@ -38,3 +38,17 @@ export function formatRelativeTime(dateStr: string): string {
   const days = Math.floor(hours / 24)
   return `${days}譌･蜑港
 }
+
+/**
+ * ISO日時文字列をローカル時刻の hh:mm:ss 形式で表示する
+ * 無効値は --:--:-- を返す
+ */
+export function formatLogTime(dateStr: string | null | undefined): string {
+  if (!dateStr) return '--:--:--'
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return '--:--:--'
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  const ss = String(d.getSeconds()).padStart(2, '0')
+  return `${hh}:${mm}:${ss}`
+}

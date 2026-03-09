@@ -1,6 +1,7 @@
 // DB履歴ログの1行表示（タスク・探索共通）
 
 import type { BaseLog } from '@cognac/shared'
+import { formatLogTime } from '../../lib/format'
 
 export function LogEntry({ log }: { log: BaseLog }) {
   const hasError = log.error_type != null
@@ -28,8 +29,8 @@ export function LogEntry({ log }: { log: BaseLog }) {
           </span>
         )}
       </div>
-      <span className="shrink-0 font-mono text-xs text-muted-foreground">
-        {log.created_at}
+      <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums [font-variant-numeric:tabular-nums]">
+        {formatLogTime(log.created_at)}
       </span>
     </div>
   )
