@@ -43,6 +43,14 @@ const ICON_MAP = {
   warning: { icon: TriangleAlert, className: 'text-[#d97706]' },
 } as const
 
+// variant別の自動消去時間（ミリ秒）
+const DURATION_MAP: Record<ToastVariant, number> = {
+  default: 2000,
+  success: 2000,
+  error: 4000,
+  warning: 4000,
+} as const
+
 // --- Reducer ---
 
 function toastReducer(state: Toast[], action: ToastAction): Toast[] {
@@ -68,9 +76,9 @@ function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: (id: stri
   // 各トースト個別の自動消去タイマー（他のトースト追加でリセットされない）
   useEffect(() => {
     if (t.dismissing) return
-    const timer = setTimeout(() => onDismiss(t.id), 3000)
+    const timer = setTimeout(() => onDismiss(t.id), DURATION_MAP[t.variant])
     return () => clearTimeout(timer)
-  }, [t.id, t.dismissing, onDismiss])
+  }, [t.id, t.dismissing, t.variant, onDismiss])
 
   return (
     <div
@@ -88,7 +96,7 @@ function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: (id: stri
       <p className="min-w-0 flex-1 text-sm text-foreground">{t.message}</p>
       <button
         type="button"
-        className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center"
+        className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center"
         onClick={() => onDismiss(t.id)}
       >
         <X className="h-4 w-4 text-muted-foreground" />
