@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useDeleteDatabase, useSettings, useUpdateSettings } from '@/hooks/use-system'
+import { useToast } from '@/components/toast'
 
 // --- CIコマンドエディター ---
 
@@ -468,6 +469,7 @@ export function SettingsPage() {
   const deleteDatabase = useDeleteDatabase()
   const { data: settings } = useSettings()
   const updateSettings = useUpdateSettings()
+  const { toast } = useToast()
 
   // サーバーから初期値をロード（初回のみ）
   const initialized = useRef(false)
@@ -484,21 +486,33 @@ export function SettingsPage() {
 
   const handleSave = () => {
     const maxRetriesNum = parseInt(maxRetries, 10)
-    if (Number.isNaN(maxRetriesNum) || maxRetriesNum < 0) return
+    if (Number.isNaN(maxRetriesNum) || maxRetriesNum < 0) {
+      toast('入力値を確認してください', 'warning')
+      return
+    }
     const commitLogLimitNum = parseInt(commitLogLimit, 10)
-    if (Number.isNaN(commitLogLimitNum) || commitLogLimitNum < 1) return
+    if (Number.isNaN(commitLogLimitNum) || commitLogLimitNum < 1) {
+      toast('入力値を確認してください', 'warning')
+      return
+    }
 
-    updateSettings.mutate({
-      provider,
-      ci: {
-        maxRetries: maxRetriesNum,
-        steps: ciSteps.filter((s) => s.name.trim() && s.command.trim()),
+    updateSettings.mutate(
+      {
+        provider,
+        ci: {
+          maxRetries: maxRetriesNum,
+          steps: ciSteps.filter((s) => s.name.trim() && s.command.trim()),
+        },
+        git: {
+          commitLogLimit: commitLogLimitNum,
+          commitMessageLanguage,
+        },
       },
-      git: {
-        commitLogLimit: commitLogLimitNum,
-        commitMessageLanguage,
+      {
+        onSuccess: () => toast('設定を保存しました', 'success'),
+        onError: () => toast('保存に失敗しました', 'error'),
       },
-    })
+    )
   }
 
   const handleDeleteDatabase = () => {

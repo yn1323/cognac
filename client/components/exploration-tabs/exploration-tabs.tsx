@@ -4,7 +4,7 @@
 
 import { cn } from '@/lib/utils'
 
-const TABS = ['概要', 'ディスカッション', 'ログ', 'レポート'] as const
+const TABS = ['概要', 'ディスカッション', 'レポート', 'ログ'] as const
 
 export type ExplorationTab = (typeof TABS)[number]
 
