@@ -1,11 +1,11 @@
 // コマンド登録/編集モーダル
 // デザイン ConsolePage.pen qZfZ7 に準拠
 
-import { useState, useEffect, useId } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { useScrollLock, useEscapeClose } from '@/hooks/use-scroll-lock'
+import { useEscapeClose, useScrollLock } from '@/hooks/use-scroll-lock'
 
 interface CommandModalProps {
   open: boolean
@@ -69,7 +69,9 @@ export function CommandModal({ open, onClose, onSubmit, initialData }: CommandMo
         {/* Form */}
         <div className="flex flex-col gap-4 p-6">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="cmd-name" className="text-sm font-medium text-foreground">表示名</label>
+            <label htmlFor="cmd-name" className="text-sm font-medium text-foreground">
+              表示名
+            </label>
             <Input
               id="cmd-name"
               placeholder="例: Dev Server"
@@ -78,7 +80,9 @@ export function CommandModal({ open, onClose, onSubmit, initialData }: CommandMo
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="cmd-command" className="text-sm font-medium text-foreground">コマンド</label>
+            <label htmlFor="cmd-command" className="text-sm font-medium text-foreground">
+              コマンド
+            </label>
             <Input
               id="cmd-command"
               placeholder="例: pnpm dev"
@@ -87,7 +91,9 @@ export function CommandModal({ open, onClose, onSubmit, initialData }: CommandMo
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="cmd-note" className="text-sm font-medium text-foreground">メモ（任意）</label>
+            <label htmlFor="cmd-note" className="text-sm font-medium text-foreground">
+              メモ（任意）
+            </label>
             <Textarea
               id="cmd-note"
               placeholder="コマンドの説明など"

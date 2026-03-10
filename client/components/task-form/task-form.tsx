@@ -1,13 +1,13 @@
 // タスク作成フォーム
 // title + description を入力してタスクを追加する
 
-import { useState, type FormEvent } from 'react'
+import { Plus } from 'lucide-react'
+import { type FormEvent, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useCreateTask } from '@/hooks/use-tasks'
-import { Plus } from 'lucide-react'
 
 export function TaskForm() {
   const [title, setTitle] = useState('')

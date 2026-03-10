@@ -6,10 +6,7 @@ export function getCognacRoot(cwd = process.cwd()): string {
   return resolve(cwd, '.cognac')
 }
 
-export function getExplorationUploadDir(
-  explorationSessionId: number,
-  cwd = process.cwd(),
-): string {
+export function getExplorationUploadDir(explorationSessionId: number, cwd = process.cwd()): string {
   return resolve(getCognacRoot(cwd), 'uploads', 'explorations', String(explorationSessionId))
 }
 
@@ -35,10 +32,7 @@ export async function ensureExplorationDirs(
   await mkdir(getExplorationPlaywrightDir(explorationSessionId, cwd), { recursive: true })
 }
 
-export function toCognacRelativePath(
-  inputPath: string,
-  cwd = process.cwd(),
-): string | null {
+export function toCognacRelativePath(inputPath: string, cwd = process.cwd()): string | null {
   const cognacRoot = getCognacRoot(cwd)
   const absolutePath = isAbsolute(inputPath) ? inputPath : resolve(cwd, inputPath)
   const rel = relative(cognacRoot, absolutePath)
@@ -46,10 +40,7 @@ export function toCognacRelativePath(
   return rel.split(sep).join('/')
 }
 
-export function resolveCognacPath(
-  filePath: string,
-  cwd = process.cwd(),
-): string {
+export function resolveCognacPath(filePath: string, cwd = process.cwd()): string {
   return resolve(getCognacRoot(cwd), filePath)
 }
 

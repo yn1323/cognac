@@ -2,20 +2,25 @@
 // PC: オーバーレイ + センターモーダル / SP: フルスクリーンシート
 // task-modalのパターンを流用
 
-import { useState, useEffect, useMemo } from 'react'
-import { useScrollLock, useEscapeClose } from '@/hooks/use-scroll-lock'
-import { X, Upload, Camera, Loader2 } from 'lucide-react'
-import type { Task, TaskImage, PriorityLabel } from '@cognac/shared'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { DropZone } from '@/components/ui/drop-zone'
-import { ImagePreviewList } from '@/components/ui/image-preview-list'
-import { PriorityRadioGroup } from '@/components/ui/priority-radio-group'
-import { Textarea } from '@/components/ui/textarea'
+import type { PriorityLabel, Task, TaskImage } from '@cognac/shared'
+import { Camera, Loader2, Upload, X } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { MobileModalFooter } from '@/components/mobile-modal-footer'
 import { useToast } from '@/components/toast'
-import { useUpdateTask, useTaskImages, useUploadTaskImages, useDeleteTaskImage } from '@/hooks/use-tasks'
-import { PRIORITY_MAP, PRIORITY_REVERSE, PC_PRIORITIES, SP_PRIORITIES } from '@/lib/constants'
+import { Button } from '@/components/ui/button'
+import { DropZone } from '@/components/ui/drop-zone'
+import { ImagePreviewList } from '@/components/ui/image-preview-list'
+import { Input } from '@/components/ui/input'
+import { PriorityRadioGroup } from '@/components/ui/priority-radio-group'
+import { Textarea } from '@/components/ui/textarea'
+import { useEscapeClose, useScrollLock } from '@/hooks/use-scroll-lock'
+import {
+  useDeleteTaskImage,
+  useTaskImages,
+  useUpdateTask,
+  useUploadTaskImages,
+} from '@/hooks/use-tasks'
+import { PC_PRIORITIES, PRIORITY_MAP, PRIORITY_REVERSE, SP_PRIORITIES } from '@/lib/constants'
 import { validateTitle } from '@/lib/validation'
 
 // --- 型定義 ---
@@ -115,9 +120,7 @@ function PCEditModal({
             <X className="h-5 w-5" />
           </button>
           <h2 className="text-xl font-semibold text-foreground">タスク編集</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            タスクの内容を編集します
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">タスクの内容を編集します</p>
         </div>
 
         {/* フォーム */}
@@ -147,11 +150,7 @@ function PCEditModal({
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">優先度</label>
-            <PriorityRadioGroup
-              options={PC_PRIORITIES}
-              value={priority}
-              onChange={setPriority}
-            />
+            <PriorityRadioGroup options={PC_PRIORITIES} value={priority} onChange={setPriority} />
           </div>
 
           {/* Images */}
@@ -170,11 +169,7 @@ function PCEditModal({
             <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               キャンセル
             </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={isSubmitting}
-            >
+            <Button type="submit" variant="primary" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -214,22 +209,13 @@ function SPEditModal({
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <h2 className="text-lg font-semibold text-foreground">タスク編集</h2>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg p-1 text-foreground"
-        >
+        <button type="button" onClick={onClose} className="rounded-lg p-1 text-foreground">
           <X className="h-5 w-5" />
         </button>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-1 flex-col gap-5 overflow-y-auto p-4"
-      >
-        <p className="text-[13px] text-muted-foreground">
-          タスクの内容を編集します
-        </p>
+      <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-5 overflow-y-auto p-4">
+        <p className="text-[13px] text-muted-foreground">タスクの内容を編集します</p>
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">タイトル</label>
@@ -256,11 +242,7 @@ function SPEditModal({
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">優先度</label>
-          <PriorityRadioGroup
-            options={SP_PRIORITIES}
-            value={priority}
-            onChange={setPriority}
-          />
+          <PriorityRadioGroup options={SP_PRIORITIES} value={priority} onChange={setPriority} />
         </div>
 
         {/* Images */}

@@ -1,5 +1,9 @@
+import type {
+  ConsoleCommand,
+  CreateConsoleCommandInput,
+  UpdateConsoleCommandInput,
+} from '@cognac/shared'
 import type Database from 'better-sqlite3'
-import type { ConsoleCommand, CreateConsoleCommandInput, UpdateConsoleCommandInput } from '@cognac/shared'
 
 export function listCommands(db: Database.Database): ConsoleCommand[] {
   const stmt = db.prepare(`
@@ -27,7 +31,7 @@ export function createCommand(
     command: input.command,
     note: input.note ?? null,
   })
-  return getCommand(db, Number(result.lastInsertRowid))!
+  return getCommand(db, Number(result.lastInsertRowid)) as ConsoleCommand
 }
 
 export function updateCommand(

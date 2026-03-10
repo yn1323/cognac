@@ -3,9 +3,9 @@
  */
 
 import type { CliProvider } from '@cognac/shared'
-import type { CliProviderInterface } from './types.js'
 import { ClaudeProvider } from './claude-provider.js'
 import { CodexProvider } from './codex-provider.js'
+import type { CliProviderInterface } from './types.js'
 
 const providers: Record<CliProvider, () => CliProviderInterface> = {
   claude: () => new ClaudeProvider(),
@@ -20,5 +20,10 @@ export function createProvider(type: CliProvider): CliProviderInterface {
 }
 
 // 型の re-export
-export type { CliProviderInterface, CliResponse, StreamExecOptions, PrintExecOptions } from './types.js'
+export type {
+  CliProviderInterface,
+  CliResponse,
+  PrintExecOptions,
+  StreamExecOptions,
+} from './types.js'
 export { ProcessTimeoutError, TaskCancelledError } from './types.js'

@@ -1,4 +1,3 @@
-import type Database from 'better-sqlite3'
 import type {
   CognacConfig,
   ExplorationImage,
@@ -6,11 +5,12 @@ import type {
   ExplorationSession,
   PersonaSelection,
 } from '@cognac/shared'
-import { createProvider } from './providers/index.js'
-import { extractJson } from './json-parser.js'
-import { getRepoStructure } from './context-cache.js'
-import * as personaQueries from '../db/queries/exploration-personas.js'
+import type Database from 'better-sqlite3'
 import * as logQueries from '../db/queries/exploration-logs.js'
+import * as personaQueries from '../db/queries/exploration-personas.js'
+import { getRepoStructure } from './context-cache.js'
+import { extractJson } from './json-parser.js'
+import { createProvider } from './providers/index.js'
 
 function buildSystemPrompt(config: CognacConfig): string {
   return `あなたは探索チームのリーダーだ。
@@ -108,7 +108,12 @@ export async function executeExplorationPhasePersona(
   const systemPrompt = buildSystemPrompt(config)
   const userPrompt = buildUserPrompt(exploration, repoStructure, images)
 
-  let response = { result: '', sessionId: '', usage: { inputTokens: 0, outputTokens: 0 }, durationMs: 0 }
+  let response = {
+    result: '',
+    sessionId: '',
+    usage: { inputTokens: 0, outputTokens: 0 },
+    durationMs: 0,
+  }
   let personaSelection: PersonaSelection | null = null
 
   for (let attempt = 0; attempt < 2; attempt++) {

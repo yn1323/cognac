@@ -1,17 +1,17 @@
 // Snackbar通知システム
 // デザインシステム: OeZYr(Default), po45K(Success), 0jXla(Error), T2tUR(Warning)
 
+import { CircleCheck, CircleX, Info, TriangleAlert, X } from 'lucide-react'
 import {
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useReducer,
-  type ReactNode,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { CircleCheck, CircleX, Info, TriangleAlert, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // --- 型定義 ---
@@ -50,9 +50,7 @@ function toastReducer(state: Toast[], action: ToastAction): Toast[] {
     case 'ADD':
       return [...state, action.toast]
     case 'DISMISS':
-      return state.map((t) =>
-        t.id === action.id ? { ...t, dismissing: true } : t,
-      )
+      return state.map((t) => (t.id === action.id ? { ...t, dismissing: true } : t))
     case 'REMOVE':
       return state.filter((t) => t.id !== action.id)
   }
@@ -64,13 +62,7 @@ const ToastContext = createContext<ToastContextValue | null>(null)
 
 // --- ToastItem ---
 
-function ToastItem({
-  toast: t,
-  onDismiss,
-}: {
-  toast: Toast
-  onDismiss: (id: string) => void
-}) {
+function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: (id: string) => void }) {
   const { icon: Icon, className: iconClass } = ICON_MAP[t.variant]
 
   // 各トースト個別の自動消去タイマー（他のトースト追加でリセットされない）
@@ -107,13 +99,7 @@ function ToastItem({
 
 // --- Toaster (Portal) ---
 
-function Toaster({
-  toasts,
-  onDismiss,
-}: {
-  toasts: Toast[]
-  onDismiss: (id: string) => void
-}) {
+function Toaster({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: string) => void }) {
   if (toasts.length === 0) return null
 
   return createPortal(
@@ -138,16 +124,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setTimeout(() => dispatch({ type: 'REMOVE', id }), 200)
   }, [])
 
-  const toast = useCallback(
-    (message: string, variant: ToastVariant = 'default') => {
-      const id = `toast-${++toastCounter}`
-      dispatch({
-        type: 'ADD',
-        toast: { id, message, variant, dismissing: false },
-      })
-    },
-    [],
-  )
+  const toast = useCallback((message: string, variant: ToastVariant = 'default') => {
+    const id = `toast-${++toastCounter}`
+    dispatch({
+      type: 'ADD',
+      toast: { id, message, variant, dismissing: false },
+    })
+  }, [])
 
   const contextValue = useMemo(() => ({ toast }), [toast])
 

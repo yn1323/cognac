@@ -33,19 +33,12 @@ export function SPMetric({
       onClick={onClick}
       className={cn(
         'flex flex-1 flex-col items-center gap-0.5 rounded-lg px-3 py-2.5 transition-all',
-        active
-          ? cn(activeBgColor, activeBorderColor, 'border-2')
-          : 'border bg-card border-border',
+        active ? cn(activeBgColor, activeBorderColor, 'border-2') : 'border bg-card border-border',
         onClick && 'cursor-pointer hover:opacity-80',
         className,
       )}
     >
-      <span
-        className={cn(
-          'text-xl font-bold',
-          active ? activeTextColor : 'text-foreground',
-        )}
-      >
+      <span className={cn('text-xl font-bold', active ? activeTextColor : 'text-foreground')}>
         {value}
       </span>
       <span

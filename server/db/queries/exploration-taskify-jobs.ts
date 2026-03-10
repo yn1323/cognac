@@ -1,5 +1,5 @@
-import type Database from 'better-sqlite3'
 import type { ExplorationTaskifyJob } from '@cognac/shared'
+import type Database from 'better-sqlite3'
 
 export function createExplorationTaskifyJob(
   db: Database.Database,
@@ -10,7 +10,7 @@ export function createExplorationTaskifyJob(
     VALUES (?)
   `)
   const result = stmt.run(explorationSessionId)
-  return getExplorationTaskifyJob(db, Number(result.lastInsertRowid))!
+  return getExplorationTaskifyJob(db, Number(result.lastInsertRowid)) as ExplorationTaskifyJob
 }
 
 export function getExplorationTaskifyJob(

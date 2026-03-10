@@ -1,12 +1,12 @@
 // タスク詳細ページ — プランタブ
 // デザイン design.pen PC=pdM6h, SP=8w1Xs に準拠
 
-import { useState } from 'react'
-import { FileText, Terminal, Copy, Check } from 'lucide-react'
 import type { Task } from '@cognac/shared'
-import { Card } from '@/components/ui/card'
+import { Check, Copy, FileText, Terminal } from 'lucide-react'
+import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { useTaskPlan } from '@/hooks/use-tasks'
 
 // 複雑度バッジの色
@@ -50,29 +50,22 @@ export function PCPlanTab({ task }: { task: Task }) {
 
   if (!plan) {
     return (
-      <p className="py-8 text-center text-sm text-muted-foreground">
-        プラン生成を待っています
-      </p>
+      <p className="py-8 text-center text-sm text-muted-foreground">プラン生成を待っています</p>
     )
   }
 
-  const complexityStyle = plan.estimated_complexity
+  const _complexityStyle = plan.estimated_complexity
     ? COMPLEXITY_STYLES[plan.estimated_complexity]
     : null
 
   return (
     <div className="flex flex-col gap-6">
-
       {/* Implementation Plan カード */}
       <Card className="overflow-hidden">
         <div className="flex items-center justify-between px-6 pt-6">
           <div className="flex items-center gap-3">
-            <h2 className="text-base font-semibold text-foreground">
-              実装プラン
-            </h2>
-            {plan.total_rounds > 0 && (
-              <Badge>{plan.total_rounds} ラウンドの議論を経て作成</Badge>
-            )}
+            <h2 className="text-base font-semibold text-foreground">実装プラン</h2>
+            {plan.total_rounds > 0 && <Badge>{plan.total_rounds} ラウンドの議論を経て作成</Badge>}
           </div>
         </div>
 
@@ -88,9 +81,7 @@ export function PCPlanTab({ task }: { task: Task }) {
         <div className="flex items-center justify-between px-6 pt-6">
           <div className="flex items-center gap-2">
             <Terminal className="h-4 w-4 text-foreground" />
-            <h2 className="text-base font-semibold text-foreground">
-              実行プロンプト
-            </h2>
+            <h2 className="text-base font-semibold text-foreground">実行プロンプト</h2>
           </div>
           <CopyButton text={plan.execution_prompt} />
         </div>
@@ -114,9 +105,7 @@ export function SPPlanTab({ task }: { task: Task }) {
 
   if (!plan) {
     return (
-      <p className="py-6 text-center text-xs text-muted-foreground">
-        プラン生成を待っています
-      </p>
+      <p className="py-6 text-center text-xs text-muted-foreground">プラン生成を待っています</p>
     )
   }
 
@@ -129,11 +118,11 @@ export function SPPlanTab({ task }: { task: Task }) {
       {/* ステータスバナー */}
       <div className="flex items-center gap-2.5 rounded-lg border border-[#2563eb30] bg-[#eff6ff] px-3 py-2.5">
         <FileText className="h-4 w-4 shrink-0 text-[#2563eb]" />
-        <span className="text-xs font-medium leading-[1.4] text-[#1e40af]">
-          プラン実行準備完了
-        </span>
+        <span className="text-xs font-medium leading-[1.4] text-[#1e40af]">プラン実行準備完了</span>
         {complexityStyle && (
-          <span className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-medium ${complexityStyle.bg} ${complexityStyle.text}`}>
+          <span
+            className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-medium ${complexityStyle.bg} ${complexityStyle.text}`}
+          >
             {plan.estimated_complexity}
           </span>
         )}
@@ -151,9 +140,7 @@ export function SPPlanTab({ task }: { task: Task }) {
         <div className="flex items-center justify-between px-3.5 pt-3.5">
           <div className="flex items-center gap-1.5">
             <Terminal className="h-3.5 w-3.5 text-foreground" />
-            <span className="text-[13px] font-semibold text-foreground">
-              実行プロンプト
-            </span>
+            <span className="text-[13px] font-semibold text-foreground">実行プロンプト</span>
           </div>
           <CopyButton text={plan.execution_prompt} size="sm" />
         </div>

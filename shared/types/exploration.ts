@@ -7,12 +7,7 @@ export type ExplorationStatus =
   | 'paused'
   | 'stopped'
 
-export type ExplorationPhase =
-  | 'persona'
-  | 'discussion'
-  | 'explore'
-  | 'report'
-  | 'taskify'
+export type ExplorationPhase = 'persona' | 'discussion' | 'explore' | 'report' | 'taskify'
 
 export type ExplorationArtifactKind =
   | 'plan'
@@ -23,11 +18,7 @@ export type ExplorationArtifactKind =
 
 export type ExplorationImageSourceType = 'user' | 'playwright'
 
-export type ExplorationTaskifyJobStatus =
-  | 'pending'
-  | 'running'
-  | 'completed'
-  | 'failed'
+export type ExplorationTaskifyJobStatus = 'pending' | 'running' | 'completed' | 'failed'
 
 export interface ExplorationSession {
   id: number
@@ -163,7 +154,18 @@ export type ExplorationEvent =
   | { type: 'taskify_started'; jobId: number }
   | { type: 'taskify_completed'; jobId: number; taskIds: number[] }
   | { type: 'taskify_failed'; jobId: number; message: string }
-  | { type: 'retry'; errorType: 'app' | 'process'; count: number; maxRetries: number; reason: string }
+  | {
+      type: 'retry'
+      errorType: 'app' | 'process'
+      count: number
+      maxRetries: number
+      reason: string
+    }
   | { type: 'paused'; reason: string; phase: ExplorationPhase }
-  | { type: 'error'; errorType: 'app' | 'infra' | 'process'; message: string; phase?: ExplorationPhase }
+  | {
+      type: 'error'
+      errorType: 'app' | 'infra' | 'process'
+      message: string
+      phase?: ExplorationPhase
+    }
   | { type: 'completed'; summary: string; totalDurationMs: number }

@@ -1,4 +1,4 @@
-import { spawnSync, type ChildProcess } from 'node:child_process'
+import { type ChildProcess, spawnSync } from 'node:child_process'
 
 export function requestGracefulStop(child: ChildProcess): void {
   if (child.pid == null) return

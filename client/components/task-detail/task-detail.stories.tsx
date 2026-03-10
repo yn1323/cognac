@@ -3,9 +3,9 @@
 
 import type { Meta, StoryObj } from '@storybook/react'
 import { MemoryRouter } from 'react-router-dom'
-import { TaskDetail } from './task-detail'
-import { MOCK_TASKS } from '../__mocks__/task-data'
 import { MOCK_EVENTS } from '../__mocks__/event-data'
+import { MOCK_TASKS } from '../__mocks__/task-data'
+import { TaskDetail } from './task-detail'
 
 const meta = {
   title: 'Components/TaskDetail',

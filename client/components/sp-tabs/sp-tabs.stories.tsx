@@ -1,8 +1,8 @@
 // SPTabs のストーリー
 
 import type { Meta, StoryObj } from '@storybook/react'
-import { SPTab, SPTabBar } from './sp-tabs'
 import { fn } from '@storybook/test'
+import { SPTab, SPTabBar } from './sp-tabs'
 
 const meta = {
   title: 'Components/SP/SPTabs',

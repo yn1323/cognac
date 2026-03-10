@@ -1,4 +1,3 @@
-import type Database from 'better-sqlite3'
 import type {
   CognacConfig,
   ExplorationArtifact,
@@ -8,11 +7,12 @@ import type {
   ExplorationReportResult,
   ExplorationSession,
 } from '@cognac/shared'
-import { createProvider } from './providers/index.js'
-import { formatDiscussions } from './discussion-utils.js'
+import type Database from 'better-sqlite3'
 import * as artifactQueries from '../db/queries/exploration-artifacts.js'
 import * as logQueries from '../db/queries/exploration-logs.js'
+import { formatDiscussions } from './discussion-utils.js'
 import { parseExplorationReportResult } from './exploration-output.js'
+import { createProvider } from './providers/index.js'
 
 function buildSystemPrompt(): string {
   return `あなたは探索結果レポートをまとめる担当だ。
@@ -75,10 +75,7 @@ ${findings.map((artifact) => `- ${artifact.title}: ${artifact.content_text ?? ''
   return prompt
 }
 
-function appendEvidenceSection(
-  markdown: string,
-  images: ExplorationImage[],
-): string {
+function appendEvidenceSection(markdown: string, images: ExplorationImage[]): string {
   if (images.length === 0) return markdown
   const evidenceLines = images.map((image) => `- ${image.file_path}`).join('\n')
   return `${markdown.trim()}\n\n### 証跡画像\n${evidenceLines}\n`

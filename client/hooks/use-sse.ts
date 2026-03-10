@@ -3,8 +3,8 @@
 // サーバーの stream.ts は event: event.type で named events を送信するから
 // addEventListener でイベントタイプごとにリッスンする
 
-import { useEffect, useRef, useState, useCallback } from 'react'
 import type { TaskEvent } from '@cognac/shared'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 // 全イベントタイプ（stream.ts が event フィールドに設定するやつ）
 const EVENT_TYPES = [

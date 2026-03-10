@@ -1,10 +1,10 @@
 // 実行ログの表示
 // SSEイベント・DB永続化イベント共通で時系列表示する
 
+import type { CliProvider, TaskEvent } from '@cognac/shared'
 import { useEffect, useRef } from 'react'
-import type { TaskEvent, CliProvider } from '@cognac/shared'
-import { cn } from '@/lib/utils'
 import { formatNumber } from '@/lib/format'
+import { cn } from '@/lib/utils'
 
 // イベントを表示用テキストに変換する
 function formatEvent(
@@ -15,9 +15,17 @@ function formatEvent(
     case 'phase_start':
       return { label: 'Phase', detail: `${event.phase} 開始`, color: 'text-blue-600' }
     case 'phase_end':
-      return { label: 'Phase', detail: `${event.phase} 完了 (${formatNumber(event.durationMs)}ms)`, color: 'text-blue-600' }
+      return {
+        label: 'Phase',
+        detail: `${event.phase} 完了 (${formatNumber(event.durationMs)}ms)`,
+        color: 'text-blue-600',
+      }
     case 'claude_output':
-      return { label: provider === 'codex' ? 'Codex' : 'Claude', detail: event.content.slice(0, 200), color: 'text-foreground' }
+      return {
+        label: provider === 'codex' ? 'Codex' : 'Claude',
+        detail: event.content.slice(0, 200),
+        color: 'text-foreground',
+      }
     case 'file_changed':
       return { label: 'File', detail: `${event.toolName}: ${event.path}`, color: 'text-green-600' }
     case 'command_executed':
@@ -47,12 +55,21 @@ function formatEvent(
     case 'paused':
       return { label: 'Paused', detail: event.reason, color: 'text-red-600' }
     case 'git_operation':
-      return { label: 'Git', detail: `${event.operation}: ${event.detail}`, color: 'text-purple-600' }
+      return {
+        label: 'Git',
+        detail: `${event.operation}: ${event.detail}`,
+        color: 'text-purple-600',
+      }
     case 'debug_log':
       return {
         label: 'Debug',
         detail: event.message,
-        color: event.level === 'error' ? 'text-red-600' : event.level === 'warn' ? 'text-yellow-600' : 'text-muted-foreground',
+        color:
+          event.level === 'error'
+            ? 'text-red-600'
+            : event.level === 'warn'
+              ? 'text-yellow-600'
+              : 'text-muted-foreground',
       }
     case 'completed':
       return { label: 'Done', detail: event.summary, color: 'text-green-700' }
@@ -72,13 +89,11 @@ export function LogView({ events, provider }: LogViewProps) {
   // 新しいイベントが来たら自動スクロール
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [events.length])
+  }, [])
 
   if (events.length === 0) {
     return (
-      <div className="text-center text-muted-foreground py-8 text-sm">
-        イベントを待ってるよ...
-      </div>
+      <div className="text-center text-muted-foreground py-8 text-sm">イベントを待ってるよ...</div>
     )
   }
 

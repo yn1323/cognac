@@ -1,12 +1,12 @@
 // 新規ブランチ作成モーダル
 // デザイン: スクリーンショット準拠 (マージモーダルと同スタイル)
 
-import { useState, useEffect, useMemo } from 'react'
-import { GitBranchPlus, ChevronDown } from 'lucide-react'
 import type { GitBranch } from '@cognac/shared'
+import { ChevronDown, GitBranchPlus } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useScrollLock, useEscapeClose } from '@/hooks/use-scroll-lock'
+import { useEscapeClose, useScrollLock } from '@/hooks/use-scroll-lock'
 
 interface NewBranchModalProps {
   open: boolean
@@ -26,7 +26,8 @@ export function NewBranchModal({ open, onClose, branches, onCreate }: NewBranchM
   useEffect(() => {
     if (!open) return
     setBranchName('')
-    const defaultBase = localBranches.find((b) => b.name === 'main')?.name ?? localBranches[0]?.name ?? ''
+    const defaultBase =
+      localBranches.find((b) => b.name === 'main')?.name ?? localBranches[0]?.name ?? ''
     setBaseBranch(defaultBase)
   }, [open, localBranches])
 
@@ -50,9 +51,7 @@ export function NewBranchModal({ open, onClose, branches, onCreate }: NewBranchM
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#dcfce7]">
               <GitBranchPlus className="h-5 w-5 text-[#16a34a]" />
             </div>
-            <h2 className="text-lg font-semibold text-foreground">
-              新規ブランチを作成
-            </h2>
+            <h2 className="text-lg font-semibold text-foreground">新規ブランチを作成</h2>
           </div>
           <p className="text-sm leading-[1.43] text-muted-foreground">
             現在のブランチまたは指定したブランチから新しいブランチを作成します。
@@ -63,9 +62,7 @@ export function NewBranchModal({ open, onClose, branches, onCreate }: NewBranchM
         <div className="flex flex-col gap-4 px-6">
           {/* ブランチ名 */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-foreground">
-              ブランチ名
-            </label>
+            <label className="text-sm font-semibold text-foreground">ブランチ名</label>
             <Input
               className="bg-white"
               value={branchName}
@@ -76,9 +73,7 @@ export function NewBranchModal({ open, onClose, branches, onCreate }: NewBranchM
 
           {/* 作成元ブランチ */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-foreground">
-              作成元ブランチ
-            </label>
+            <label className="text-sm font-semibold text-foreground">作成元ブランチ</label>
             <div className="relative">
               <select
                 value={baseBranch}

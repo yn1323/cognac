@@ -1,9 +1,9 @@
+import type { TaskEvent } from '@cognac/shared'
 import type Database from 'better-sqlite3'
 import { Hono } from 'hono'
 import { streamSSE } from 'hono/streaming'
-import type { TaskEvent } from '@cognac/shared'
-import type { EventBus } from '../sse/event-bus.js'
 import * as taskEventQueries from '../db/queries/task-events.js'
+import type { EventBus } from '../sse/event-bus.js'
 
 export function streamRouter(eventBus: EventBus<TaskEvent>, db: Database.Database) {
   const app = new Hono()

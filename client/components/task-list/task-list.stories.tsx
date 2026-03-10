@@ -4,8 +4,8 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { MemoryRouter } from 'react-router-dom'
 import { withMockFetch } from '../../.storybook/decorators'
-import { TaskList } from './task-list'
 import { MOCK_TASKS } from '../__mocks__/task-data'
+import { TaskList } from './task-list'
 
 const meta = {
   title: 'Components/TaskList',

@@ -1,8 +1,8 @@
 // タスク一覧コンポーネント
 // 全タスクをカードで表示する
 
-import { useTasks } from '@/hooks/use-tasks'
 import { TaskCard } from '@/components/task-card'
+import { useTasks } from '@/hooks/use-tasks'
 
 export function TaskList() {
   const { data: tasks, isLoading, error } = useTasks()
@@ -12,11 +12,7 @@ export function TaskList() {
   }
 
   if (error) {
-    return (
-      <div className="text-center text-destructive py-8">
-        エラー: {error.message}
-      </div>
-    )
+    return <div className="text-center text-destructive py-8">エラー: {error.message}</div>
   }
 
   if (!tasks || tasks.length === 0) {

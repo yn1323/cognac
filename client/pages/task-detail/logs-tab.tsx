@@ -4,8 +4,8 @@
 // デザイン design.pen PC=ndNzU, SP=cZcuS に準拠
 
 import type { Task, TaskEvent } from '@cognac/shared'
-import { useTaskEvents } from '@/hooks/use-tasks'
 import { LogView } from '@/components/log-view'
+import { useTaskEvents } from '@/hooks/use-tasks'
 import { ACTIVE_STATUSES } from '@/lib/status-config'
 
 interface LogsTabProps {
@@ -49,7 +49,11 @@ function TaskLogsBody({
         <LogView events={events} />
       ) : (
         <div className="py-8 text-center text-sm text-muted-foreground">
-          {isLoading ? 'ログを読み込み中...' : isActive ? 'イベントを待ってるよ...' : '実行ログがまだないよ'}
+          {isLoading
+            ? 'ログを読み込み中...'
+            : isActive
+              ? 'イベントを待ってるよ...'
+              : '実行ログがまだないよ'}
         </div>
       )}
     </>

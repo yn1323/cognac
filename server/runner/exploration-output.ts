@@ -1,10 +1,10 @@
-import { z } from 'zod'
 import type {
   ErrorType,
   ExplorationExecutionResult,
   ExplorationPhase,
   ExplorationReportResult,
 } from '@cognac/shared'
+import { z } from 'zod'
 import { classifyError } from './error-classifier.js'
 import { extractJson } from './json-parser.js'
 
@@ -107,12 +107,7 @@ export class ExplorationPhaseError extends Error {
 }
 
 export function parseExplorationExecutionResult(raw: string): ExplorationExecutionResult {
-  return parseStructuredJson(
-    'explore',
-    raw,
-    executionResultSchema,
-    '探索結果のJSON構造が不正',
-  )
+  return parseStructuredJson('explore', raw, executionResultSchema, '探索結果のJSON構造が不正')
 }
 
 export function parseExplorationReportResult(raw: string): ExplorationReportResult {

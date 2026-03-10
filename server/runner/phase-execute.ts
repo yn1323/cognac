@@ -1,4 +1,4 @@
-import type { AgentStreamEvent, Task, CognacConfig, TaskEvent } from '@cognac/shared'
+import type { AgentStreamEvent, CognacConfig, Task, TaskEvent } from '@cognac/shared'
 import { createProvider } from './providers/index.js'
 
 // Phase 3用システムプロンプト
@@ -37,13 +37,15 @@ export async function executePhase3(
   signal?: AbortSignal,
 ): Promise<{ sessionId: string; tokenInput: number; tokenOutput: number; durationMs: number }> {
   const prompt = executionPrompt ?? buildExecutionPrompt(task)
-  const onStream = onEvent ? (event: AgentStreamEvent): void => {
-    if (event.type === 'agent_output') {
-      onEvent({ type: 'claude_output', content: event.content })
-      return
-    }
-    onEvent(event)
-  } : undefined
+  const onStream = onEvent
+    ? (event: AgentStreamEvent): void => {
+        if (event.type === 'agent_output') {
+          onEvent({ type: 'claude_output', content: event.content })
+          return
+        }
+        onEvent(event)
+      }
+    : undefined
 
   const provider = createProvider(config.provider)
   const response = await provider.execStream(

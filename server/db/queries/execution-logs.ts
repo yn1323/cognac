@@ -1,9 +1,15 @@
 // 実行ログのクエリ
 // Claude Codeの呼び出し履歴を記録するやつ
 
-import type Database from 'better-sqlite3'
 import type { ExecutionLog } from '@cognac/shared'
-import { insertLog, selectLogsByParentId, selectLogById, deleteLogsByParentId, type LogTableConfig } from './log-helpers.js'
+import type Database from 'better-sqlite3'
+import {
+  deleteLogsByParentId,
+  insertLog,
+  type LogTableConfig,
+  selectLogById,
+  selectLogsByParentId,
+} from './log-helpers.js'
 
 const CONFIG: LogTableConfig = { tableName: 'execution_logs', parentColumn: 'task_id' }
 
@@ -34,29 +40,20 @@ export function createLog(
  * タスクIDで実行ログ一覧を取得する
  * 作成日時の古い順（時系列）で返す
  */
-export function getLogsByTaskId(
-  db: Database.Database,
-  taskId: number,
-): ExecutionLog[] {
+export function getLogsByTaskId(db: Database.Database, taskId: number): ExecutionLog[] {
   return selectLogsByParentId<ExecutionLog>(db, CONFIG, taskId)
 }
 
 /**
  * 実行ログを1件取得する
  */
-export function getLog(
-  db: Database.Database,
-  id: number,
-): ExecutionLog | undefined {
+export function getLog(db: Database.Database, id: number): ExecutionLog | undefined {
   return selectLogById<ExecutionLog>(db, CONFIG, id)
 }
 
 /**
  * タスクIDで実行ログを全削除する（リトライ時のクリーンアップ用）
  */
-export function deleteLogsByTaskId(
-  db: Database.Database,
-  taskId: number,
-): number {
+export function deleteLogsByTaskId(db: Database.Database, taskId: number): number {
   return deleteLogsByParentId(db, CONFIG, taskId)
 }

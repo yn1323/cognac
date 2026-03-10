@@ -1,5 +1,5 @@
-import type Database from 'better-sqlite3'
 import type { ExplorationPersona } from '@cognac/shared'
+import type Database from 'better-sqlite3'
 
 export function createExplorationPersonas(
   db: Database.Database,

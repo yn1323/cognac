@@ -1,13 +1,13 @@
 // Phase 2-A: ペルソナ選定
 // タスクに最適な専門家チーム（2〜4名）を選出する
 
+import type { CognacConfig, Persona, PersonaSelection, Task, TaskEvent } from '@cognac/shared'
 import type Database from 'better-sqlite3'
-import type { Task, CognacConfig, TaskEvent, Persona, PersonaSelection } from '@cognac/shared'
-import { createProvider } from './providers/index.js'
-import { extractJson } from './json-parser.js'
-import { getRepoStructure, getTaskHistory } from './context-cache.js'
-import * as personaQueries from '../db/queries/personas.js'
 import * as logQueries from '../db/queries/execution-logs.js'
+import * as personaQueries from '../db/queries/personas.js'
+import { getRepoStructure, getTaskHistory } from './context-cache.js'
+import { extractJson } from './json-parser.js'
+import { createProvider } from './providers/index.js'
 
 // ペルソナ選定のシステムプロンプト
 function buildSystemPrompt(config: CognacConfig): string {
@@ -102,7 +102,12 @@ export async function executePhasePersona(
   const userPrompt = buildUserPrompt(task, repoStructure, taskHistory)
 
   let personaSelection: PersonaSelection | null = null
-  let response = { result: '', sessionId: '', usage: { inputTokens: 0, outputTokens: 0 }, durationMs: 0 }
+  let response = {
+    result: '',
+    sessionId: '',
+    usage: { inputTokens: 0, outputTokens: 0 },
+    durationMs: 0,
+  }
 
   // 最大2回トライ（初回 + 1回リトライ）
   const provider = createProvider(config.provider)

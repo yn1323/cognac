@@ -74,4 +74,3 @@ export const SoftTheme: Story = {
     theme: 'soft',
   },
 }
-

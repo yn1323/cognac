@@ -1,7 +1,7 @@
 // Git GUI ハードコードデータ
 // Server API未実装のため、デザイン準拠のモックデータ
 
-import type { GitFile, GitBranch, GitCommit, GitRemoteStatus } from '@cognac/shared'
+import type { GitBranch, GitCommit, GitFile, GitRemoteStatus } from '@cognac/shared'
 
 export const MOCK_FILES: GitFile[] = [
   { status: 'M', path: 'src/api/git.ts' },

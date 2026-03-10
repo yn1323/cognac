@@ -1,8 +1,8 @@
 // MetricCard のストーリー
 
 import type { Meta, StoryObj } from '@storybook/react'
+import { AlertCircle, CheckCircle, Clock, ListTodo, Play } from 'lucide-react'
 import { MetricCard } from './metric-card'
-import { ListTodo, CheckCircle, Clock, AlertTriangle, Play, AlertCircle } from 'lucide-react'
 
 const meta = {
   title: 'Components/MetricCard',

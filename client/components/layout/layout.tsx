@@ -1,7 +1,7 @@
 // 共通レイアウト
 // ヘッダー + メインコンテンツ、SPファーストで max-w-2xl
 
-import { Outlet, Link } from 'react-router-dom'
+import { Link, Outlet } from 'react-router-dom'
 import { BrandLogo } from '@/components/brand-logo'
 
 export function Layout() {

@@ -2,45 +2,48 @@
 // PC: サイドバー + コマンドパネル(380px) + ログパネル / SP: リスト ↔ ログ詳細
 // デザイン ConsolePage.pen PC=HmvhY, SP-List=wukk3, SP-Log=3tUlE に準拠
 
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import type { ConsoleCommandListItem } from '@cognac/shared'
 import { useQueryClient } from '@tanstack/react-query'
 import {
-  Plus,
-  Play,
-  Square,
-  MoreVertical,
-  Pencil,
-  Trash2,
   ArrowLeft,
   Loader2,
+  MoreVertical,
+  Pencil,
+  Play,
+  Plus,
+  Square,
   Terminal,
+  Trash2,
 } from 'lucide-react'
-import type { ConsoleCommandListItem } from '@cognac/shared'
-import { Sidebar } from '@/components/sidebar'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AppBottomNav } from '@/components/app-bottom-nav'
-import { Button } from '@/components/ui/button'
-import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu'
-import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Sidebar } from '@/components/sidebar'
 import { useToast } from '@/components/toast'
-import { NAV_MAP } from '@/lib/constants'
+import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 import {
   useConsoleCommands,
-  useRunLog,
   useCreateConsoleCommand,
-  useUpdateConsoleCommand,
   useDeleteConsoleCommand,
   useRunConsoleCommand,
+  useRunLog,
   useStopConsoleCommand,
+  useUpdateConsoleCommand,
 } from '@/hooks/use-console'
 import { useConsoleSSE } from '@/hooks/use-console-sse'
+import { NAV_MAP } from '@/lib/constants'
 import { CommandModal } from './command-modal'
 
 // --- ステータス表示ユーティリティ ---
 
 type DerivedStatus = ConsoleCommandListItem['derived_status']
 
-const STATUS_CONFIG: Record<DerivedStatus, { dotClass: string; badgeClass: string; borderColorClass: string }> = {
+const STATUS_CONFIG: Record<
+  DerivedStatus,
+  { dotClass: string; badgeClass: string; borderColorClass: string }
+> = {
   running: {
     dotClass: 'bg-[#2563eb]',
     badgeClass: 'bg-[#dbeafe] text-[#2563eb]',
@@ -81,7 +84,9 @@ const STATUS_CONFIG: Record<DerivedStatus, { dotClass: string; badgeClass: strin
 function StatusBadge({ status }: { status: DerivedStatus }) {
   const cfg = STATUS_CONFIG[status]
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${cfg.badgeClass}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${cfg.badgeClass}`}
+    >
       {status}
     </span>
   )
@@ -94,9 +99,15 @@ function StatusDot({ status }: { status: DerivedStatus }) {
 
 function formatTime(isoString: string): string {
   // SQLiteの datetime('now') は UTC だが 'Z' なしで返るため、ローカル扱いされないよう補正
-  const normalized = isoString.endsWith('Z') || isoString.includes('+') ? isoString : `${isoString}Z`
+  const normalized =
+    isoString.endsWith('Z') || isoString.includes('+') ? isoString : `${isoString}Z`
   const d = new Date(normalized)
-  return d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+  return d.toLocaleTimeString('ja-JP', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  })
 }
 
 // --- 共通Props ---
@@ -118,13 +129,7 @@ interface ConsolePageViewProps {
 
 // --- コマンドカードの三点メニュー ---
 
-function CommandActions({
-  onEdit,
-  onDelete,
-}: {
-  onEdit: () => void
-  onDelete: () => void
-}) {
+function CommandActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
   const [open, setOpen] = useState(false)
   return (
     <DropdownMenu
@@ -136,10 +141,23 @@ function CommandActions({
       open={open}
       onOpenChange={setOpen}
     >
-      <DropdownMenuItem icon={Pencil} onClick={() => { onEdit(); setOpen(false) }}>
+      <DropdownMenuItem
+        icon={Pencil}
+        onClick={() => {
+          onEdit()
+          setOpen(false)
+        }}
+      >
         編集
       </DropdownMenuItem>
-      <DropdownMenuItem icon={Trash2} variant="destructive" onClick={() => { onDelete(); setOpen(false) }}>
+      <DropdownMenuItem
+        icon={Trash2}
+        variant="destructive"
+        onClick={() => {
+          onDelete()
+          setOpen(false)
+        }}
+      >
         削除
       </DropdownMenuItem>
     </DropdownMenu>
@@ -190,11 +208,21 @@ function CommandCard({
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
         <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
           {isActive ? (
-            <button type="button" onClick={onStop} disabled={isStopPending} className="rounded p-1 hover:bg-[#f5f5f5] disabled:opacity-50">
+            <button
+              type="button"
+              onClick={onStop}
+              disabled={isStopPending}
+              className="rounded p-1 hover:bg-[#f5f5f5] disabled:opacity-50"
+            >
               <Square className="h-4 w-4 text-[#e7000b]" />
             </button>
           ) : (
-            <button type="button" onClick={onRun} disabled={isRunPending} className="rounded p-1 hover:bg-[#f5f5f5] disabled:opacity-50">
+            <button
+              type="button"
+              onClick={onRun}
+              disabled={isRunPending}
+              className="rounded p-1 hover:bg-[#f5f5f5] disabled:opacity-50"
+            >
               <Play className="h-4 w-4 text-[#737373]" />
             </button>
           )}
@@ -240,7 +268,7 @@ function LogPanel({
     if (isNearBottom.current && logRef.current) {
       logRef.current.scrollTop = logRef.current.scrollHeight
     }
-  }, [logContent])
+  }, [])
 
   if (!command) {
     return (
@@ -262,7 +290,12 @@ function LogPanel({
           <StatusBadge status={command.derived_status} />
         </div>
         {isActive && (
-          <button type="button" onClick={onStop} disabled={isStopPending} className="rounded p-1.5 hover:bg-[#f5f5f5] disabled:opacity-50">
+          <button
+            type="button"
+            onClick={onStop}
+            disabled={isStopPending}
+            className="rounded p-1.5 hover:bg-[#f5f5f5] disabled:opacity-50"
+          >
             <Square className="h-4 w-4 text-[#e7000b]" />
           </button>
         )}
@@ -303,7 +336,9 @@ function EmptyState({ onOpenCreate }: { onOpenCreate: () => void }) {
       </div>
       <div className="flex flex-col gap-1">
         <p className="text-sm font-medium text-foreground">コマンドがありません</p>
-        <p className="text-xs text-muted-foreground">よく使うコマンドを登録して、ワンクリックで実行できます。</p>
+        <p className="text-xs text-muted-foreground">
+          よく使うコマンドを登録して、ワンクリックで実行できます。
+        </p>
       </div>
       <Button variant="primary" size="sm" onClick={onOpenCreate}>
         <Plus className="mr-1 h-4 w-4" />
@@ -421,7 +456,8 @@ function SPConsolePage({
 }: ConsolePageViewProps & { onBack: () => void }) {
   // ログ詳細画面
   if (selectedCommand) {
-    const isActive = selectedCommand.derived_status === 'running' || selectedCommand.derived_status === 'starting'
+    const isActive =
+      selectedCommand.derived_status === 'running' || selectedCommand.derived_status === 'starting'
     const run = selectedCommand.latest_run
 
     return (
@@ -436,7 +472,12 @@ function SPConsolePage({
             <StatusBadge status={selectedCommand.derived_status} />
           </div>
           {isActive && (
-            <button type="button" onClick={() => onStop(selectedCommand.id)} disabled={isStopPending} className="rounded p-1.5 hover:bg-[#f5f5f5] disabled:opacity-50">
+            <button
+              type="button"
+              onClick={() => onStop(selectedCommand.id)}
+              disabled={isStopPending}
+              className="rounded p-1.5 hover:bg-[#f5f5f5] disabled:opacity-50"
+            >
               <Square className="h-4 w-4 text-[#e7000b]" />
             </button>
           )}
@@ -445,7 +486,9 @@ function SPConsolePage({
         {/* SP Log Meta */}
         {run && (
           <div className="flex h-9 items-center gap-3 bg-[#f5f5f5] px-4">
-            <span className="text-[11px] font-medium text-muted-foreground">$ {selectedCommand.command}</span>
+            <span className="text-[11px] font-medium text-muted-foreground">
+              $ {selectedCommand.command}
+            </span>
             <div className="h-3.5 w-px bg-[#e5e5e5]" />
             <span className="text-[11px] text-muted-foreground">{formatTime(run.started_at)}</span>
             {run.pid && (
@@ -535,7 +578,10 @@ export function ConsolePage() {
   )
 
   const editInitialData = useMemo(
-    () => editTarget ? { name: editTarget.name, command: editTarget.command, note: editTarget.note ?? '' } : undefined,
+    () =>
+      editTarget
+        ? { name: editTarget.name, command: editTarget.command, note: editTarget.note ?? '' }
+        : undefined,
     [editTarget],
   )
 
@@ -562,48 +608,63 @@ export function ConsolePage() {
   // コマンド選択切り替え時にSSEバッファをリセット
   useEffect(() => {
     clearLog()
-  }, [selectedId, clearLog])
+  }, [clearLog])
 
   // --- ハンドラ ---
 
-  const handleRun = useCallback((id: number) => {
-    runMutation.mutate(id, {
-      onSuccess: () => {
-        setSelectedId(id)
-        queryClient.invalidateQueries({ queryKey: ['console-runs'] })
-      },
-      onError: (err) => toast(`実行に失敗しました: ${err.message}`, 'error'),
-    })
-  }, [runMutation, queryClient, toast])
+  const handleRun = useCallback(
+    (id: number) => {
+      runMutation.mutate(id, {
+        onSuccess: () => {
+          setSelectedId(id)
+          queryClient.invalidateQueries({ queryKey: ['console-runs'] })
+        },
+        onError: (err) => toast(`実行に失敗しました: ${err.message}`, 'error'),
+      })
+    },
+    [runMutation, queryClient, toast],
+  )
 
-  const handleStop = useCallback((id: number) => {
-    stopMutation.mutate(id, {
-      onError: (err) => toast(`停止に失敗しました: ${err.message}`, 'error'),
-    })
-  }, [stopMutation, toast])
+  const handleStop = useCallback(
+    (id: number) => {
+      stopMutation.mutate(id, {
+        onError: (err) => toast(`停止に失敗しました: ${err.message}`, 'error'),
+      })
+    },
+    [stopMutation, toast],
+  )
 
   const handleOpenCreate = useCallback(() => setShowCreateModal(true), [])
 
-  const handleCreate = useCallback((data: { name: string; command: string; note: string }) => {
-    createMutation.mutate(data, {
-      onSuccess: () => {
-        setShowCreateModal(false)
-        toast('コマンドを登録しました', 'success')
-      },
-      onError: (err) => toast(`登録に失敗しました: ${err.message}`, 'error'),
-    })
-  }, [createMutation, toast])
+  const handleCreate = useCallback(
+    (data: { name: string; command: string; note: string }) => {
+      createMutation.mutate(data, {
+        onSuccess: () => {
+          setShowCreateModal(false)
+          toast('コマンドを登録しました', 'success')
+        },
+        onError: (err) => toast(`登録に失敗しました: ${err.message}`, 'error'),
+      })
+    },
+    [createMutation, toast],
+  )
 
-  const handleEdit = useCallback((data: { name: string; command: string; note: string }) => {
-    if (!editTarget) return
-    updateMutation.mutate({ id: editTarget.id, data }, {
-      onSuccess: () => {
-        setEditTarget(null)
-        toast('コマンドを更新しました', 'success')
-      },
-      onError: (err) => toast(`更新に失敗しました: ${err.message}`, 'error'),
-    })
-  }, [editTarget, updateMutation, toast])
+  const handleEdit = useCallback(
+    (data: { name: string; command: string; note: string }) => {
+      if (!editTarget) return
+      updateMutation.mutate(
+        { id: editTarget.id, data },
+        {
+          onSuccess: () => {
+            setEditTarget(null)
+            toast('コマンドを更新しました', 'success')
+          },
+          onError: (err) => toast(`更新に失敗しました: ${err.message}`, 'error'),
+        },
+      )
+    },
+    [editTarget, updateMutation, toast],
+  )
 
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return

@@ -1,10 +1,10 @@
 // Gitコミット履歴行
 // デザイン design.pen reusable=fkBBE 準拠
 
-import { Bot } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import type { GitCommit } from '@cognac/shared'
+import { Bot } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 interface GitCommitRowProps {
   commit: GitCommit
@@ -14,32 +14,20 @@ interface GitCommitRowProps {
 
 export function GitCommitRow({ commit, isLast, onExplain }: GitCommitRowProps) {
   return (
-    <div
-      className={cn(
-        'flex gap-3 px-4 py-3',
-        !isLast && 'border-b border-[#e5e5e5]',
-      )}
-    >
+    <div className={cn('flex gap-3 px-4 py-3', !isLast && 'border-b border-[#e5e5e5]')}>
       {/* グラフカラム */}
       <div className="flex w-6 flex-col items-center">
         <div
           className="h-2.5 w-2.5 shrink-0 rounded-full"
           style={{ backgroundColor: commit.dotColor }}
         />
-        {!isLast && (
-          <div
-            className="w-0.5 flex-1"
-            style={{ backgroundColor: commit.lineColor }}
-          />
-        )}
+        {!isLast && <div className="w-0.5 flex-1" style={{ backgroundColor: commit.lineColor }} />}
       </div>
 
       {/* 情報カラム */}
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-center gap-2">
-          <span className="truncate text-[13px] font-medium text-foreground">
-            {commit.message}
-          </span>
+          <span className="truncate text-[13px] font-medium text-foreground">{commit.message}</span>
           {commit.mergeBadge && (
             <Badge variant="outline" className="shrink-0 text-[10px] text-[#7c3aed]">
               {commit.mergeBadge}

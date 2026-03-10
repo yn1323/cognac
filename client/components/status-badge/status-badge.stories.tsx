@@ -2,8 +2,8 @@
 // 全ステータスのバリエーションを表示
 
 import type { Meta, StoryObj } from '@storybook/react'
-import { StatusBadge } from './status-badge'
 import { ALL_STATUSES } from '../__mocks__/task-data'
+import { StatusBadge } from './status-badge'
 
 const meta = {
   title: 'Components/StatusBadge',

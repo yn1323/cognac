@@ -2,21 +2,21 @@
 // PC: オーバーレイ + センターモーダル / SP: フルスクリーンシート
 // デザイン design.pen PC=wLVYI, SP=qi7HK に準拠
 
-import { useState, useEffect, useCallback } from 'react'
-import { useScrollLock, useEscapeClose } from '@/hooks/use-scroll-lock'
-import { useSearchParams, useNavigate } from 'react-router-dom'
-import { X, Upload, Camera, Loader2 } from 'lucide-react'
 import type { PriorityLabel } from '@cognac/shared'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { DropZone } from '@/components/ui/drop-zone'
-import { ImagePreviewList } from '@/components/ui/image-preview-list'
-import { PriorityRadioGroup } from '@/components/ui/priority-radio-group'
-import { Textarea } from '@/components/ui/textarea'
+import { Camera, Loader2, Upload, X } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { MobileModalFooter } from '@/components/mobile-modal-footer'
 import { useToast } from '@/components/toast'
+import { Button } from '@/components/ui/button'
+import { DropZone } from '@/components/ui/drop-zone'
+import { ImagePreviewList } from '@/components/ui/image-preview-list'
+import { Input } from '@/components/ui/input'
+import { PriorityRadioGroup } from '@/components/ui/priority-radio-group'
+import { Textarea } from '@/components/ui/textarea'
+import { useEscapeClose, useScrollLock } from '@/hooks/use-scroll-lock'
 import { useCreateTask, useUploadTaskImages } from '@/hooks/use-tasks'
-import { PRIORITY_MAP, PC_PRIORITIES, SP_PRIORITIES } from '@/lib/constants'
+import { PC_PRIORITIES, PRIORITY_MAP, SP_PRIORITIES } from '@/lib/constants'
 import { validateTitle } from '@/lib/validation'
 
 interface FormProps {
@@ -106,11 +106,7 @@ function PCTaskModal({
           {/* Priority */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">優先度</label>
-            <PriorityRadioGroup
-              options={PC_PRIORITIES}
-              value={priority}
-              onChange={setPriority}
-            />
+            <PriorityRadioGroup options={PC_PRIORITIES} value={priority} onChange={setPriority} />
           </div>
 
           {/* Images */}
@@ -129,11 +125,7 @@ function PCTaskModal({
             <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
               キャンセル
             </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={isSubmitting}
-            >
+            <Button type="submit" variant="primary" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -172,23 +164,14 @@ function SPTaskModal({
       {/* ヘッダーバー */}
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <h2 className="text-lg font-semibold text-foreground">新規タスク</h2>
-        <button
-          type="button"
-          onClick={handleClose}
-          className="rounded-lg p-1 text-foreground"
-        >
+        <button type="button" onClick={handleClose} className="rounded-lg p-1 text-foreground">
           <X className="h-5 w-5" />
         </button>
       </div>
 
       {/* スクロールボディ */}
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-1 flex-col gap-5 overflow-y-auto p-4"
-      >
-        <p className="text-[13px] text-muted-foreground">
-          新しいタスクを作成してキューに追加
-        </p>
+      <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-5 overflow-y-auto p-4">
+        <p className="text-[13px] text-muted-foreground">新しいタスクを作成してキューに追加</p>
 
         {/* Title */}
         <div className="space-y-2">
@@ -218,11 +201,7 @@ function SPTaskModal({
         {/* Priority (SP: 3択) */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">優先度</label>
-          <PriorityRadioGroup
-            options={SP_PRIORITIES}
-            value={priority}
-            onChange={setPriority}
-          />
+          <PriorityRadioGroup options={SP_PRIORITIES} value={priority} onChange={setPriority} />
         </div>
 
         {/* Images */}

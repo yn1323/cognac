@@ -1,16 +1,16 @@
 // タスク詳細表示
 // 概要情報 + 実行ログ
 
-import { useState } from 'react'
 import type { Task, TaskEvent } from '@cognac/shared'
-import { StatusBadge } from '@/components/status-badge'
-import { LogView } from '@/components/log-view'
-import { Button } from '@/components/ui/button'
-import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useDeleteTask } from '@/hooks/use-tasks'
-import { useNavigate } from 'react-router-dom'
 import { Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { LogView } from '@/components/log-view'
+import { StatusBadge } from '@/components/status-badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { useDeleteTask } from '@/hooks/use-tasks'
 import { formatDateTime } from '@/lib/format'
 import { DELETABLE_STATUSES } from '@/lib/status-config'
 
@@ -57,9 +57,7 @@ export function TaskDetail({
           </div>
 
           {task.branch_name && (
-            <div className="text-xs font-mono bg-muted rounded px-2 py-1">
-              {task.branch_name}
-            </div>
+            <div className="text-xs font-mono bg-muted rounded px-2 py-1">{task.branch_name}</div>
           )}
 
           {task.paused_reason && (

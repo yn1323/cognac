@@ -4,16 +4,8 @@
 
 import type { ExplorationStatus } from '@cognac/shared'
 import type { LucideIcon } from 'lucide-react'
+import { CheckCircle, Clock, Eye, Loader, MessageCircle, PauseCircle, XCircle } from 'lucide-react'
 import type { BadgeProps } from '@/components/ui/badge'
-import {
-  Clock,
-  Loader,
-  MessageCircle,
-  Eye,
-  CheckCircle,
-  PauseCircle,
-  XCircle,
-} from 'lucide-react'
 
 // 削除可能なステータス
 export const EXPLORATION_DELETABLE_STATUSES = new Set<ExplorationStatus>([
@@ -24,10 +16,7 @@ export const EXPLORATION_DELETABLE_STATUSES = new Set<ExplorationStatus>([
 ])
 
 // リトライ可能なステータス
-export const EXPLORATION_RETRYABLE_STATUSES = new Set<ExplorationStatus>([
-  'paused',
-  'stopped',
-])
+export const EXPLORATION_RETRYABLE_STATUSES = new Set<ExplorationStatus>(['paused', 'stopped'])
 
 // キャンセル可能なステータス
 export const EXPLORATION_CANCELABLE_STATUSES = new Set<ExplorationStatus>([

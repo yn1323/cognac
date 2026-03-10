@@ -1,34 +1,31 @@
-import type Database from 'better-sqlite3'
 import type {
   AgentStreamEvent,
   CognacConfig,
   ConfigPatch,
   ExplorationArtifact,
   ExplorationEvent,
-  ExplorationImage,
   ExplorationPhase,
   ExplorationSession,
 } from '@cognac/shared'
-import type { EventBus } from '../sse/event-bus.js'
+import type Database from 'better-sqlite3'
 import type { RunnerStatus } from '../api/system.js'
-import * as explorationQueries from '../db/queries/explorations.js'
-import * as explorationImageQueries from '../db/queries/exploration-images.js'
-import * as explorationPersonaQueries from '../db/queries/exploration-personas.js'
-import * as explorationDiscussionQueries from '../db/queries/exploration-discussions.js'
 import * as explorationArtifactQueries from '../db/queries/exploration-artifacts.js'
+import * as explorationEventQueries from '../db/queries/exploration-events.js'
+import * as explorationImageQueries from '../db/queries/exploration-images.js'
 import * as explorationLogQueries from '../db/queries/exploration-logs.js'
 import * as explorationTaskifyJobQueries from '../db/queries/exploration-taskify-jobs.js'
-import * as explorationEventQueries from '../db/queries/exploration-events.js'
+import * as explorationQueries from '../db/queries/explorations.js'
+import type { EventBus } from '../sse/event-bus.js'
 import { classifyError } from './error-classifier.js'
+import type { ExecutionCoordinator } from './execution-coordinator.js'
 import { ExplorationPhaseError } from './exploration-output.js'
-import { ProcessTimeoutError, TaskCancelledError } from './providers/types.js'
-import { executeExplorationPhasePersona } from './phase-exploration-persona.js'
+import { getStatus as getGitStatus } from './git-api-ops.js'
 import { executeExplorationPhaseDiscussion } from './phase-exploration-discussion.js'
 import { executeExplorationPhaseExplore } from './phase-exploration-execute.js'
+import { executeExplorationPhasePersona } from './phase-exploration-persona.js'
 import { executeExplorationPhaseReport } from './phase-exploration-report.js'
 import { executeExplorationPhaseTaskify } from './phase-exploration-taskify.js'
-import { getStatus as getGitStatus } from './git-api-ops.js'
-import type { ExecutionCoordinator } from './execution-coordinator.js'
+import { ProcessTimeoutError, TaskCancelledError } from './providers/types.js'
 
 function phaseStart(phase: ExplorationPhase): ExplorationEvent {
   return { type: 'phase_start', phase, timestamp: new Date().toISOString() }
@@ -167,7 +164,10 @@ export class ExplorationRunner implements RunnerStatus {
 
     const pendingJob = explorationTaskifyJobQueries.getNextPendingExplorationTaskifyJob(this.db)
     if (pendingJob) {
-      const exploration = explorationQueries.getExploration(this.db, pendingJob.exploration_session_id)
+      const exploration = explorationQueries.getExploration(
+        this.db,
+        pendingJob.exploration_session_id,
+      )
       if (exploration && this.coordinator.acquire('taskify', pendingJob.id)) {
         this.currentExecution = { kind: 'taskify', id: pendingJob.id }
         try {
@@ -255,8 +255,14 @@ export class ExplorationRunner implements RunnerStatus {
         (event) => {
           const mapped = toExplorationStreamEvent(event)
           if (mapped) this.emit(exploration.id, mapped)
-          if (event.type === 'tool_invoked' && event.toolName.toLowerCase().includes('playwright')) {
-            this.emit(exploration.id, { type: 'playwright_log', message: `Playwright MCP: ${event.toolName}` })
+          if (
+            event.type === 'tool_invoked' &&
+            event.toolName.toLowerCase().includes('playwright')
+          ) {
+            this.emit(exploration.id, {
+              type: 'playwright_log',
+              message: `Playwright MCP: ${event.toolName}`,
+            })
           }
         },
         signal,
@@ -270,16 +276,31 @@ export class ExplorationRunner implements RunnerStatus {
 
       const artifacts = explorationArtifactQueries.listExplorationArtifacts(this.db, exploration.id)
       const { summaryArtifact, findings } = getSessionArtifacts(artifacts)
-      const evidenceImages = explorationArtifactQueries.listExplorationEvidenceImages(this.db, exploration.id)
+      const evidenceImages = explorationArtifactQueries.listExplorationEvidenceImages(
+        this.db,
+        exploration.id,
+      )
 
       if (summaryArtifact) {
-        this.emit(exploration.id, { type: 'artifact_created', kind: 'plan', title: summaryArtifact.title ?? undefined })
+        this.emit(exploration.id, {
+          type: 'artifact_created',
+          kind: 'plan',
+          title: summaryArtifact.title ?? undefined,
+        })
       }
       for (const finding of findings) {
-        this.emit(exploration.id, { type: 'artifact_created', kind: 'finding', title: finding.title ?? undefined })
+        this.emit(exploration.id, {
+          type: 'artifact_created',
+          kind: 'finding',
+          title: finding.title ?? undefined,
+        })
       }
       for (const image of evidenceImages) {
-        this.emit(exploration.id, { type: 'artifact_created', kind: 'playwright-log', path: image.file_path })
+        this.emit(exploration.id, {
+          type: 'artifact_created',
+          kind: 'playwright-log',
+          path: image.file_path,
+        })
       }
 
       currentPhase = 'report'
@@ -339,9 +360,10 @@ export class ExplorationRunner implements RunnerStatus {
       }
 
       const rawForClassification = outputRaw ?? message
-      const errorType = error instanceof ExplorationPhaseError
-        ? error.errorType
-        : classifyError(rawForClassification, 1)
+      const errorType =
+        error instanceof ExplorationPhaseError
+          ? error.errorType
+          : classifyError(rawForClassification, 1)
 
       if (errorType === 'infra') {
         explorationQueries.markExplorationPaused(this.db, exploration.id, message)

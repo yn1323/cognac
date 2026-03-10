@@ -1,28 +1,31 @@
+import { randomUUID } from 'node:crypto'
 import { mkdir, rm, unlink, writeFile } from 'node:fs/promises'
 import { extname, resolve } from 'node:path'
-import { randomUUID } from 'node:crypto'
+import type { ExplorationEvent, ExplorationStatus } from '@cognac/shared'
+import type Database from 'better-sqlite3'
 import { Hono } from 'hono'
 import { streamSSE } from 'hono/streaming'
 import { z } from 'zod'
-import type Database from 'better-sqlite3'
-import type { ExplorationEvent, ExplorationStatus } from '@cognac/shared'
-import type { EventBus } from '../sse/event-bus.js'
-import * as explorationQueries from '../db/queries/explorations.js'
-import * as explorationImageQueries from '../db/queries/exploration-images.js'
-import * as explorationPersonaQueries from '../db/queries/exploration-personas.js'
-import * as explorationDiscussionQueries from '../db/queries/exploration-discussions.js'
 import * as explorationArtifactQueries from '../db/queries/exploration-artifacts.js'
-import * as explorationLogQueries from '../db/queries/exploration-logs.js'
-import * as explorationTaskifyJobQueries from '../db/queries/exploration-taskify-jobs.js'
+import * as explorationDiscussionQueries from '../db/queries/exploration-discussions.js'
 import * as explorationEventQueries from '../db/queries/exploration-events.js'
+import * as explorationImageQueries from '../db/queries/exploration-images.js'
+import * as explorationLogQueries from '../db/queries/exploration-logs.js'
+import * as explorationPersonaQueries from '../db/queries/exploration-personas.js'
+import * as explorationTaskifyJobQueries from '../db/queries/exploration-taskify-jobs.js'
+import * as explorationQueries from '../db/queries/explorations.js'
 import {
   getExplorationArtifactDir,
   getExplorationUploadDir,
   resolveCognacPath,
 } from '../runner/exploration-paths.js'
+import type { EventBus } from '../sse/event-bus.js'
 
 const createExplorationSchema = z.object({
-  title: z.string().min(2, 'タイトルは2文字以上で入力してね').max(200, 'タイトルは200文字以内にしてね'),
+  title: z
+    .string()
+    .min(2, 'タイトルは2文字以上で入力してね')
+    .max(200, 'タイトルは200文字以内にしてね'),
   request: z.string().min(2, '本文は2文字以上で入力してね'),
 })
 
@@ -74,10 +77,7 @@ async function saveExplorationImages(
   explorationImageQueries.createExplorationImages(db, savedImages)
 }
 
-function resetExplorationForRetry(
-  db: Database.Database,
-  explorationId: number,
-) {
+function resetExplorationForRetry(db: Database.Database, explorationId: number) {
   const resetInTransaction = db.transaction(() => {
     explorationPersonaQueries.deleteExplorationPersonasBySessionId(db, explorationId)
     explorationDiscussionQueries.deleteExplorationDiscussionsBySessionId(db, explorationId)
@@ -105,7 +105,11 @@ export interface ExplorationCanceller {
 }
 
 const updateExplorationSchema = z.object({
-  title: z.string().min(2, 'タイトルは2文字以上で入力してね').max(200, 'タイトルは200文字以内にしてね').optional(),
+  title: z
+    .string()
+    .min(2, 'タイトルは2文字以上で入力してね')
+    .max(200, 'タイトルは200文字以内にしてね')
+    .optional(),
   request: z.string().min(2, '本文は2文字以上で入力してね').optional(),
 })
 
@@ -134,7 +138,9 @@ export function explorationsRouter(
       }
 
       const exploration = explorationQueries.createExploration(db, parsed.data)
-      const files = formData.getAll('images').filter((value): value is File => value instanceof File)
+      const files = formData
+        .getAll('images')
+        .filter((value): value is File => value instanceof File)
       try {
         await saveExplorationImages(db, exploration.id, files)
       } catch (error) {
@@ -158,7 +164,8 @@ export function explorationsRouter(
     if (!exploration) return c.json({ error: '探索が見つからない' }, 404)
     return c.json({
       ...exploration,
-      latestTaskifyJob: explorationTaskifyJobQueries.getLatestExplorationTaskifyJobBySessionId(db, id) ?? null,
+      latestTaskifyJob:
+        explorationTaskifyJobQueries.getLatestExplorationTaskifyJobBySessionId(db, id) ?? null,
     })
   })
 

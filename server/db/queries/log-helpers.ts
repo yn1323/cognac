@@ -1,8 +1,8 @@
 // ログテーブル共通クエリヘルパー
 // execution_logs / exploration_logs の共通SQL操作を抽出
 
-import type Database from 'better-sqlite3'
 import type { BaseLog } from '@cognac/shared'
+import type Database from 'better-sqlite3'
 
 export interface LogTableConfig {
   tableName: string
@@ -10,8 +10,16 @@ export interface LogTableConfig {
 }
 
 const LOG_COLUMNS = [
-  'phase', 'session_id', 'input_summary', 'output_raw', 'output_summary',
-  'token_input', 'token_output', 'duration_ms', 'error_type', 'error_message',
+  'phase',
+  'session_id',
+  'input_summary',
+  'output_raw',
+  'output_summary',
+  'token_input',
+  'token_output',
+  'duration_ms',
+  'error_type',
+  'error_message',
 ] as const
 
 export function insertLog<T extends BaseLog>(
@@ -37,7 +45,7 @@ export function insertLog<T extends BaseLog>(
       ${config.parentColumn}, ${LOG_COLUMNS.join(', ')}
     )
     VALUES (
-      @parentId, ${LOG_COLUMNS.map(c => `@${c}`).join(', ')}
+      @parentId, ${LOG_COLUMNS.map((c) => `@${c}`).join(', ')}
     )
   `)
 
@@ -55,7 +63,7 @@ export function insertLog<T extends BaseLog>(
     error_message: data.error_message ?? null,
   })
 
-  return selectLogById<T>(db, config, Number(result.lastInsertRowid), normalize)!
+  return selectLogById<T>(db, config, Number(result.lastInsertRowid), normalize) as T
 }
 
 export function selectLogsByParentId<T extends BaseLog>(

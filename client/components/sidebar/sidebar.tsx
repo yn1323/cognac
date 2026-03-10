@@ -2,17 +2,11 @@
 // ブランドロゴ + ナビゲーションを表示する
 
 import type { LucideIcon } from 'lucide-react'
-import {
-  ListChecks,
-  Compass,
-  GitBranch,
-  Terminal,
-  Settings,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Compass, GitBranch, ListChecks, Settings, Terminal } from 'lucide-react'
 import { BrandLogo } from '@/components/brand-logo'
 import { useSettings } from '@/hooks/use-system'
 import { providerLabel } from '@/lib/provider'
+import { cn } from '@/lib/utils'
 
 interface NavItem {
   icon: LucideIcon
@@ -92,9 +86,7 @@ export function Sidebar({ activeItem = 'タスク', onItemClick, className }: Si
       </div>
 
       <footer className="sidebar-footer mt-2 shrink-0 border-t border-sidebar-border pt-2">
-        <nav className="flex flex-col gap-0.5">
-          {renderNavButton(FOOTER_NAV_ITEM)}
-        </nav>
+        <nav className="flex flex-col gap-0.5">{renderNavButton(FOOTER_NAV_ITEM)}</nav>
       </footer>
     </aside>
   )

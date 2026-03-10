@@ -1,8 +1,5 @@
+import type { ExplorationImage, ExplorationImageSourceType } from '@cognac/shared'
 import type Database from 'better-sqlite3'
-import type {
-  ExplorationImage,
-  ExplorationImageSourceType,
-} from '@cognac/shared'
 
 export function createExplorationImages(
   db: Database.Database,

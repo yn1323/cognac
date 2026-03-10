@@ -1,6 +1,4 @@
-export type ActiveExecution =
-  | { kind: 'task' | 'exploration' | 'taskify'; id: number }
-  | null
+export type ActiveExecution = { kind: 'task' | 'exploration' | 'taskify'; id: number } | null
 
 export class ExecutionCoordinator {
   private activeExecution: ActiveExecution = null

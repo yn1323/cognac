@@ -1,7 +1,7 @@
 // ディスカッションのCRUD操作
 
-import type Database from 'better-sqlite3'
 import type { Discussion } from '@cognac/shared'
+import type Database from 'better-sqlite3'
 
 // SQLiteはbooleanをINTEGER(0/1)で保存するため、読み取り時に変換する
 type RawDiscussion = Omit<Discussion, 'should_continue'> & {
@@ -78,13 +78,8 @@ export function createDiscussionStatements(
 /**
  * タスクIDでディスカッション一覧を取得する（ラウンド順）
  */
-export function getDiscussionsByTaskId(
-  db: Database.Database,
-  taskId: number,
-): Discussion[] {
-  const stmt = db.prepare(
-    `SELECT * FROM discussions WHERE task_id = ? ORDER BY round ASC, id ASC`,
-  )
+export function getDiscussionsByTaskId(db: Database.Database, taskId: number): Discussion[] {
+  const stmt = db.prepare(`SELECT * FROM discussions WHERE task_id = ? ORDER BY round ASC, id ASC`)
   return (stmt.all(taskId) as RawDiscussion[]).map(toDiscussion)
 }
 
@@ -105,10 +100,7 @@ export function getDiscussionsByRound(
 /**
  * タスクIDでディスカッションを全削除する（リトライ時のクリーンアップ用）
  */
-export function deleteDiscussionsByTaskId(
-  db: Database.Database,
-  taskId: number,
-): number {
+export function deleteDiscussionsByTaskId(db: Database.Database, taskId: number): number {
   const stmt = db.prepare('DELETE FROM discussions WHERE task_id = ?')
   return stmt.run(taskId).changes
 }

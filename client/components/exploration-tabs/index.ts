@@ -1,1 +1,1 @@
-export { ExplorationTabs, type ExplorationTab } from './exploration-tabs'
+export { type ExplorationTab, ExplorationTabs } from './exploration-tabs'

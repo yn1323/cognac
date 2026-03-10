@@ -1,13 +1,11 @@
-import type Database from 'better-sqlite3'
 import type { ExplorationDiscussion } from '@cognac/shared'
+import type Database from 'better-sqlite3'
 
 type RawExplorationDiscussion = Omit<ExplorationDiscussion, 'should_continue'> & {
   should_continue: number
 }
 
-function toExplorationDiscussion(
-  row: RawExplorationDiscussion,
-): ExplorationDiscussion {
+function toExplorationDiscussion(row: RawExplorationDiscussion): ExplorationDiscussion {
   return { ...row, should_continue: Boolean(row.should_continue) }
 }
 

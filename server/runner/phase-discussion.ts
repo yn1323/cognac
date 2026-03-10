@@ -1,29 +1,26 @@
 // Phase 2-B: マルチペルソナディスカッション
 // 選出されたペルソナ陣によるロールプレイ形式の議論（最大3ラウンド）
 
-import type Database from 'better-sqlite3'
 import type {
-  Task,
   CognacConfig,
-  TaskEvent,
-  Persona,
   Discussion,
   DiscussionRound,
+  Persona,
+  Task,
+  TaskEvent,
 } from '@cognac/shared'
-import { createProvider } from './providers/index.js'
-import { extractJson } from './json-parser.js'
-import { getRepoStructure } from './context-cache.js'
+import type Database from 'better-sqlite3'
 import * as discussionQueries from '../db/queries/discussions.js'
 import * as logQueries from '../db/queries/execution-logs.js'
+import { getRepoStructure } from './context-cache.js'
 import { groupDiscussionsByRound } from './discussion-utils.js'
+import { extractJson } from './json-parser.js'
+import { createProvider } from './providers/index.js'
 
 // ペルソナ定義をMarkdownに変換
 function formatPersonas(personas: Persona[]): string {
   return personas
-    .map(
-      (p) =>
-        `- **${p.name}** (${p.persona_id}): ${p.focus}。スタイル: ${p.tone}`,
-    )
+    .map((p) => `- **${p.name}** (${p.persona_id}): ${p.focus}。スタイル: ${p.tone}`)
     .join('\n')
 }
 
@@ -97,7 +94,8 @@ ${repoStructure}
 `
 
   if (round === 1) {
-    prompt += '\nタスクについてチャットで話し合って。いきなり本題に切り込んでOK。全員が順番に自己紹介的に発言するのではなく、誰かの問題提起に他のメンバーが反応する形で始めて。最初の発言者はランダムに選んで。'
+    prompt +=
+      '\nタスクについてチャットで話し合って。いきなり本題に切り込んでOK。全員が順番に自己紹介的に発言するのではなく、誰かの問題提起に他のメンバーが反応する形で始めて。最初の発言者はランダムに選んで。'
   } else {
     // 前ラウンドの会話をチャットログ形式で含める
     prompt += '\n### これまでの会話\n\n'
@@ -111,7 +109,8 @@ ${repoStructure}
   }
 
   if (isLastRound) {
-    prompt += '\n\n**注意: これが最終ラウンドだ。shouldContinueはfalseにして、結論を短くまとめるメッセージで締めてくれ。**'
+    prompt +=
+      '\n\n**注意: これが最終ラウンドだ。shouldContinueはfalseにして、結論を短くまとめるメッセージで締めてくれ。**'
   }
 
   return prompt
@@ -155,7 +154,12 @@ export async function executePhaseDiscussion(
     let discussionRound: DiscussionRound | null = null
 
     // 最大2回トライ（初回 + 1回リトライ）
-    let response = { result: '', sessionId: '', usage: { inputTokens: 0, outputTokens: 0 }, durationMs: 0 }
+    let response = {
+      result: '',
+      sessionId: '',
+      usage: { inputTokens: 0, outputTokens: 0 },
+      durationMs: 0,
+    }
     const provider = createProvider(config.provider)
 
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -218,7 +222,10 @@ export async function executePhaseDiscussion(
     }))
 
     const savedDiscussions = discussionQueries.createDiscussionStatements(
-      db, task.id, round, statements,
+      db,
+      task.id,
+      round,
+      statements,
     )
     allDiscussions.push(...savedDiscussions)
 

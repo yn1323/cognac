@@ -1,13 +1,10 @@
-import type { StorybookConfig } from '@storybook/react-vite'
 import path from 'node:path'
+import type { StorybookConfig } from '@storybook/react-vite'
 
 const config: StorybookConfig = {
   // コロケーション対応: components/ 配下の .stories.tsx を全部拾う
   stories: ['../components/**/*.stories.@(ts|tsx)'],
-  addons: [
-    '@storybook/addon-essentials',
-    '@storybook/addon-interactions',
-  ],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/react-vite',
     options: {},
@@ -16,7 +13,7 @@ const config: StorybookConfig = {
     // Vite設定のpathエイリアスを引き継ぐ
     config.resolve = config.resolve || {}
     config.resolve.alias = {
-      ...config.resolve.alias as Record<string, string>,
+      ...(config.resolve.alias as Record<string, string>),
       '@': path.resolve(__dirname, '..'),
     }
 

@@ -1,12 +1,12 @@
 // タスク詳細ページ — CIタブ
 // デザイン design.pen PC=MIuKS, SP=09sQT に準拠
 
-import { useMemo } from 'react'
+import type { ExecutionLog, Task, TaskEvent } from '@cognac/shared'
 import { Check, ExternalLink, Loader, XCircle } from 'lucide-react'
-import type { Task, TaskEvent, ExecutionLog } from '@cognac/shared'
+import { useMemo } from 'react'
 import { useTaskLogs } from '@/hooks/use-tasks'
-import { ACTIVE_STATUSES } from '@/lib/status-config'
 import { formatDuration } from '@/lib/format'
+import { ACTIVE_STATUSES } from '@/lib/status-config'
 
 // SSEイベントからCIステップを抽出
 interface CiStepStatus {
@@ -43,7 +43,7 @@ function extractCiSteps(events: TaskEvent[]): CiStepStatus[] {
       }
     }
   }
-  return order.map((k) => stepMap.get(k)!)
+  return order.map((k) => stepMap.get(k) as CiStepStatus)
 }
 
 // ステータスアイコン
@@ -55,10 +55,30 @@ function StepIcon({ status, size = 'md' }: { status: CiStepStatus['status']; siz
 }
 
 // バナーの色設定
-const BANNER_RUNNING = { border: 'border-[#2563eb30]', bg: 'bg-[#eff6ff]', text: 'text-[#1e40af]', sub: 'text-[#3b82f6]' } as const
-const BANNER_RUNNING_SP = { border: 'border-[#2563eb30]', bg: 'bg-[#dbeafe]', text: 'text-[#1e40af]', sub: 'text-[#3b82f6]' } as const
-const BANNER_FAILURE = { border: 'border-[#dc262630]', bg: 'bg-[#fef2f2]', text: 'text-[#991b1b]', sub: 'text-[#dc2626]' } as const
-const BANNER_SUCCESS = { border: 'border-[#16a34a30]', bg: 'bg-[#f0fdf4]', text: 'text-[#166534]', sub: 'text-[#16a34a]' } as const
+const BANNER_RUNNING = {
+  border: 'border-[#2563eb30]',
+  bg: 'bg-[#eff6ff]',
+  text: 'text-[#1e40af]',
+  sub: 'text-[#3b82f6]',
+} as const
+const BANNER_RUNNING_SP = {
+  border: 'border-[#2563eb30]',
+  bg: 'bg-[#dbeafe]',
+  text: 'text-[#1e40af]',
+  sub: 'text-[#3b82f6]',
+} as const
+const BANNER_FAILURE = {
+  border: 'border-[#dc262630]',
+  bg: 'bg-[#fef2f2]',
+  text: 'text-[#991b1b]',
+  sub: 'text-[#dc2626]',
+} as const
+const BANNER_SUCCESS = {
+  border: 'border-[#16a34a30]',
+  bg: 'bg-[#f0fdf4]',
+  text: 'text-[#166534]',
+  sub: 'text-[#16a34a]',
+} as const
 
 function getBannerStyle(steps: CiStepStatus[], variant: 'pc' | 'sp') {
   const hasFailed = steps.some((s) => s.status === 'failure')
@@ -71,17 +91,11 @@ function getBannerStyle(steps: CiStepStatus[], variant: 'pc' | 'sp') {
 // 共通データフック: PC/SPで同じデータロジックを共有
 function useCITabData(task: Task, events: TaskEvent[]) {
   const isActive = ACTIVE_STATUSES.has(task.status)
-  const steps = useMemo(
-    () => (isActive ? extractCiSteps(events) : []),
-    [isActive, events],
-  )
+  const steps = useMemo(() => (isActive ? extractCiSteps(events) : []), [isActive, events])
 
   // 完了タスクのみDBログを取得
   const { data: logs } = useTaskLogs(task.id, !isActive)
-  const ciLogs = useMemo(
-    () => (logs ?? []).filter((l) => l.phase === 'ci'),
-    [logs],
-  )
+  const ciLogs = useMemo(() => (logs ?? []).filter((l) => l.phase === 'ci'), [logs])
 
   const hasCiData = steps.length > 0 || ciLogs.length > 0
 
@@ -94,17 +108,15 @@ export function PCCITab({ task, events }: { task: Task; events: TaskEvent[] }) {
   const { isActive, steps, ciLogs, hasCiData } = useCITabData(task, events)
 
   if (!hasCiData && !isActive) {
-    return (
-      <p className="py-8 text-center text-sm text-muted-foreground">
-        CI実行を待っています
-      </p>
-    )
+    return <p className="py-8 text-center text-sm text-muted-foreground">CI実行を待っています</p>
   }
 
   if (!hasCiData && isActive) {
     return (
       <div className="flex flex-col gap-6">
-        <div className={`flex items-center gap-3 rounded-lg border ${BANNER_RUNNING.border} ${BANNER_RUNNING.bg} px-4 py-3`}>
+        <div
+          className={`flex items-center gap-3 rounded-lg border ${BANNER_RUNNING.border} ${BANNER_RUNNING.bg} px-4 py-3`}
+        >
           <Loader className="h-[18px] w-[18px] shrink-0 text-[#2563eb]" />
           <span className={`text-[13px] font-medium leading-[1.4] ${BANNER_RUNNING.text}`}>
             CI実行を待っています
@@ -123,7 +135,9 @@ export function PCCITab({ task, events }: { task: Task; events: TaskEvent[] }) {
     return (
       <div className="flex flex-col gap-6">
         {/* ステータスバナー */}
-        <div className={`flex items-center gap-3 rounded-lg border ${banner.border} ${banner.bg} px-4 py-3`}>
+        <div
+          className={`flex items-center gap-3 rounded-lg border ${banner.border} ${banner.bg} px-4 py-3`}
+        >
           <Loader className="h-[18px] w-[18px] shrink-0 text-[#2563eb]" />
           <div className="flex flex-col gap-0.5">
             <span className={`text-[13px] font-semibold leading-[1.4] ${banner.text}`}>
@@ -183,17 +197,15 @@ export function SPCITab({ task, events }: { task: Task; events: TaskEvent[] }) {
   const { isActive, steps, ciLogs, hasCiData } = useCITabData(task, events)
 
   if (!hasCiData && !isActive) {
-    return (
-      <p className="py-6 text-center text-xs text-muted-foreground">
-        CI実行を待っています
-      </p>
-    )
+    return <p className="py-6 text-center text-xs text-muted-foreground">CI実行を待っています</p>
   }
 
   if (!hasCiData && isActive) {
     return (
       <div className="flex flex-col gap-3">
-        <div className={`flex items-center gap-2 rounded-lg border ${BANNER_RUNNING_SP.border} ${BANNER_RUNNING_SP.bg} px-3 py-2.5`}>
+        <div
+          className={`flex items-center gap-2 rounded-lg border ${BANNER_RUNNING_SP.border} ${BANNER_RUNNING_SP.bg} px-3 py-2.5`}
+        >
           <Loader className="h-4 w-4 shrink-0 text-[#2563eb]" />
           <span className={`text-xs font-semibold leading-[1.4] ${BANNER_RUNNING_SP.text}`}>
             CI実行を待っています
@@ -209,7 +221,9 @@ export function SPCITab({ task, events }: { task: Task; events: TaskEvent[] }) {
 
     return (
       <div className="flex flex-col gap-3">
-        <div className={`flex items-center justify-between rounded-lg border ${BANNER_RUNNING_SP.border} ${BANNER_RUNNING_SP.bg} px-3 py-2.5`}>
+        <div
+          className={`flex items-center justify-between rounded-lg border ${BANNER_RUNNING_SP.border} ${BANNER_RUNNING_SP.bg} px-3 py-2.5`}
+        >
           <div className="flex items-center gap-2">
             <Loader className="h-4 w-4 shrink-0 text-[#2563eb]" />
             <span className={`text-xs font-semibold leading-[1.4] ${BANNER_RUNNING_SP.text}`}>
@@ -243,9 +257,7 @@ export function SPCITab({ task, events }: { task: Task; events: TaskEvent[] }) {
 
         <div className="flex items-center gap-1.5">
           <ExternalLink className="h-3 w-3 text-primary" />
-          <span className="text-xs leading-[1.4] text-muted-foreground">
-            詳細はログタブで確認
-          </span>
+          <span className="text-xs leading-[1.4] text-muted-foreground">詳細はログタブで確認</span>
         </div>
       </div>
     )
@@ -269,7 +281,9 @@ function CILogsList({ ciLogs, variant }: { ciLogs: ExecutionLog[]; variant: 'pc'
 
   return (
     <div className={`flex flex-col ${gap}`}>
-      <div className={`flex items-center gap-${isPC ? '3' : '2'} rounded-lg border ${BANNER_SUCCESS.border} ${BANNER_SUCCESS.bg} ${padding}`}>
+      <div
+        className={`flex items-center gap-${isPC ? '3' : '2'} rounded-lg border ${BANNER_SUCCESS.border} ${BANNER_SUCCESS.bg} ${padding}`}
+      >
         <Check className={`${bannerIconSize} shrink-0 text-[#16a34a]`} />
         <span className={`${bannerLabelClass} leading-[1.4] ${BANNER_SUCCESS.text}`}>
           CI完了 — {ciLogs.length} ステップ{isPC ? '実行' : ''}

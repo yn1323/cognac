@@ -2,8 +2,8 @@
 // task-modal / edit-task-modal で共通利用
 
 import type { PriorityLabel } from '@cognac/shared'
-import { cn } from '@/lib/utils'
 import { PRIORITY_LABEL_JA } from '@/lib/constants'
+import { cn } from '@/lib/utils'
 
 export function PriorityRadioGroup({
   options,
@@ -34,9 +34,7 @@ export function PriorityRadioGroup({
               value === option ? 'border-blue-600' : 'border-input',
             )}
           >
-            {value === option && (
-              <div className="h-2.5 w-2.5 rounded-full bg-blue-600" />
-            )}
+            {value === option && <div className="h-2.5 w-2.5 rounded-full bg-blue-600" />}
           </div>
           <span className="text-sm font-medium text-foreground">{PRIORITY_LABEL_JA[option]}</span>
         </label>

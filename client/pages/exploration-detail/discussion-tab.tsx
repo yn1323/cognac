@@ -2,12 +2,12 @@
 // タスクのdiscussion-tab.tsxと同じパターン
 // ペルソナ一覧 + ラウンドごとのディスカッションを表示
 
+import type { ExplorationDiscussion, ExplorationSession } from '@cognac/shared'
+import { CheckCircle2, User } from 'lucide-react'
 import { useMemo } from 'react'
-import { User, CheckCircle2 } from 'lucide-react'
-import type { ExplorationSession, ExplorationPersona, ExplorationDiscussion } from '@cognac/shared'
 import { Card } from '@/components/ui/card'
+import { useExplorationDiscussions, useExplorationPersonas } from '@/hooks/use-explorations'
 import { getPersonaColor } from '@/lib/persona-colors'
-import { useExplorationPersonas, useExplorationDiscussions } from '@/hooks/use-explorations'
 
 // --- ユーティリティ ---
 
@@ -27,16 +27,13 @@ function useDiscussionData(explorationId: number) {
 
   const colorMap = useMemo(() => {
     const map = new Map<string, number>()
-    personaList.forEach((p, i) => map.set(p.persona_id, i))
+    for (const [i, p] of personaList.entries()) map.set(p.persona_id, i)
     return map
   }, [personaList])
 
   const grouped = useMemo(() => groupByRound(discussionList), [discussionList])
 
-  const rounds = useMemo(
-    () => [...grouped.entries()].sort(([a], [b]) => a - b),
-    [grouped],
-  )
+  const rounds = useMemo(() => [...grouped.entries()].sort(([a], [b]) => a - b), [grouped])
   const lastRound = rounds[rounds.length - 1]
   const lastRoundDiscussions = lastRound?.[1] ?? []
   const hasConsensus = lastRoundDiscussions.some((d) => !d.should_continue)
@@ -50,9 +47,7 @@ function RoundSeparator({ round }: { round: number }) {
   return (
     <div className="flex items-center gap-3">
       <div className="h-px flex-1 bg-border" />
-      <span className="text-xs font-medium text-muted-foreground">
-        ラウンド {round}
-      </span>
+      <span className="text-xs font-medium text-muted-foreground">ラウンド {round}</span>
       <div className="h-px flex-1 bg-border" />
     </div>
   )
@@ -65,7 +60,9 @@ function ConsensusMarker({ size = 'md' }: { size?: 'md' | 'sm' }) {
     <div className="flex items-center gap-2">
       <div className="h-px flex-1 bg-[#16a34a]/30" />
       <div className="flex items-center gap-1.5">
-        <CheckCircle2 className={size === 'sm' ? 'h-3.5 w-3.5 text-[#16a34a]' : 'h-4 w-4 text-[#16a34a]'} />
+        <CheckCircle2
+          className={size === 'sm' ? 'h-3.5 w-3.5 text-[#16a34a]' : 'h-4 w-4 text-[#16a34a]'}
+        />
         <span className={`font-medium text-[#16a34a] ${size === 'sm' ? 'text-xs' : 'text-[13px]'}`}>
           合意形成完了
         </span>
@@ -78,7 +75,8 @@ function ConsensusMarker({ size = 'md' }: { size?: 'md' | 'sm' }) {
 // --- PC版 ---
 
 export function PCDiscussionTab({ exploration }: { exploration: ExplorationSession }) {
-  const { discussionList, personaList, colorMap, rounds, lastRound, hasConsensus } = useDiscussionData(exploration.id)
+  const { discussionList, personaList, colorMap, rounds, lastRound, hasConsensus } =
+    useDiscussionData(exploration.id)
 
   if (personaList.length === 0 && discussionList.length === 0) {
     return (
@@ -92,26 +90,22 @@ export function PCDiscussionTab({ exploration }: { exploration: ExplorationSessi
     <div className="flex flex-col gap-5">
       {personaList.length > 0 && (
         <div className="flex flex-col gap-4">
-          <h2 className="text-base font-semibold text-foreground">
-            選択されたペルソナ
-          </h2>
+          <h2 className="text-base font-semibold text-foreground">選択されたペルソナ</h2>
           <div className="grid grid-cols-3 gap-4">
             {personaList.map((persona, i) => (
               <Card key={persona.id} className="p-4">
                 <div className="flex items-center gap-3">
                   <div
                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-                    style={{ backgroundColor: getPersonaColor(colorMap.get(persona.persona_id) ?? i) }}
+                    style={{
+                      backgroundColor: getPersonaColor(colorMap.get(persona.persona_id) ?? i),
+                    }}
                   >
                     <User className="h-4 w-4 text-white" />
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-semibold text-foreground">
-                      {persona.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {persona.focus}
-                    </span>
+                    <span className="text-sm font-semibold text-foreground">{persona.name}</span>
+                    <span className="text-xs text-muted-foreground">{persona.focus}</span>
                   </div>
                 </div>
               </Card>
@@ -144,15 +138,14 @@ export function PCDiscussionTab({ exploration }: { exploration: ExplorationSessi
 
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   {!prevSamePerson && (
-                    <span
-                      className="text-[13px] font-semibold leading-[1.3]"
-                      style={{ color }}
-                    >
+                    <span className="text-[13px] font-semibold leading-[1.3]" style={{ color }}>
                       {d.persona_name}
                     </span>
                   )}
                   <div className="rounded-2xl bg-secondary px-3 py-2">
-                    <p className="whitespace-pre-wrap text-sm leading-[1.5] text-foreground">{d.content}</p>
+                    <p className="whitespace-pre-wrap text-sm leading-[1.5] text-foreground">
+                      {d.content}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -169,7 +162,8 @@ export function PCDiscussionTab({ exploration }: { exploration: ExplorationSessi
 // --- SP版 ---
 
 export function SPDiscussionTab({ exploration }: { exploration: ExplorationSession }) {
-  const { discussionList, personaList, colorMap, rounds, lastRound, hasConsensus } = useDiscussionData(exploration.id)
+  const { discussionList, personaList, colorMap, rounds, lastRound, hasConsensus } =
+    useDiscussionData(exploration.id)
 
   if (personaList.length === 0 && discussionList.length === 0) {
     return (
@@ -183,21 +177,19 @@ export function SPDiscussionTab({ exploration }: { exploration: ExplorationSessi
     <div className="flex flex-col gap-4">
       {personaList.length > 0 && (
         <Card className="p-4">
-          <h3 className="mb-3 text-[15px] font-semibold text-foreground">
-            ペルソナ
-          </h3>
+          <h3 className="mb-3 text-[15px] font-semibold text-foreground">ペルソナ</h3>
           <div className="flex flex-col gap-3">
             {personaList.map((persona, i) => (
               <div key={persona.id} className="flex items-center gap-2.5">
                 <div
                   className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-                  style={{ backgroundColor: getPersonaColor(colorMap.get(persona.persona_id) ?? i) }}
+                  style={{
+                    backgroundColor: getPersonaColor(colorMap.get(persona.persona_id) ?? i),
+                  }}
                 >
                   <User className="h-3.5 w-3.5 text-white" />
                 </div>
-                <span className="text-[13px] font-medium text-foreground">
-                  {persona.name}
-                </span>
+                <span className="text-[13px] font-medium text-foreground">{persona.name}</span>
               </div>
             ))}
           </div>
@@ -228,10 +220,7 @@ export function SPDiscussionTab({ exploration }: { exploration: ExplorationSessi
 
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   {!prevSamePerson && (
-                    <span
-                      className="text-xs font-semibold leading-[1.3]"
-                      style={{ color }}
-                    >
+                    <span className="text-xs font-semibold leading-[1.3]" style={{ color }}>
                       {d.persona_name}
                     </span>
                   )}

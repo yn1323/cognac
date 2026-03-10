@@ -2,8 +2,8 @@
 // ExplorationEventのリアルタイムストリーミングを受信する
 // サーバーの explorations.ts は event: event.type で named events を送信する
 
-import { useEffect, useRef, useState, useCallback } from 'react'
 import type { ExplorationEvent } from '@cognac/shared'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 const EVENT_TYPES = [
   'phase_start',

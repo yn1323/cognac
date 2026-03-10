@@ -1,17 +1,31 @@
-import { Context, Hono } from 'hono'
+import { type Context, Hono } from 'hono'
 import { streamSSE } from 'hono/streaming'
 import { z } from 'zod'
-import { ConsoleManager, ConsoleManagerError } from '../console/console-manager.js'
+import { type ConsoleManager, ConsoleManagerError } from '../console/console-manager.js'
 
 const createCommandSchema = z.object({
   name: z.string().trim().min(1, '表示名を入力してください').max(100, '表示名は100文字以内です'),
-  command: z.string().trim().min(1, 'コマンドを入力してください').max(1000, 'コマンドは1000文字以内です'),
+  command: z
+    .string()
+    .trim()
+    .min(1, 'コマンドを入力してください')
+    .max(1000, 'コマンドは1000文字以内です'),
   note: z.string().max(2000, 'メモは2000文字以内です').optional(),
 })
 
 const updateCommandSchema = z.object({
-  name: z.string().trim().min(1, '表示名を入力してください').max(100, '表示名は100文字以内です').optional(),
-  command: z.string().trim().min(1, 'コマンドを入力してください').max(1000, 'コマンドは1000文字以内です').optional(),
+  name: z
+    .string()
+    .trim()
+    .min(1, '表示名を入力してください')
+    .max(100, '表示名は100文字以内です')
+    .optional(),
+  command: z
+    .string()
+    .trim()
+    .min(1, 'コマンドを入力してください')
+    .max(1000, 'コマンドは1000文字以内です')
+    .optional(),
   note: z.string().max(2000, 'メモは2000文字以内です').optional(),
 })
 
