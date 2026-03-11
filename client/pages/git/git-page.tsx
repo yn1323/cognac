@@ -45,6 +45,7 @@ import {
   useMerge,
   usePush,
 } from '@/hooks/use-git'
+import { useScrollLock } from '@/hooks/use-scroll-lock'
 import { useSettings } from '@/hooks/use-system'
 import { NAV_MAP } from '@/lib/constants'
 import { ChangedFilesPanel } from './changed-files-panel'
@@ -353,6 +354,8 @@ function SPGitPage({
   fileDiff,
   isFileDiffLoading,
 }: GitPageViewProps) {
+  useScrollLock(!!selectedFilePath)
+
   return (
     <div className="flex min-h-screen flex-col bg-[#fafafa]">
       {/* SPヘッダー */}
