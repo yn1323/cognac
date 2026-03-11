@@ -38,6 +38,7 @@ function buildSystemPrompt(explorationId: number, cwd: string): string {
 - テキスト調査で十分なら使わない
 - 証跡を残す場合は ${evidenceDir} に保存する
 - 最後は必ず JSON だけを返す
+- severity は必ず "low" | "medium" | "high" のいずれかを指定する
 
 \`\`\`json
 {

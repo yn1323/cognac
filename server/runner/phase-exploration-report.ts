@@ -25,6 +25,7 @@ function buildSystemPrompt(): string {
 - ## 次アクション
 
 返答は JSON だけにして。
+severity は必ず "low" | "medium" | "high" のいずれかを指定して。
 
 \`\`\`json
 {
