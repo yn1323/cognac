@@ -113,6 +113,7 @@ pushトリガーの4つのGitHub Actionsワークフロー: `build.yml`、`lint.
 ## 品質
 
 - タスク完了時に下記コマンドで異常がないか確認すること
+   - `pnpm format`
    - `pnpm test`
    - `pnpm lint` (エラーがあれば修正する)
    - `pnpm typecheck`
