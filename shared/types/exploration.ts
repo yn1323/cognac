@@ -61,6 +61,7 @@ export interface ExplorationPersona {
   name: string
   focus: string
   tone: string
+  emoji: string // 性格・バイブスを表す絵文字
   created_at: string
 }
 

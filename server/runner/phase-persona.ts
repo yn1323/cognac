@@ -29,6 +29,9 @@ function buildSystemPrompt(config: CognacConfig): string {
   - 「テスト書いた？テスト書こう？テスト書け。」のテスト原理主義者
   これはあくまで例。タスクに合った独自のキャラを作ってOK。
   各メンバーのキャラが被らないように、チーム全体でバランスを取って。
+- emoji: そのキャラの性格・雰囲気・バイブスが伝わる絵文字を1つ選んで。
+  ⚠️ 役割を直接表す絵文字（🔧💻🛡️🧪📊）は避けること。
+  性格が伝わるものを選んで。例: ムードメーカー→🎉、冷めたベテラン→🧊、好奇心旺盛→🐿️、慎重派→🧐、ミニマリスト→🍃
 
 推定ラウンド数（estimatedRounds）も設定して。シンプルなタスクなら1-2、複雑なら3。
 
@@ -37,8 +40,8 @@ function buildSystemPrompt(config: CognacConfig): string {
 \`\`\`json
 {
   "personas": [
-    { "id": "frontend-engineer", "name": "フロントエンドエンジニア", "focus": "UI実装・コンポーネント設計・ユーザー体験", "tone": "ムードメーカー。「おっ、いいじゃん！」とノリよく反応。ただしUXの話になると急に真剣になる" },
-    { "id": "backend-engineer", "name": "バックエンドエンジニア", "focus": "API設計・データモデル・パフォーマンス", "tone": "ツッコミ役。甘い設計には「それだと〇〇のとき困るよ？」と容赦なく突っ込む" }
+    { "id": "frontend-engineer", "name": "フロントエンドエンジニア", "focus": "UI実装・コンポーネント設計・ユーザー体験", "tone": "ムードメーカー。「おっ、いいじゃん！」とノリよく反応。ただしUXの話になると急に真剣になる", "emoji": "🎉" },
+    { "id": "backend-engineer", "name": "バックエンドエンジニア", "focus": "API設計・データモデル・パフォーマンス", "tone": "ツッコミ役。甘い設計には「それだと〇〇のとき困るよ？」と容赦なく突っ込む", "emoji": "🧊" }
   ],
   "estimatedRounds": 2
 }
@@ -70,12 +73,14 @@ function getGenericPersonas(): PersonaSelection {
         name: 'コードレビューアー',
         focus: 'コード品質・設計パターン・保守性',
         tone: '建設的。改善点を具体的に提案する',
+        emoji: '🧐',
       },
       {
         id: 'test-engineer',
         name: 'テストエンジニア',
         focus: 'テスト戦略・エッジケース・品質保証',
         tone: '慎重派。壊れやすいポイントを見抜く',
+        emoji: '🔍',
       },
     ],
     estimatedRounds: 2,
@@ -155,6 +160,7 @@ export async function executePhasePersona(
       name: p.name,
       focus: p.focus,
       tone: p.tone,
+      emoji: p.emoji || '',
     })),
   )
 

@@ -2,11 +2,11 @@
 // デザイン design.pen PC=fuDgb, SP=O7k5O に準拠
 
 import type { Discussion, Task } from '@cognac/shared'
-import { CheckCircle2, User } from 'lucide-react'
+import { CheckCircle2 } from 'lucide-react'
 import { useMemo } from 'react'
 import { Card } from '@/components/ui/card'
 import { useTaskDiscussions, useTaskPersonas } from '@/hooks/use-tasks'
-import { getPersonaColor } from '@/lib/persona-colors'
+import { getPersonaColor, getPersonaEmoji } from '@/lib/persona-colors'
 
 // ラウンドごとにディスカッションをグルーピング
 function groupByRound(discussions: Discussion[]): Map<number, Discussion[]> {
@@ -32,6 +32,12 @@ function useDiscussionTabData(taskId: number) {
     return map
   }, [personaList])
 
+  const emojiMap = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const p of personaList) map.set(p.persona_id, p.emoji)
+    return map
+  }, [personaList])
+
   const grouped = useMemo(() => groupByRound(discussionList), [discussionList])
 
   const rounds = useMemo(() => [...grouped.entries()].sort(([a], [b]) => a - b), [grouped])
@@ -39,7 +45,7 @@ function useDiscussionTabData(taskId: number) {
   const lastRoundDiscussions = lastRound?.[1] ?? []
   const hasConsensus = lastRoundDiscussions.some((d) => !d.should_continue)
 
-  return { discussionList, personaList, colorMap, rounds, lastRound, hasConsensus }
+  return { discussionList, personaList, colorMap, emojiMap, rounds, lastRound, hasConsensus }
 }
 
 // --- ラウンドセパレーター ---
@@ -76,7 +82,7 @@ function ConsensusMarker({ size = 'md' }: { size?: 'md' | 'sm' }) {
 // --- PC版 ---
 
 export function PCDiscussionTab({ task }: { task: Task }) {
-  const { discussionList, personaList, colorMap, rounds, lastRound, hasConsensus } =
+  const { discussionList, personaList, colorMap, emojiMap, rounds, lastRound, hasConsensus } =
     useDiscussionTabData(task.id)
 
   if (personaList.length === 0 && discussionList.length === 0) {
@@ -103,7 +109,9 @@ export function PCDiscussionTab({ task }: { task: Task }) {
                       backgroundColor: getPersonaColor(colorMap.get(persona.persona_id) ?? i),
                     }}
                   >
-                    <User className="h-4 w-4 text-white" />
+                    <span className="text-lg leading-none">
+                      {getPersonaEmoji(persona.emoji, persona.persona_id)}
+                    </span>
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="text-sm font-semibold text-foreground">{persona.name}</span>
@@ -136,7 +144,9 @@ export function PCDiscussionTab({ task }: { task: Task }) {
                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
                     style={{ backgroundColor: color }}
                   >
-                    <User className="h-4 w-4 text-white" />
+                    <span className="text-lg leading-none">
+                      {getPersonaEmoji(emojiMap.get(d.persona_id), d.persona_id)}
+                    </span>
                   </div>
                 )}
 
@@ -168,7 +178,7 @@ export function PCDiscussionTab({ task }: { task: Task }) {
 // --- SP版 ---
 
 export function SPDiscussionTab({ task }: { task: Task }) {
-  const { discussionList, personaList, colorMap, rounds, lastRound, hasConsensus } =
+  const { discussionList, personaList, colorMap, emojiMap, rounds, lastRound, hasConsensus } =
     useDiscussionTabData(task.id)
 
   if (personaList.length === 0 && discussionList.length === 0) {
@@ -194,7 +204,9 @@ export function SPDiscussionTab({ task }: { task: Task }) {
                     backgroundColor: getPersonaColor(colorMap.get(persona.persona_id) ?? i),
                   }}
                 >
-                  <User className="h-3.5 w-3.5 text-white" />
+                  <span className="text-base leading-none">
+                    {getPersonaEmoji(persona.emoji, persona.persona_id)}
+                  </span>
                 </div>
                 <span className="text-[13px] font-medium text-foreground">{persona.name}</span>
               </div>
@@ -223,7 +235,9 @@ export function SPDiscussionTab({ task }: { task: Task }) {
                     className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full"
                     style={{ backgroundColor: color }}
                   >
-                    <User className="h-3.5 w-3.5 text-white" />
+                    <span className="text-base leading-none">
+                      {getPersonaEmoji(emojiMap.get(d.persona_id), d.persona_id)}
+                    </span>
                   </div>
                 )}
 

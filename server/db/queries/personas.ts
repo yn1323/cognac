@@ -9,13 +9,13 @@ import type Database from 'better-sqlite3'
 export function createPersonas(
   db: Database.Database,
   taskId: number,
-  personas: { persona_id: string; name: string; focus: string; tone: string }[],
+  personas: { persona_id: string; name: string; focus: string; tone: string; emoji: string }[],
 ): Persona[] {
   if (personas.length === 0) return []
 
   const stmt = db.prepare(`
-    INSERT INTO personas (task_id, persona_id, name, focus, tone)
-    VALUES (@task_id, @persona_id, @name, @focus, @tone)
+    INSERT INTO personas (task_id, persona_id, name, focus, tone, emoji)
+    VALUES (@task_id, @persona_id, @name, @focus, @tone, @emoji)
   `)
 
   const results: Persona[] = []
