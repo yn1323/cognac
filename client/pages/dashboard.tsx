@@ -383,7 +383,7 @@ function SPDashboard({
                 <SPTaskCard
                   title={task.title}
                   subtitle={getSPSubtitle(task)}
-                  badge={<StatusBadge status={task.status} />}
+                  badge={<StatusBadge status={task.status} configMap={STATUS_CONFIG} />}
                   borderColor={getSPBorderColor(task)}
                   actions={
                     RETRYABLE_STATUSES.has(task.status) ? (

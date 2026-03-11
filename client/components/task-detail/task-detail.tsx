@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useDeleteTask } from '@/hooks/use-tasks'
 import { formatDateTime } from '@/lib/format'
-import { DELETABLE_STATUSES } from '@/lib/status-config'
+import { DELETABLE_STATUSES, STATUS_CONFIG } from '@/lib/status-config'
 
 export function TaskDetail({
   task,
@@ -42,7 +42,7 @@ export function TaskDetail({
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle className="text-lg">{task.title}</CardTitle>
-          <StatusBadge status={task.status} />
+          <StatusBadge status={task.status} configMap={STATUS_CONFIG} />
         </CardHeader>
         <CardContent className="space-y-3">
           {task.description && (

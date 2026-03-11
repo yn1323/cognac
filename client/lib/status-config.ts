@@ -14,6 +14,14 @@ import {
   XCircle,
 } from 'lucide-react'
 
+// StatusBadgeが参照するベース型
+export type StatusConfigEntry = {
+  label: string
+  color: string
+  dotColor: string
+  bgColor: string
+}
+
 // 削除可能なステータス
 export const DELETABLE_STATUSES = new Set<TaskStatus>(['pending', 'completed', 'paused', 'stopped'])
 

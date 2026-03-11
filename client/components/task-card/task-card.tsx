@@ -41,7 +41,7 @@ export function TaskCard({ task, onRetry }: TaskCardProps) {
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           {/* 1行目: バッジ + フェーズ */}
           <div className="flex items-center gap-2">
-            <StatusBadge status={task.status} />
+            <StatusBadge status={task.status} configMap={STATUS_CONFIG} />
             {phaseText && (
               <span className="text-xs leading-[1.3] text-muted-foreground">{phaseText}</span>
             )}

@@ -15,13 +15,11 @@ import * as logQueries from '../db/queries/execution-logs.js'
 import * as planQueries from '../db/queries/plans.js'
 import * as imageQueries from '../db/queries/task-images.js'
 import { getRepoStructure } from './context-cache.js'
-import { groupDiscussionsByRound } from './discussion-utils.js'
+import { formatDiscussions } from './discussion-utils.js'
 import { extractJson } from './json-parser.js'
 import { createProvider } from './providers/index.js'
 
 // プラン策定のシステムプロンプト
-// 一時コメントアウト: git commit指示を除去（不具合調査のノイズ除去）
-// 元の指示: 「実装が完了したらgit commitしといて」「コミットメッセージの形式は自由でOK」
 function buildSystemPrompt(): string {
   return `あなたはテックリードだ。ディスカッション結果を基に、実装計画と実行プロンプトを作成してくれ。
 
@@ -64,25 +62,6 @@ Phase 3でClaude Codeに渡す完全な指示を生成して。以下を含め�
 \`\`\`
 
 出力がJSONフォーマットに準拠しているか確認してから返して。`
-}
-
-// ディスカッションログをMarkdownに変換
-function formatDiscussions(discussions: Discussion[]): string {
-  if (discussions.length === 0) {
-    return '（ディスカッションなし）'
-  }
-
-  const grouped = groupDiscussionsByRound(discussions)
-
-  let markdown = ''
-  for (const [round, entries] of grouped) {
-    markdown += `### ラウンド ${round}\n\n`
-    for (const d of entries) {
-      markdown += `**${d.persona_name}**: ${d.content}\n`
-    }
-    markdown += '\n'
-  }
-  return markdown
 }
 
 // ユーザープロンプトを構築

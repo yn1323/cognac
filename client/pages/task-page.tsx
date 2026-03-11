@@ -24,7 +24,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu'
-import { useTaskSSE } from '@/hooks/use-sse'
+import { useTaskSSE } from '@/hooks/use-task-sse'
 import { useCancelTask, useDeleteTask, useRetryTask, useTask } from '@/hooks/use-tasks'
 import { NAV_MAP } from '@/lib/constants'
 import {

@@ -2,6 +2,7 @@
 // 全ステータスのバリエーションを表示
 
 import type { Meta, StoryObj } from '@storybook/react'
+import { STATUS_CONFIG } from '@/lib/status-config'
 import { ALL_STATUSES } from '../__mocks__/task-data'
 import { StatusBadge } from './status-badge'
 
@@ -21,16 +22,16 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
-  args: { status: 'executing' },
+  args: { status: 'executing', configMap: STATUS_CONFIG },
 }
 
 // 全ステータス一覧
 export const AllStatuses: Story = {
-  args: { status: 'pending' },
+  args: { status: 'pending', configMap: STATUS_CONFIG },
   render: () => (
     <div className="flex flex-wrap gap-2">
       {ALL_STATUSES.map((s) => (
-        <StatusBadge key={s} status={s} />
+        <StatusBadge key={s} status={s} configMap={STATUS_CONFIG} />
       ))}
     </div>
   ),

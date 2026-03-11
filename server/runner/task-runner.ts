@@ -10,9 +10,7 @@ import { ProcessTimeoutError, TaskCancelledError } from './claude-caller.js'
 import { invalidateContextCache } from './context-cache.js'
 import { classifyError } from './error-classifier.js'
 import type { ExecutionCoordinator } from './execution-coordinator.js'
-import {
-  buildBranchName /* createTaskBranch, resetTaskBranch, mergeTaskBranch */,
-} from './git-ops.js'
+import { buildBranchName } from './git-ops.js'
 import { executePhaseDiscussion } from './phase-discussion.js'
 import { executePhase3 } from './phase-execute.js'
 import { executePhasePersona } from './phase-persona.js'
@@ -186,7 +184,7 @@ export class TaskRunner implements RunnerStatus {
           branch_name: branchName,
           started_at: new Date().toISOString(),
         })
-        await this.executeWithRetry(task, branchName, undefined, signal)
+        await this.executeWithRetry(task, undefined, signal)
       } else {
         // --- フルパイプライン ---
         taskQueries.updateTask(this.db, id, {
@@ -258,21 +256,12 @@ export class TaskRunner implements RunnerStatus {
         // キャンセルチェック
         if (signal.aborted) return
 
-        // Gitブランチ作成（一時コメントアウト: 不具合調査のノイズ除去）
-        // currentPhase = 'git'
-        // const branchName = createTaskBranch(id, task.title, this.config.git.defaultBranch)
         const branchName = buildBranchName(id, task.title)
         taskQueries.updateTask(this.db, id, { status: 'executing', branch_name: branchName })
-        // this.emit(id, { type: 'git_operation', operation: 'checkout', detail: `ブランチ作成: ${branchName}` })
 
         // Phase 3 + CI リトライループ（executionPromptを渡す）
         currentPhase = 'execute'
-        await this.executeWithRetry(task, branchName, planResult.plan.execution_prompt, signal)
-
-        // 完了: Gitマージ + push（一時コメントアウト: 不具合調査のノイズ除去）
-        // currentPhase = 'git'
-        // mergeTaskBranch(branchName, this.config.git.defaultBranch)
-        // this.emit(id, { type: 'git_operation', operation: 'merge', detail: `${branchName} → ${this.config.git.defaultBranch}` })
+        await this.executeWithRetry(task, planResult.plan.execution_prompt, signal)
 
         // コンテキストキャッシュ無効化
         invalidateContextCache()
@@ -320,14 +309,12 @@ export class TaskRunner implements RunnerStatus {
 
   private async executeWithRetry(
     task: Task,
-    _branchName: string,
     executionPrompt?: string,
     signal?: AbortSignal,
   ): Promise<void> {
     const { id } = task
     const maxRetries = this.config.ci.maxRetries
     const previousErrors: string[] = []
-    const _isFullPipeline = !this.config.discussion.skipDiscussion
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
@@ -444,11 +431,6 @@ export class TaskRunner implements RunnerStatus {
             maxRetries,
             reason: `CI失敗（${failedStep?.step.name}）、リトライ ${attempt + 1}/${maxRetries}`,
           })
-          // ブランチリセットしてPhase 3からやり直し（一時コメントアウト: 不具合調査のノイズ除去）
-          // if (isFullPipeline) {
-          //   resetTaskBranch(id, task.title, this.config.git.defaultBranch)
-          //   this.emit(id, { type: 'git_operation', operation: 'checkout', detail: `ブランチリセット: ${branchName}` })
-          // }
         }
       } catch (err) {
         // キャンセルエラーは上位に伝搬
@@ -485,11 +467,6 @@ export class TaskRunner implements RunnerStatus {
             maxRetries: this.config.claude.processMaxRetries,
             reason: 'プロセスタイムアウト',
           })
-          // ブランチリセットしてリトライ（一時コメントアウト: 不具合調査のノイズ除去）
-          // if (isFullPipeline) {
-          //   resetTaskBranch(id, task.title, this.config.git.defaultBranch)
-          //   this.emit(id, { type: 'git_operation', operation: 'checkout', detail: `ブランチリセット: ${branchName}` })
-          // }
           continue
         }
 

@@ -12,8 +12,6 @@ function buildSystemPrompt(): string {
 
 // ブートストラップ用のPhase 3実行プロンプトを構築する
 // Phase 2はスキップなので、タスク情報から直接プロンプトを組み立てる
-// 一時コメントアウト: git commit指示を除去（不具合調査のノイズ除去）
-// 元の指示: 「実装が完了したらgit commitしといて」「コミットメッセージの形式は自由でOK」
 function buildExecutionPrompt(task: Task): string {
   return `以下のタスクを実装してくれ。
 

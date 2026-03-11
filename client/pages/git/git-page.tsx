@@ -6,7 +6,6 @@ import type { GitBranch as GitBranchType, GitCommit, GitFile } from '@cognac/sha
 import {
   ArrowDown,
   ArrowUp,
-  Bot,
   Check,
   ChevronDown,
   GitBranch,
@@ -14,17 +13,14 @@ import {
   GitMerge,
   Loader2,
   RefreshCw,
-  Trash2,
   Upload,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AiCommitProgress } from '@/components/ai-commit-progress'
 import { AppBottomNav } from '@/components/app-bottom-nav'
 import { CommitExplainModal } from '@/components/commit-explain-modal'
 import { GitCommitRow } from '@/components/git-commit-row'
 import { GitDiffView } from '@/components/git-diff-view'
-import { GitFileRow } from '@/components/git-file-row'
 import { MergeModal } from '@/components/merge-modal'
 import { NewBranchModal } from '@/components/new-branch-modal'
 import { PageHeader } from '@/components/page-header'
@@ -51,16 +47,7 @@ import {
 } from '@/hooks/use-git'
 import { useSettings } from '@/hooks/use-system'
 import { NAV_MAP } from '@/lib/constants'
-
-// AIコミット実行中に表示するプレースホルダーログ
-const COMMIT_IN_PROGRESS_LOG = [
-  { text: 'AIコミットを実行中...', bold: true },
-  { text: '' },
-  { text: '$ git add -A' },
-  { text: '$ git diff --staged' },
-  { text: 'analyzing changes...' },
-  { text: 'generating commit message...' },
-]
+import { ChangedFilesPanel } from './changed-files-panel'
 
 // --- ブランチセレクター ---
 
@@ -291,68 +278,17 @@ function PCGitPage({
         <div className="flex flex-1 gap-6">
           {/* 左カラム: 変更ファイル */}
           <div className="flex flex-1 flex-col gap-4">
-            <div className="flex flex-col overflow-hidden rounded-lg border border-[#e5e5e5] bg-[#fafafa] shadow-[0_1px_1.75px_#0000000d]">
-              {/* AIコミット中はヘッダーなしでログのみ表示 */}
-              {isCommitting ? (
-                <AiCommitProgress logLines={COMMIT_IN_PROGRESS_LOG} />
-              ) : (
-                <>
-                  {/* ヘッダー */}
-                  <div className="flex items-center justify-between border-b border-[#e5e5e5] px-4 py-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-foreground">変更ファイル</span>
-                      <span className="text-sm text-muted-foreground">({files.length})</span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-auto px-2 py-1 text-xs text-[#e7000b]"
-                      onClick={onToggleDiscardDialog}
-                      disabled={files.length === 0}
-                    >
-                      <Trash2 className="h-4 w-4 text-[#e7000b]" />
-                      全て破棄
-                    </Button>
-                  </div>
-
-                  {/* ファイルリスト */}
-                  <div className="flex flex-col">
-                    {files.map((file, i) => (
-                      <GitFileRow
-                        key={file.path}
-                        status={file.status}
-                        path={file.path}
-                        isLast={i === files.length - 1}
-                        selected={file.path === selectedFilePath}
-                        onClick={() => onFileSelect(file.path)}
-                      />
-                    ))}
-                  </div>
-
-                  {/* AIコミット・解説ボタン */}
-                  <div className="flex gap-2 p-4">
-                    <Button
-                      variant="primary"
-                      className="flex-1"
-                      onClick={onStartCommit}
-                      disabled={files.length === 0 || pushPhase !== 'idle'}
-                    >
-                      <Bot className="h-4 w-4" />
-                      AI コミット
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={onExplainWorking}
-                      disabled={files.length === 0 || isExplainWorkingLoading}
-                    >
-                      <Bot className="h-4 w-4" />
-                      AI 解説
-                    </Button>
-                  </div>
-                </>
-              )}
-            </div>
+            <ChangedFilesPanel
+              isCommitting={isCommitting}
+              files={files}
+              selectedFilePath={selectedFilePath}
+              onFileSelect={onFileSelect}
+              onStartCommit={onStartCommit}
+              onExplainWorking={onExplainWorking}
+              isExplainWorkingLoading={isExplainWorkingLoading}
+              onToggleDiscardDialog={onToggleDiscardDialog}
+              commitDisabled={pushPhase !== 'idle'}
+            />
           </div>
 
           {/* 右カラム: ファイルdiff or コミット履歴 */}
@@ -481,68 +417,17 @@ function SPGitPage({
         </div>
 
         {/* 変更ファイルカード */}
-        <div className="flex flex-col overflow-hidden rounded-lg border border-[#e5e5e5] bg-[#fafafa] shadow-[0_1px_1.75px_#0000000d]">
-          {/* AIコミット中はヘッダーなしでログのみ表示 */}
-          {isCommitting ? (
-            <AiCommitProgress logLines={COMMIT_IN_PROGRESS_LOG} />
-          ) : (
-            <>
-              {/* ヘッダー */}
-              <div className="flex items-center justify-between border-b border-[#e5e5e5] px-4 py-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-foreground">変更ファイル</span>
-                  <span className="text-sm text-muted-foreground">({files.length})</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-auto px-2 py-1 text-xs text-[#e7000b]"
-                  onClick={onToggleDiscardDialog}
-                  disabled={files.length === 0}
-                >
-                  <Trash2 className="h-4 w-4 text-[#e7000b]" />
-                  全て破棄
-                </Button>
-              </div>
-
-              {/* ファイルリスト */}
-              <div className="flex flex-col">
-                {files.map((file, i) => (
-                  <GitFileRow
-                    key={file.path}
-                    status={file.status}
-                    path={file.path}
-                    isLast={i === files.length - 1}
-                    selected={file.path === selectedFilePath}
-                    onClick={() => onFileSelect(file.path)}
-                  />
-                ))}
-              </div>
-
-              {/* AIコミット・解説ボタン */}
-              <div className="flex gap-2 p-4">
-                <Button
-                  variant="primary"
-                  className="flex-1"
-                  onClick={onStartCommit}
-                  disabled={files.length === 0 || pushPhase !== 'idle'}
-                >
-                  <Bot className="h-4 w-4" />
-                  AI コミット
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={onExplainWorking}
-                  disabled={files.length === 0 || isExplainWorkingLoading}
-                >
-                  <Bot className="h-4 w-4" />
-                  AI 解説
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
+        <ChangedFilesPanel
+          isCommitting={isCommitting}
+          files={files}
+          selectedFilePath={selectedFilePath}
+          onFileSelect={onFileSelect}
+          onStartCommit={onStartCommit}
+          onExplainWorking={onExplainWorking}
+          isExplainWorkingLoading={isExplainWorkingLoading}
+          onToggleDiscardDialog={onToggleDiscardDialog}
+          commitDisabled={pushPhase !== 'idle'}
+        />
 
         {/* SP版: ファイルdiffモーダル */}
         {selectedFilePath && (

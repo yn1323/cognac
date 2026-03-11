@@ -1,12 +1,19 @@
-// ステータスバッジ
-// TaskStatus に応じたドット付きピル型バッジを表示する
+// ステータスバッジ（ジェネリック）
+// 任意のステータス文字列型に対応するドット付きピル型バッジ
 
-import type { TaskStatus } from '@cognac/shared'
-import { STATUS_CONFIG } from '@/lib/status-config'
+import type { StatusConfigEntry } from '@/lib/status-config'
 import { cn } from '@/lib/utils'
 
-export function StatusBadge({ status, className }: { status: TaskStatus; className?: string }) {
-  const config = STATUS_CONFIG[status]
+export function StatusBadge<S extends string>({
+  status,
+  configMap,
+  className,
+}: {
+  status: S
+  configMap: Record<S, StatusConfigEntry>
+  className?: string
+}) {
+  const config = configMap[status]
 
   return (
     <span

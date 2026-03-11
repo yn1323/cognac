@@ -1,11 +1,10 @@
 // 探索SSE接続フック
-// ExplorationEventのリアルタイムストリーミングを受信する
-// サーバーの explorations.ts は event: event.type で named events を送信する
+// useSSEの薄いラッパー。探索用イベントタイプとエンドポイントを固定
 
 import type { ExplorationEvent } from '@cognac/shared'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useSSE } from './use-sse'
 
-const EVENT_TYPES = [
+const EXPLORATION_EVENT_TYPES = [
   'phase_start',
   'phase_end',
   'persona_selected',
@@ -27,48 +26,8 @@ const EVENT_TYPES = [
   'completed',
 ] as const
 
+const buildExplorationEndpoint = (id: number) => `/api/explorations/${id}/stream`
+
 export function useExplorationSSE(explorationId: number | null) {
-  const [events, setEvents] = useState<ExplorationEvent[]>([])
-  const [connected, setConnected] = useState(false)
-  const eventSourceRef = useRef<EventSource | null>(null)
-
-  useEffect(() => {
-    if (explorationId === null) return
-
-    const es = new EventSource(`/api/explorations/${explorationId}/stream`)
-    eventSourceRef.current = es
-
-    es.onopen = () => setConnected(true)
-    es.onerror = () => setConnected(false)
-
-    const MAX_EVENTS = 500
-
-    const handler = (e: Event) => {
-      try {
-        const data = JSON.parse((e as MessageEvent).data) as ExplorationEvent
-        setEvents((prev) => {
-          const next = [...prev, data]
-          return next.length > MAX_EVENTS ? next.slice(-MAX_EVENTS) : next
-        })
-      } catch {
-        // パース失敗は無視
-      }
-    }
-
-    for (const type of EVENT_TYPES) {
-      es.addEventListener(type, handler)
-    }
-
-    return () => {
-      for (const type of EVENT_TYPES) {
-        es.removeEventListener(type, handler)
-      }
-      es.close()
-      setConnected(false)
-    }
-  }, [explorationId])
-
-  const clearEvents = useCallback(() => setEvents([]), [])
-
-  return { events, connected, clearEvents }
+  return useSSE<ExplorationEvent>(explorationId, buildExplorationEndpoint, EXPLORATION_EVENT_TYPES)
 }
