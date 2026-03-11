@@ -207,6 +207,7 @@ CREATE TABLE IF NOT EXISTS exploration_taskify_jobs (
     CHECK (status IN ('pending', 'running', 'completed', 'failed')),
   result_json TEXT,
   error_message TEXT,
+  user_instruction TEXT,
   requested_at TEXT NOT NULL DEFAULT (datetime('now')),
   started_at TEXT,
   completed_at TEXT,

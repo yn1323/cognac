@@ -86,9 +86,10 @@ export function useUpdateExploration() {
 export function useTaskifyExploration() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => api.explorations.taskify(id),
-    onSuccess: (_res, id) => {
-      qc.invalidateQueries({ queryKey: ['explorations', id] })
+    mutationFn: (params: { id: number; userInstruction?: string }) =>
+      api.explorations.taskify(params.id, params.userInstruction),
+    onSuccess: (_res, params) => {
+      qc.invalidateQueries({ queryKey: ['explorations', params.id] })
     },
   })
 }

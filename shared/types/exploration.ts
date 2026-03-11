@@ -98,6 +98,7 @@ export interface ExplorationTaskifyJob {
   status: ExplorationTaskifyJobStatus
   result_json: string | null
   error_message: string | null
+  user_instruction: string | null
   requested_at: string
   started_at: string | null
   completed_at: string | null

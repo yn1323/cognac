@@ -178,8 +178,11 @@ export const api = {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
-    taskify: (id: number) =>
-      fetchJson<ExplorationTaskifyJob>(`/explorations/${id}/taskify`, { method: 'POST' }),
+    taskify: (id: number, userInstruction?: string) =>
+      fetchJson<ExplorationTaskifyJob>(`/explorations/${id}/taskify`, {
+        method: 'POST',
+        ...(userInstruction ? { body: JSON.stringify({ userInstruction }) } : {}),
+      }),
     delete: (id: number) => fetchJson<{ ok: boolean }>(`/explorations/${id}`, { method: 'DELETE' }),
     deleteImage: (id: number, imageId: number) =>
       fetchJson<{ ok: boolean }>(`/explorations/${id}/images/${imageId}`, { method: 'DELETE' }),

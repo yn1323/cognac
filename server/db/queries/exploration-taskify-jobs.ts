@@ -4,12 +4,13 @@ import type Database from 'better-sqlite3'
 export function createExplorationTaskifyJob(
   db: Database.Database,
   explorationSessionId: number,
+  userInstruction?: string,
 ): ExplorationTaskifyJob {
   const stmt = db.prepare(`
-    INSERT INTO exploration_taskify_jobs (exploration_session_id)
-    VALUES (?)
+    INSERT INTO exploration_taskify_jobs (exploration_session_id, user_instruction)
+    VALUES (?, ?)
   `)
-  const result = stmt.run(explorationSessionId)
+  const result = stmt.run(explorationSessionId, userInstruction ?? null)
   return getExplorationTaskifyJob(db, Number(result.lastInsertRowid)) as ExplorationTaskifyJob
 }
 

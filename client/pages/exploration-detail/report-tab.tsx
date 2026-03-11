@@ -13,7 +13,8 @@ import {
   Sparkles,
   TriangleAlert,
 } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { TaskifyModal } from '@/components/taskify-modal'
 import { useToast } from '@/components/toast'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -209,6 +210,7 @@ export function PCReportTab({ exploration }: { exploration: ExplorationSession }
     exploration.status === 'completed',
   )
   const taskifyMutation = useTaskifyExploration()
+  const [taskifyModalOpen, setTaskifyModalOpen] = useState(false)
 
   const hasReport = exploration.status === 'completed' && exploration.final_report_markdown
 
@@ -216,13 +218,6 @@ export function PCReportTab({ exploration }: { exploration: ExplorationSession }
     () => (reportData?.markdown ? parseReportMarkdown(reportData.markdown) : null),
     [reportData?.markdown],
   )
-
-  const handleTaskify = () => {
-    taskifyMutation.mutate(exploration.id, {
-      onSuccess: () => toast('タスク化を開始しました', 'success'),
-      onError: (err) => toast(err.message, 'error'),
-    })
-  }
 
   if (!hasReport) {
     return (
@@ -239,7 +234,7 @@ export function PCReportTab({ exploration }: { exploration: ExplorationSession }
         <Button
           variant="primary"
           size="sm"
-          onClick={handleTaskify}
+          onClick={() => setTaskifyModalOpen(true)}
           disabled={taskifyMutation.isPending}
         >
           <Sparkles className="mr-2 h-3.5 w-3.5" />
@@ -258,6 +253,24 @@ export function PCReportTab({ exploration }: { exploration: ExplorationSession }
       )}
 
       <EvidenceSection images={reportData?.evidenceImages ?? []} />
+
+      <TaskifyModal
+        open={taskifyModalOpen}
+        onClose={() => setTaskifyModalOpen(false)}
+        onSubmit={(userInstruction) => {
+          taskifyMutation.mutate(
+            { id: exploration.id, userInstruction: userInstruction || undefined },
+            {
+              onSuccess: () => {
+                setTaskifyModalOpen(false)
+                toast('タスク化を開始しました', 'success')
+              },
+              onError: (err) => toast(err.message, 'error'),
+            },
+          )
+        }}
+        isPending={taskifyMutation.isPending}
+      />
     </div>
   )
 }
@@ -271,6 +284,7 @@ export function SPReportTab({ exploration }: { exploration: ExplorationSession }
     exploration.status === 'completed',
   )
   const taskifyMutation = useTaskifyExploration()
+  const [taskifyModalOpen, setTaskifyModalOpen] = useState(false)
 
   const hasReport = exploration.status === 'completed' && exploration.final_report_markdown
 
@@ -278,13 +292,6 @@ export function SPReportTab({ exploration }: { exploration: ExplorationSession }
     () => (reportData?.markdown ? parseReportMarkdown(reportData.markdown) : null),
     [reportData?.markdown],
   )
-
-  const handleTaskify = () => {
-    taskifyMutation.mutate(exploration.id, {
-      onSuccess: () => toast('タスク化を開始しました', 'success'),
-      onError: (err) => toast(err.message, 'error'),
-    })
-  }
 
   if (!hasReport) {
     return (
@@ -300,7 +307,7 @@ export function SPReportTab({ exploration }: { exploration: ExplorationSession }
         <Button
           size="sm"
           className="bg-blue-600 text-white hover:bg-blue-700"
-          onClick={handleTaskify}
+          onClick={() => setTaskifyModalOpen(true)}
           disabled={taskifyMutation.isPending}
         >
           <Sparkles className="mr-1 h-3 w-3" />
@@ -319,6 +326,24 @@ export function SPReportTab({ exploration }: { exploration: ExplorationSession }
       )}
 
       <EvidenceSection images={reportData?.evidenceImages ?? []} size="sm" />
+
+      <TaskifyModal
+        open={taskifyModalOpen}
+        onClose={() => setTaskifyModalOpen(false)}
+        onSubmit={(userInstruction) => {
+          taskifyMutation.mutate(
+            { id: exploration.id, userInstruction: userInstruction || undefined },
+            {
+              onSuccess: () => {
+                setTaskifyModalOpen(false)
+                toast('タスク化を開始しました', 'success')
+              },
+              onError: (err) => toast(err.message, 'error'),
+            },
+          )
+        }}
+        isPending={taskifyMutation.isPending}
+      />
     </div>
   )
 }

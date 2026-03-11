@@ -50,8 +50,9 @@ function buildUserPrompt(
   reportArtifact: ExplorationArtifact | undefined,
   findings: ExplorationArtifact[],
   images: ExplorationImage[],
+  userInstruction?: string | null,
 ): string {
-  return `## 探索依頼
+  let prompt = `## 探索依頼
 **タイトル**: ${exploration.title}
 
 ## 最終レポート
@@ -64,6 +65,12 @@ ${findings.map((artifact) => `- ${artifact.title}: ${artifact.content_text ?? ''
 ${images.map((image) => `- id=${image.id} path=${image.file_path}`).join('\n') || 'なし'}
 
 基本は1タスクにまとめて。技術領域がまったく異なる場合のみ分割して。priority は 0〜3 で返して。`
+
+  if (userInstruction) {
+    prompt += `\n\n## ユーザーからの補足指示\n${userInstruction}`
+  }
+
+  return prompt
 }
 
 function getFallbackTaskifyResult(exploration: ExplorationSession): ExplorationTaskifyResult {
@@ -93,7 +100,13 @@ export async function executeExplorationPhaseTaskify(
 ): Promise<{ taskIds: number[]; resultJson: string }> {
   const provider = createProvider(config.provider)
   const systemPrompt = buildSystemPrompt()
-  const prompt = buildUserPrompt(exploration, reportArtifact, findings, images)
+  const prompt = buildUserPrompt(
+    exploration,
+    reportArtifact,
+    findings,
+    images,
+    job.user_instruction,
+  )
 
   const response = await provider.execPrint({ prompt, systemPrompt, signal }, config)
 

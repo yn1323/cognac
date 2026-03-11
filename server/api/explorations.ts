@@ -239,7 +239,7 @@ export function explorationsRouter(
     return c.json(updated)
   })
 
-  app.post('/:id/taskify', (c) => {
+  app.post('/:id/taskify', async (c) => {
     const id = Number(c.req.param('id'))
     const exploration = explorationQueries.getExploration(db, id)
     if (!exploration) return c.json({ error: '探索が見つからない' }, 404)
@@ -250,7 +250,20 @@ export function explorationsRouter(
       return c.json({ error: '進行中の taskify ジョブがある' }, 409)
     }
 
-    const job = explorationTaskifyJobQueries.createExplorationTaskifyJob(db, id)
+    // bodyからuserInstructionを取得（bodyが空でもOK）
+    const taskifyBodySchema = z.object({ userInstruction: z.string().optional() }).optional()
+    let userInstruction: string | undefined
+    try {
+      const body = await c.req.json()
+      const parsed = taskifyBodySchema.safeParse(body)
+      if (parsed.success) {
+        userInstruction = parsed.data?.userInstruction
+      }
+    } catch {
+      // bodyが空の場合は無視
+    }
+
+    const job = explorationTaskifyJobQueries.createExplorationTaskifyJob(db, id, userInstruction)
     return c.json(job, 202)
   })
 
