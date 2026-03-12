@@ -4,11 +4,10 @@ export function requestGracefulStop(child: ChildProcess): void {
   if (child.pid == null) return
 
   if (process.platform === 'win32') {
-    try {
-      child.kill('SIGTERM')
-    } catch {
-      // noop
-    }
+    spawnSync('taskkill', ['/pid', String(child.pid), '/t', '/f'], {
+      stdio: 'ignore',
+      windowsHide: true,
+    })
     return
   }
 
@@ -27,11 +26,10 @@ export function requestTerminate(child: ChildProcess): void {
   if (child.pid == null) return
 
   if (process.platform === 'win32') {
-    try {
-      child.kill('SIGTERM')
-    } catch {
-      // noop
-    }
+    spawnSync('taskkill', ['/pid', String(child.pid), '/t', '/f'], {
+      stdio: 'ignore',
+      windowsHide: true,
+    })
     return
   }
 
