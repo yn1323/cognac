@@ -9,6 +9,12 @@ export default defineConfig({
   },
   ci: {
     maxRetries: 5,
+    steps: [
+      { name: "Format", command: "pnpm format" },
+      { name: "Lint", command: "pnpm lint" },
+      { name: "Test", command: "pnpm test" },
+      { name: "Build", command: "pnpm build" },
+    ],
   },
   discussion: {
     maxRounds: 3,

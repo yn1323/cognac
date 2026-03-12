@@ -241,7 +241,7 @@ function PCSettings({
           <CardHeader className="p-6">
             <CardTitle className="text-base">CI設定</CardTitle>
             <p className="text-[13px] text-muted-foreground">
-              タスク完了時に実行するCIコマンドを設定します
+              タスク・探索完了時に実行するCIコマンドを設定します
             </p>
           </CardHeader>
           <CardContent className="flex flex-col gap-5 p-6 pt-0">
@@ -388,7 +388,7 @@ function SPSettings({
         <Card>
           <CardHeader className="p-4">
             <CardTitle className="text-[15px]">CI設定</CardTitle>
-            <p className="text-xs text-muted-foreground">タスク完了時に実行するCIコマンド</p>
+            <p className="text-xs text-muted-foreground">タスク・探索完了時に実行するCIコマンド</p>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 px-4 pb-4 pt-0">
             <CiCommandsEditor steps={ciSteps} onChange={setCiSteps} />

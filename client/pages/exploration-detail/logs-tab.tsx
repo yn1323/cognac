@@ -64,6 +64,14 @@ function formatExplorationEvent(event: ExplorationEvent): LogLine {
         detail: `Report created — ${event.issueCount} issues`,
         color: 'text-blue-600',
       }
+    case 'ci_start':
+      return { label: '[ci]', detail: `${event.step}: ${event.command}`, color: 'text-blue-600' }
+    case 'ci_result':
+      return {
+        label: '[ci]',
+        detail: `${event.step}: ${event.success ? 'OK' : 'FAIL'} (${Math.round(event.durationMs / 1000)}s)`,
+        color: event.success ? 'text-green-600' : 'text-red-600',
+      }
     case 'taskify_started':
       return { label: '[taskify]', detail: `Job #${event.jobId} started`, color: 'text-blue-600' }
     case 'taskify_completed':

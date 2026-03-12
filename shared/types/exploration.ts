@@ -7,7 +7,7 @@ export type ExplorationStatus =
   | 'paused'
   | 'stopped'
 
-export type ExplorationPhase = 'persona' | 'discussion' | 'explore' | 'report' | 'taskify'
+export type ExplorationPhase = 'persona' | 'discussion' | 'explore' | 'report' | 'ci' | 'taskify'
 
 export type ExplorationArtifactKind =
   | 'plan'
@@ -153,6 +153,8 @@ export type ExplorationEvent =
   | { type: 'playwright_log'; message: string }
   | { type: 'artifact_created'; kind: ExplorationArtifactKind; title?: string; path?: string }
   | { type: 'report_created'; issueCount: number }
+  | { type: 'ci_start'; step: string; command: string }
+  | { type: 'ci_result'; step: string; success: boolean; output: string; durationMs: number }
   | { type: 'taskify_started'; jobId: number }
   | { type: 'taskify_completed'; jobId: number; taskIds: number[] }
   | { type: 'taskify_failed'; jobId: number; message: string }
