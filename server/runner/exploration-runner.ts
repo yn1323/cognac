@@ -16,7 +16,6 @@ import * as explorationLogQueries from '../db/queries/exploration-logs.js'
 import * as explorationTaskifyJobQueries from '../db/queries/exploration-taskify-jobs.js'
 import * as explorationQueries from '../db/queries/explorations.js'
 import type { EventBus } from '../sse/event-bus.js'
-import { getCiSteps, runCi } from './ci-runner.js'
 import { classifyError } from './error-classifier.js'
 import type { ExecutionCoordinator } from './execution-coordinator.js'
 import { ExplorationPhaseError } from './exploration-output.js'
@@ -322,65 +321,6 @@ export class ExplorationRunner implements RunnerStatus {
       )
       this.emit(exploration.id, phaseEnd('report', reportResult.durationMs))
 
-      // --- CIフェーズ ---
-      let ciDurationMs = 0
-      const ciSteps = getCiSteps(this.db, this.config, this.cwd)
-      if (ciSteps.length > 0) {
-        currentPhase = 'ci'
-        this.emit(exploration.id, phaseStart('ci'))
-
-        try {
-          const ciResult = runCi(
-            ciSteps,
-            (event) => this.emit(exploration.id, event as ExplorationEvent),
-            this.cwd,
-          )
-          ciDurationMs = ciResult.results.reduce((sum, r) => sum + r.durationMs, 0)
-
-          this.emit(exploration.id, phaseEnd('ci', ciDurationMs))
-
-          if (!ciResult.success) {
-            const failedStep = ciResult.results.find((r) => !r.success)
-            const errorOutput = failedStep?.output ?? ''
-            const errorType = classifyError(errorOutput, 1)
-
-            // CIエラーログを記録
-            explorationLogQueries.createExplorationLog(this.db, {
-              exploration_session_id: exploration.id,
-              phase: 'ci',
-              error_type: errorType,
-              error_message: `CI失敗（${failedStep?.step.name}）: ${errorOutput.slice(0, 500)}`,
-            })
-
-            if (errorType === 'infra') {
-              // infraエラー → paused
-              explorationQueries.markExplorationPaused(
-                this.db,
-                exploration.id,
-                `CI infraエラー: ${errorOutput.slice(0, 200)}`,
-              )
-              this.emit(exploration.id, {
-                type: 'paused',
-                reason: `CI infraエラー: ${errorOutput.slice(0, 200)}`,
-                phase: 'ci',
-              })
-              return
-            }
-            // appエラー → completedに進む（警告付き）
-          }
-        } catch (ciError) {
-          // CI実行自体の例外 → ログに記録してcompletedへ進む
-          const ciMessage = ciError instanceof Error ? ciError.message : String(ciError)
-          explorationLogQueries.createExplorationLog(this.db, {
-            exploration_session_id: exploration.id,
-            phase: 'ci',
-            error_type: 'infra',
-            error_message: ciMessage,
-          })
-          this.emit(exploration.id, phaseEnd('ci', 0))
-        }
-      }
-
       explorationQueries.markExplorationCompleted(
         this.db,
         exploration.id,
@@ -396,8 +336,7 @@ export class ExplorationRunner implements RunnerStatus {
           personaResult.durationMs +
           discussionResult.totalDurationMs +
           exploreResult.durationMs +
-          reportResult.durationMs +
-          ciDurationMs,
+          reportResult.durationMs,
       })
     } catch (error) {
       if (error instanceof TaskCancelledError) {
