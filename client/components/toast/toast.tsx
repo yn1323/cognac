@@ -46,7 +46,7 @@ const ICON_MAP = {
 // variant別の自動消去時間（ミリ秒）
 const DURATION_MAP: Record<ToastVariant, number> = {
   default: 2000,
-  success: 2000,
+  success: 1000,
   error: 4000,
   warning: 4000,
 } as const
@@ -83,14 +83,14 @@ function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: (id: stri
   return (
     <div
       className={cn(
-        'flex w-100 items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-[0_4px_12px_-2px_#00000014]',
+        'flex w-100 items-center gap-3 rounded-lg border border-border bg-card px-4 py-1.5 shadow-[0_4px_12px_-2px_#00000014]',
         'max-md:w-auto max-md:left-4 max-md:right-4',
         t.dismissing
           ? 'animate-[toast-fade-out_200ms_ease-in_forwards]'
           : 'animate-[toast-slide-in_300ms_ease-out]',
       )}
     >
-      <div className="flex h-5 w-5 shrink-0 items-center justify-center">
+      <div className="flex h-4 w-4 shrink-0 items-center justify-center">
         <Icon className={cn('h-4 w-4', iconClass)} />
       </div>
       <p className="min-w-0 flex-1 text-sm text-foreground">{t.message}</p>
