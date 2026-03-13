@@ -4,21 +4,14 @@
 
 import type { ConsoleCommandListItem } from '@cognac/shared'
 import { useQueryClient } from '@tanstack/react-query'
-import {
-  ArrowLeft,
-  Loader2,
-  MoreVertical,
-  Pencil,
-  Play,
-  Plus,
-  Square,
-  Terminal,
-  Trash2,
-} from 'lucide-react'
+import { Loader2, MoreVertical, Pencil, Play, Plus, Square, Terminal, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppBottomNav } from '@/components/app-bottom-nav'
+import { Fab } from '@/components/fab'
 import { Sidebar } from '@/components/sidebar'
+import { SPDetailHeader } from '@/components/sp-detail-header'
+import { SPHeader } from '@/components/sp-header'
 import { useToast } from '@/components/toast'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -388,39 +381,39 @@ function SPConsolePage({
     const run = selectedCommand.latest_run
 
     return (
-      <div className="flex min-h-screen flex-col bg-[#fafafa]">
+      <div className="flex h-dvh flex-col bg-background">
         {/* SP Log Header */}
-        <div className="flex h-14 items-center justify-between border-b border-[#e5e5e5] px-4">
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={onBack} className="rounded p-1 hover:bg-[#f5f5f5]">
-              <ArrowLeft className="h-4 w-4 text-foreground" />
-            </button>
-            <span className="text-base font-semibold text-foreground">{selectedCommand.name}</span>
-            <StatusBadge status={selectedCommand.derived_status} />
-          </div>
-          {isActive && (
-            <button
-              type="button"
-              onClick={() => onStop(selectedCommand.id)}
-              disabled={isStopPending}
-              className="rounded p-1.5 hover:bg-[#f5f5f5] disabled:opacity-50"
-            >
-              <Square className="h-4 w-4 text-[#e7000b]" />
-            </button>
-          )}
-        </div>
+        <SPDetailHeader
+          title={selectedCommand.name}
+          onBack={onBack}
+          actions={
+            <div className="flex items-center gap-2">
+              <StatusBadge status={selectedCommand.derived_status} />
+              {isActive && (
+                <button
+                  type="button"
+                  onClick={() => onStop(selectedCommand.id)}
+                  disabled={isStopPending}
+                  className="rounded p-1.5 text-destructive hover:bg-muted disabled:opacity-50"
+                >
+                  <Square className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          }
+        />
 
         {/* SP Log Meta */}
         {run && (
-          <div className="flex h-9 items-center gap-3 bg-[#f5f5f5] px-4">
+          <div className="flex h-9 items-center gap-3 bg-muted px-4">
             <span className="text-[11px] font-medium text-muted-foreground">
               $ {selectedCommand.command}
             </span>
-            <div className="h-3.5 w-px bg-[#e5e5e5]" />
+            <div className="h-3.5 w-px bg-border" />
             <span className="text-[11px] text-muted-foreground">{formatTime(run.started_at)}</span>
             {run.pid && (
               <>
-                <div className="h-3.5 w-px bg-[#e5e5e5]" />
+                <div className="h-3.5 w-px bg-border" />
                 <span className="text-[11px] text-muted-foreground">PID: {run.pid}</span>
               </>
             )}
@@ -428,7 +421,7 @@ function SPConsolePage({
         )}
 
         {/* SP Log Body */}
-        <div className="flex-1 overflow-y-auto bg-[#fafafa] p-4 pb-20">
+        <div className="flex-1 overflow-y-auto p-4 pb-20">
           <pre className="whitespace-pre-wrap font-mono text-xs leading-[1.6] text-foreground">
             {logContent || (run ? '' : 'まだ実行されていません')}
           </pre>
@@ -441,14 +434,9 @@ function SPConsolePage({
 
   // リスト画面
   return (
-    <div className="flex min-h-screen flex-col bg-[#fafafa]">
+    <div className="flex h-dvh flex-col bg-background">
       {/* SP Header */}
-      <div className="flex h-14 items-center justify-between border-b border-[#e5e5e5] px-4">
-        <span className="text-lg font-semibold text-foreground">コンソール</span>
-        <Button variant="primary" size="icon" className="h-8 w-8" onClick={onOpenCreate}>
-          <Plus className="h-4 w-4" />
-        </Button>
-      </div>
+      <SPHeader />
 
       {/* SP Command List */}
       {isLoading ? (
@@ -474,6 +462,7 @@ function SPConsolePage({
         </div>
       )}
 
+      <Fab icon={Plus} onClick={onOpenCreate} />
       <AppBottomNav activeItem="コンソール" />
     </div>
   )

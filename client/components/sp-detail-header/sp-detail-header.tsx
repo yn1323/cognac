@@ -23,7 +23,7 @@ export function SPDetailHeader({
   className,
 }: SPDetailHeaderProps) {
   return (
-    <div className={cn('flex flex-col border-b bg-background', className)}>
+    <div className={cn('sticky top-0 z-10 flex flex-col border-b bg-background', className)}>
       {/* 上段: 戻る + タイトル */}
       <div className="flex items-center gap-3 px-4 py-3">
         {onBack && (

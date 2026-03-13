@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppBottomNav } from '@/components/app-bottom-nav'
 import { Sidebar } from '@/components/sidebar'
+import { SPHeader } from '@/components/sp-header'
 import { useToast } from '@/components/toast'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -300,14 +301,10 @@ function SPSettings({
   onSave,
   isSaving,
 }: SettingsPanelProps) {
-  const _navigate = useNavigate()
-
   return (
     <div className="flex h-dvh flex-col bg-background">
       {/* ヘッダー */}
-      <header className="border-b bg-background px-4 py-3">
-        <h1 className="text-lg font-semibold text-foreground">設定</h1>
-      </header>
+      <SPHeader />
 
       <main className="flex flex-1 flex-col gap-5 overflow-y-auto p-4 pb-20">
         {/* 基本設定セクション */}

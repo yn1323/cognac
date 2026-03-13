@@ -357,14 +357,14 @@ function SPGitPage({
   useScrollLock(!!selectedFilePath)
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#fafafa]">
+    <div className="flex h-dvh flex-col bg-background">
       {/* SPヘッダー */}
       <SPHeader />
 
       {/* ボディ */}
-      <main className="flex flex-col gap-4 p-4 pb-20">
+      <main className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 pb-20">
         {/* タイトル行 */}
-        <div className="flex items-center justify-between">
+        <div className="flex shrink-0 items-center justify-between">
           <h1 className="text-xl font-semibold text-foreground">Git</h1>
           <div className="flex items-center gap-2">
             <Button
@@ -406,7 +406,7 @@ function SPGitPage({
         </div>
 
         {/* ブランチ行 */}
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <div className="relative flex-1">
             <BranchSelector
               branches={branches}
@@ -420,17 +420,19 @@ function SPGitPage({
         </div>
 
         {/* 変更ファイルカード */}
-        <ChangedFilesPanel
-          isCommitting={isCommitting}
-          files={files}
-          selectedFilePath={selectedFilePath}
-          onFileSelect={onFileSelect}
-          onStartCommit={onStartCommit}
-          onExplainWorking={onExplainWorking}
-          isExplainWorkingLoading={isExplainWorkingLoading}
-          onToggleDiscardDialog={onToggleDiscardDialog}
-          commitDisabled={pushPhase !== 'idle'}
-        />
+        <div className="shrink-0">
+          <ChangedFilesPanel
+            isCommitting={isCommitting}
+            files={files}
+            selectedFilePath={selectedFilePath}
+            onFileSelect={onFileSelect}
+            onStartCommit={onStartCommit}
+            onExplainWorking={onExplainWorking}
+            isExplainWorkingLoading={isExplainWorkingLoading}
+            onToggleDiscardDialog={onToggleDiscardDialog}
+            commitDisabled={pushPhase !== 'idle'}
+          />
+        </div>
 
         {/* SP版: ファイルdiffモーダル */}
         {selectedFilePath && (
@@ -452,7 +454,7 @@ function SPGitPage({
         )}
 
         {/* コミット履歴 */}
-        <div className="flex flex-col rounded-lg border border-[#e5e5e5] bg-[#fafafa]">
+        <div className="flex shrink-0 flex-col rounded-lg border border-[#e5e5e5] bg-[#fafafa]">
           <div className="flex items-center justify-between border-b border-[#e5e5e5] px-4 py-3">
             <span className="text-sm font-semibold text-foreground">コミット履歴</span>
           </div>
