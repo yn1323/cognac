@@ -1,6 +1,6 @@
 {
   "name": "@yn1323/cognac",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "AI駆動のタスク自動実行ツール",
   "type": "module",
   "bin": {
