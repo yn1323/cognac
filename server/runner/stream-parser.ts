@@ -11,11 +11,7 @@ import type { AgentStreamEvent } from '@cognac/shared'
 // ── Claude CLIが吐くstream-jsonの型 ──
 
 /** ストリームの各行（生JSON） */
-export type StreamChunk =
-  | AssistantChunk
-  | ResultChunk
-  | SystemChunk
-  | Record<string, unknown>
+export type StreamChunk = AssistantChunk | ResultChunk | SystemChunk | Record<string, unknown>
 
 interface AssistantChunk {
   type: 'assistant'
@@ -79,9 +75,6 @@ export class StreamParser {
   /** result チャンクの中身を保持 */
   private resultData: ParsedResult | null = null
 
-  /** 直前のツール名（tool_result を結合するため） */
-  private lastToolName: string | null = null
-
   /**
    * 1行分のJSONをパースして AgentStreamEvent を返す。
    * 該当なし or 不明タイプなら null。
@@ -141,7 +134,6 @@ export class StreamParser {
   private blockToEvent(block: ContentBlock): AgentStreamEvent | null {
     switch (block.type) {
       case 'text':
-        this.lastToolName = null
         return {
           type: 'agent_output',
           content: (block as TextBlock).text,
@@ -159,14 +151,15 @@ export class StreamParser {
         return null
 
       default:
-        console.warn(`[StreamParser] 不明なブロックタイプ: ${(block as Record<string, unknown>).type}`)
+        console.warn(
+          `[StreamParser] 不明なブロックタイプ: ${(block as Record<string, unknown>).type}`,
+        )
         return null
     }
   }
 
   private handleToolUse(block: ToolUseBlock): AgentStreamEvent | null {
     const { name, input } = block
-    this.lastToolName = name
 
     // ファイル変更系
     if (name === 'Write' || name === 'Edit') {

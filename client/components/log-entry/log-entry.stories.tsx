@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react'
 import type { BaseLog } from '@cognac/shared'
+import type { Meta, StoryObj } from '@storybook/react'
 import { LogEntry } from './log-entry'
 
 const meta = {
@@ -103,11 +103,54 @@ export const InvalidTimeFallback: Story = {
 export const MultipleEntries: StoryObj = {
   render: () => (
     <div className="max-w-2xl space-y-0">
-      <LogEntry log={{ ...baseLog, phase: 'persona', output_summary: '3名のペルソナを選出', duration_ms: 1500 }} />
-      <LogEntry log={{ ...baseLog, id: 2, phase: 'discussion', output_summary: 'ラウンド2: 10メッセージ', duration_ms: 5200, token_input: 3000, token_output: 800 }} />
-      <LogEntry log={{ ...baseLog, id: 3, phase: 'plan', output_summary: '推定複雑度: medium', duration_ms: 3100 }} />
-      <LogEntry log={{ ...baseLog, id: 4, phase: 'execute', output_summary: 'コード実行完了', duration_ms: 12000 }} />
-      <LogEntry log={{ ...baseLog, id: 5, phase: 'ci', output_summary: 'CI 4/4 ステップ成功', duration_ms: 8000, token_input: null, token_output: null }} />
+      <LogEntry
+        log={{
+          ...baseLog,
+          phase: 'persona',
+          output_summary: '3名のペルソナを選出',
+          duration_ms: 1500,
+        }}
+      />
+      <LogEntry
+        log={{
+          ...baseLog,
+          id: 2,
+          phase: 'discussion',
+          output_summary: 'ラウンド2: 10メッセージ',
+          duration_ms: 5200,
+          token_input: 3000,
+          token_output: 800,
+        }}
+      />
+      <LogEntry
+        log={{
+          ...baseLog,
+          id: 3,
+          phase: 'plan',
+          output_summary: '推定複雑度: medium',
+          duration_ms: 3100,
+        }}
+      />
+      <LogEntry
+        log={{
+          ...baseLog,
+          id: 4,
+          phase: 'execute',
+          output_summary: 'コード実行完了',
+          duration_ms: 12000,
+        }}
+      />
+      <LogEntry
+        log={{
+          ...baseLog,
+          id: 5,
+          phase: 'ci',
+          output_summary: 'CI 4/4 ステップ成功',
+          duration_ms: 8000,
+          token_input: null,
+          token_output: null,
+        }}
+      />
     </div>
   ),
 }

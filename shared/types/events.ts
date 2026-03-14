@@ -36,12 +36,21 @@ export type TaskEvent =
   | { type: 'plan_created'; planMarkdown: string; estimatedComplexity: string }
   // Phase 3: コード実行
   | { type: 'claude_output'; content: string }
-  | Extract<AgentStreamEvent, { type: 'file_changed' | 'command_executed' | 'tool_invoked' | 'debug_log' | 'error' }>
+  | Extract<
+      AgentStreamEvent,
+      { type: 'file_changed' | 'command_executed' | 'tool_invoked' | 'debug_log' | 'error' }
+    >
   // CI
   | { type: 'ci_start'; step: string; command: string }
   | { type: 'ci_result'; step: string; success: boolean; output: string; durationMs: number }
   // エラー・リトライ
-  | { type: 'retry'; errorType: 'app' | 'process'; count: number; maxRetries: number; reason: string }
+  | {
+      type: 'retry'
+      errorType: 'app' | 'process'
+      count: number
+      maxRetries: number
+      reason: string
+    }
   | { type: 'paused'; reason: string; phase: Phase }
   // Git
   | { type: 'git_operation'; operation: 'checkout' | 'commit' | 'merge' | 'push'; detail: string }

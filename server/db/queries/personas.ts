@@ -1,7 +1,7 @@
 // ペルソナのCRUD操作
 
-import type Database from 'better-sqlite3'
 import type { Persona } from '@cognac/shared'
+import type Database from 'better-sqlite3'
 
 /**
  * ペルソナを一括作成する（トランザクション）
@@ -9,13 +9,13 @@ import type { Persona } from '@cognac/shared'
 export function createPersonas(
   db: Database.Database,
   taskId: number,
-  personas: { persona_id: string; name: string; focus: string; tone: string }[],
+  personas: { persona_id: string; name: string; focus: string; tone: string; emoji: string }[],
 ): Persona[] {
   if (personas.length === 0) return []
 
   const stmt = db.prepare(`
-    INSERT INTO personas (task_id, persona_id, name, focus, tone)
-    VALUES (@task_id, @persona_id, @name, @focus, @tone)
+    INSERT INTO personas (task_id, persona_id, name, focus, tone, emoji)
+    VALUES (@task_id, @persona_id, @name, @focus, @tone, @emoji)
   `)
 
   const results: Persona[] = []
@@ -39,23 +39,15 @@ export function createPersonas(
 /**
  * タスクIDでペルソナ一覧を取得する
  */
-export function getPersonasByTaskId(
-  db: Database.Database,
-  taskId: number,
-): Persona[] {
-  const stmt = db.prepare(
-    `SELECT * FROM personas WHERE task_id = ? ORDER BY id ASC`,
-  )
+export function getPersonasByTaskId(db: Database.Database, taskId: number): Persona[] {
+  const stmt = db.prepare(`SELECT * FROM personas WHERE task_id = ? ORDER BY id ASC`)
   return stmt.all(taskId) as Persona[]
 }
 
 /**
  * タスクIDでペルソナを全削除する（リトライ時のクリーンアップ用）
  */
-export function deletePersonasByTaskId(
-  db: Database.Database,
-  taskId: number,
-): number {
+export function deletePersonasByTaskId(db: Database.Database, taskId: number): number {
   const stmt = db.prepare('DELETE FROM personas WHERE task_id = ?')
   return stmt.run(taskId).changes
 }

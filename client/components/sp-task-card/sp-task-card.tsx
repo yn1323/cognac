@@ -23,29 +23,19 @@ export function SPTaskCard({
 }: SPTaskCardProps) {
   return (
     <div
-      className={cn(
-        'flex flex-col gap-2 rounded-lg border bg-card p-3.5',
-        borderColor,
-        className,
-      )}
+      className={cn('flex flex-col gap-2 rounded-lg border bg-card p-3.5', borderColor, className)}
     >
       {/* ヘッダー: タイトル + バッジ */}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-semibold leading-[1.4] text-foreground">
-          {title}
-        </span>
+        <span className="text-sm font-semibold leading-[1.4] text-foreground">{title}</span>
         {badge}
       </div>
 
       {/* サブテキスト */}
-      <span className="text-xs leading-[1.4] text-muted-foreground">
-        {subtitle}
-      </span>
+      <span className="text-xs leading-[1.4] text-muted-foreground">{subtitle}</span>
 
       {/* アクション（任意） */}
-      {actions && (
-        <div className="flex items-center justify-end">{actions}</div>
-      )}
+      {actions && <div className="flex items-center justify-end">{actions}</div>}
     </div>
   )
 }

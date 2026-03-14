@@ -1,6 +1,5 @@
-import { spawn, type ChildProcess } from 'node:child_process'
+import { type ChildProcess, spawn } from 'node:child_process'
 import type { WriteStream } from 'node:fs'
-import type Database from 'better-sqlite3'
 import type {
   ConsoleCommand,
   ConsoleCommandListItem,
@@ -11,10 +10,17 @@ import type {
   CreateConsoleCommandInput,
   UpdateConsoleCommandInput,
 } from '@cognac/shared'
+import type Database from 'better-sqlite3'
 import * as consoleCommandQueries from '../db/queries/console-commands.js'
 import * as consoleRunQueries from '../db/queries/console-runs.js'
 import { EventBus } from '../sse/event-bus.js'
-import { buildRunLogPath, createRunLogStream, readRunLog, deleteRunLog, ensureConsoleLogRoot } from './log-store.js'
+import {
+  buildRunLogPath,
+  createRunLogStream,
+  deleteRunLog,
+  ensureConsoleLogRoot,
+  readRunLog,
+} from './log-store.js'
 import { requestForceKill, requestGracefulStop, requestTerminate } from './process-tree.js'
 
 const GRACEFUL_STOP_TIMEOUT_MS = 5_000
@@ -80,10 +86,7 @@ export class ConsoleManager {
     return consoleCommandQueries.createCommand(this.db, normalizeCommandInput(input))
   }
 
-  updateCommand(
-    commandId: number,
-    patch: UpdateConsoleCommandInput,
-  ): ConsoleCommand | undefined {
+  updateCommand(commandId: number, patch: UpdateConsoleCommandInput): ConsoleCommand | undefined {
     const normalizedPatch = normalizeCommandPatch(patch)
     return consoleCommandQueries.updateCommand(this.db, commandId, normalizedPatch)
   }
@@ -101,9 +104,11 @@ export class ConsoleManager {
       }
 
       const runs = consoleRunQueries.listRunsByCommandId(this.db, commandId)
-      await Promise.all(runs.map(async (run) => {
-        await deleteRunLog(run.log_file_path)
-      }))
+      await Promise.all(
+        runs.map(async (run) => {
+          await deleteRunLog(run.log_file_path)
+        }),
+      )
 
       return consoleCommandQueries.deleteCommand(this.db, commandId)
     })
@@ -216,9 +221,11 @@ export class ConsoleManager {
 
   async shutdown(): Promise<void> {
     const commandIds = [...this.activeProcesses.keys()]
-    await Promise.all(commandIds.map(async (commandId) => {
-      await this.ensureStopped(commandId, 'shutdown')
-    }))
+    await Promise.all(
+      commandIds.map(async (commandId) => {
+        await this.ensureStopped(commandId, 'shutdown')
+      }),
+    )
   }
 
   private registerActiveProcess(

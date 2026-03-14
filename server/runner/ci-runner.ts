@@ -3,8 +3,8 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { CiStep, CognacConfig, TaskEvent } from '@cognac/shared'
 import { hashFiles } from '@cognac/shared/utils/hash'
-import * as ciCacheQueries from '../db/queries/ci-cache.js'
 import type Database from 'better-sqlite3'
+import * as ciCacheQueries from '../db/queries/ci-cache.js'
 
 // CI関連の設定ファイル（ハッシュ変更でキャッシュ無効化）
 const CI_CONFIG_FILES = [

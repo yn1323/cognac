@@ -1,8 +1,8 @@
-import { mkdirSync, createWriteStream } from 'node:fs'
-import { readFile, rm } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import type { WriteStream } from 'node:fs'
+import { createWriteStream, mkdirSync } from 'node:fs'
+import { readFile, rm } from 'node:fs/promises'
+import { join, resolve } from 'node:path'
 
 export function ensureConsoleLogRoot(cwd: string): string {
   const root = resolve(cwd, '.cognac', 'logs', 'console')
@@ -20,9 +20,7 @@ export function createRunLogStream(logFilePath: string): WriteStream {
   return createWriteStream(logFilePath, { flags: 'a' })
 }
 
-export async function readRunLog(
-  logFilePath: string,
-): Promise<{ content: string; size: number }> {
+export async function readRunLog(logFilePath: string): Promise<{ content: string; size: number }> {
   const content = await readFile(logFilePath, 'utf8')
   return { content, size: Buffer.byteLength(content, 'utf8') }
 }

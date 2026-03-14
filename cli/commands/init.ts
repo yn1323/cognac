@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 // 設定ファイルのテンプレート
@@ -30,11 +30,7 @@ export default defineConfig({
 const GITIGNORE_ENTRY = '.cognac/'
 
 // 作成するディレクトリ一覧
-const DIRECTORIES = [
-  '.cognac/images',
-  '.cognac/logs',
-  '.cognac/tmp/context',
-] as const
+const DIRECTORIES = ['.cognac/images', '.cognac/logs', '.cognac/tmp/context'] as const
 
 /**
  * initコマンドの実行関数

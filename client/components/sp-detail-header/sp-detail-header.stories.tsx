@@ -1,9 +1,9 @@
 // SPDetailHeader のストーリー
 
 import type { Meta, StoryObj } from '@storybook/react'
-import { SPDetailHeader } from './sp-detail-header'
-import { SPTab } from '../sp-tabs'
 import { fn } from '@storybook/test'
+import { SPTab } from '../sp-tabs'
+import { SPDetailHeader } from './sp-detail-header'
 
 const meta: Meta<typeof SPDetailHeader> = {
   title: 'Components/SP/SPDetailHeader',

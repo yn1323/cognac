@@ -9,9 +9,20 @@ import { spawn } from 'node:child_process'
 import { createInterface } from 'node:readline'
 import type { CognacConfig } from '@cognac/shared'
 import { CodexStreamParser } from './codex-stream-parser.js'
-import type { CliProviderInterface, CliResponse, StreamExecOptions, PrintExecOptions } from './types.js'
+import {
+  cleanupTmpFiles,
+  setupAbortHandler,
+  setupProcess,
+  TONE_RULES,
+  writeTmpFiles,
+} from './process-utils.js'
+import type {
+  CliProviderInterface,
+  CliResponse,
+  PrintExecOptions,
+  StreamExecOptions,
+} from './types.js'
 import { TaskCancelledError } from './types.js'
-import { TONE_RULES, writeTmpFiles, cleanupTmpFiles, setupAbortHandler, setupProcess } from './process-utils.js'
 
 /**
  * Codex はシステムプロンプト用の専用フラグがないため、
@@ -63,14 +74,24 @@ export class CodexProvider implements CliProviderInterface {
         console.log(`[CodexProvider] プロセス起動 PID=${child.pid}`)
 
         const { resetTimeout, clearTimer, getStderr } = setupProcess(
-          child, tmpFiles.promptFile, config.claude.stdoutTimeoutMs, reject,
+          child,
+          tmpFiles.promptFile,
+          config.claude.stdoutTimeoutMs,
+          reject,
         )
 
-        const onAbort = setupAbortHandler(child, options.signal, clearTimer, reject, 'CodexProvider')
+        const onAbort = setupAbortHandler(
+          child,
+          options.signal,
+          clearTimer,
+          reject,
+          'CodexProvider',
+        )
 
         const parser = new CodexStreamParser()
         let lineCount = 0
 
+        // biome-ignore lint/style/noNonNullAssertion: stdio: ['pipe','pipe','pipe'] で必ず存在する
         const rl = createInterface({ input: child.stdout! })
 
         rl.on('line', (line: string) => {
@@ -95,13 +116,15 @@ export class CodexProvider implements CliProviderInterface {
           const durationMs = Date.now() - startTime
           const stderr = getStderr()
 
-          console.log(`[CodexProvider] プロセス終了 code=${code} lines=${lineCount} result=${result.length}文字 duration=${durationMs}ms`)
+          console.log(
+            `[CodexProvider] プロセス終了 code=${code} lines=${lineCount} result=${result.length}文字 duration=${durationMs}ms`,
+          )
           if (stderr) console.log(`[CodexProvider] stderr:\n${stderr}`)
 
           if (code !== 0 && !result) {
-            reject(new Error(
-              `Codex プロセスが exit code ${code} で終了した: ${stderr.slice(0, 500)}`,
-            ))
+            reject(
+              new Error(`Codex プロセスが exit code ${code} で終了した: ${stderr.slice(0, 500)}`),
+            )
             return
           }
 
@@ -139,10 +162,19 @@ export class CodexProvider implements CliProviderInterface {
         console.log(`[CodexProvider] プロセス起動 PID=${child.pid}`)
 
         const { resetTimeout, clearTimer, getStderr } = setupProcess(
-          child, tmpFiles.promptFile, config.claude.stdoutTimeoutMs, reject,
+          child,
+          tmpFiles.promptFile,
+          config.claude.stdoutTimeoutMs,
+          reject,
         )
 
-        const onAbort = setupAbortHandler(child, options.signal, clearTimer, reject, 'CodexProvider')
+        const onAbort = setupAbortHandler(
+          child,
+          options.signal,
+          clearTimer,
+          reject,
+          'CodexProvider',
+        )
 
         // stdout をバッファとして蓄積
         const chunks: Buffer[] = []
@@ -160,13 +192,15 @@ export class CodexProvider implements CliProviderInterface {
           const durationMs = Date.now() - startTime
           const stderr = getStderr()
 
-          console.log(`[CodexProvider] プロセス終了 code=${code} stdout=${totalBytes}bytes duration=${durationMs}ms`)
+          console.log(
+            `[CodexProvider] プロセス終了 code=${code} stdout=${totalBytes}bytes duration=${durationMs}ms`,
+          )
           if (stderr) console.log(`[CodexProvider] stderr:\n${stderr}`)
 
           if (code !== 0 && !stdout.trim()) {
-            reject(new Error(
-              `Codex プロセスが exit code ${code} で終了した: ${stderr.slice(0, 500)}`,
-            ))
+            reject(
+              new Error(`Codex プロセスが exit code ${code} で終了した: ${stderr.slice(0, 500)}`),
+            )
             return
           }
 

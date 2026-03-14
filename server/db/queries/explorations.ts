@@ -1,9 +1,5 @@
+import type { ExplorationListItem, ExplorationSession, ExplorationStatus } from '@cognac/shared'
 import type Database from 'better-sqlite3'
-import type {
-  ExplorationListItem,
-  ExplorationSession,
-  ExplorationStatus,
-} from '@cognac/shared'
 
 type UpdateExplorationData = Partial<{
   title: string
@@ -27,13 +23,10 @@ export function createExploration(
   `)
 
   const result = stmt.run(data)
-  return getExploration(db, Number(result.lastInsertRowid))!
+  return getExploration(db, Number(result.lastInsertRowid)) as ExplorationSession
 }
 
-export function getExploration(
-  db: Database.Database,
-  id: number,
-): ExplorationSession | undefined {
+export function getExploration(db: Database.Database, id: number): ExplorationSession | undefined {
   const stmt = db.prepare(`SELECT * FROM exploration_sessions WHERE id = ?`)
   return stmt.get(id) as ExplorationSession | undefined
 }
@@ -54,10 +47,14 @@ export function listExplorations(db: Database.Database): ExplorationListItem[] {
     ORDER BY s.created_at DESC, s.id DESC
   `)
 
-  return (stmt.all() as Array<ExplorationSession & {
-    hasFinalReport: number
-    latestTaskifyStatus: ExplorationListItem['latestTaskifyStatus']
-  }>).map((row) => ({
+  return (
+    stmt.all() as Array<
+      ExplorationSession & {
+        hasFinalReport: number
+        latestTaskifyStatus: ExplorationListItem['latestTaskifyStatus']
+      }
+    >
+  ).map((row) => ({
     ...row,
     hasFinalReport: Boolean(row.hasFinalReport),
   }))
@@ -92,9 +89,7 @@ export function updateExploration(
   return getExploration(db, id)
 }
 
-export function getNextDraftExploration(
-  db: Database.Database,
-): ExplorationSession | undefined {
+export function getNextDraftExploration(db: Database.Database): ExplorationSession | undefined {
   const stmt = db.prepare(`
     SELECT *
     FROM exploration_sessions

@@ -42,9 +42,7 @@ export function MetricCard({
       onClick={onClick}
       className={cn(
         'w-full rounded-lg text-left transition-all',
-        active
-          ? cn(activeBg, activeBorder, 'border-2 shadow-sm')
-          : 'border bg-card shadow-sm',
+        active ? cn(activeBg, activeBorder, 'border-2 shadow-sm') : 'border bg-card shadow-sm',
         onClick && 'cursor-pointer hover:opacity-80',
         className,
       )}
@@ -68,12 +66,7 @@ export function MetricCard({
             {value}
           </span>
         </div>
-        <Icon
-          className={cn(
-            'h-5 w-5',
-            active ? activeIconColor : 'text-muted-foreground',
-          )}
-        />
+        <Icon className={cn('h-5 w-5', active ? activeIconColor : 'text-muted-foreground')} />
       </div>
     </button>
   )

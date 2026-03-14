@@ -19,7 +19,9 @@ export function LogEntry({ log }: { log: BaseLog }) {
           <span className="text-foreground">
             {log.output_summary ?? '完了'}
             {log.duration_ms != null && (
-              <span className="ml-2 text-muted-foreground">({formatNumber(log.duration_ms)}ms)</span>
+              <span className="ml-2 text-muted-foreground">
+                ({formatNumber(log.duration_ms)}ms)
+              </span>
             )}
             {log.token_input != null && (
               <span className="ml-2 text-muted-foreground">

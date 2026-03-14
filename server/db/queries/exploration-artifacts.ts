@@ -1,9 +1,5 @@
+import type { ExplorationArtifact, ExplorationArtifactKind, ExplorationImage } from '@cognac/shared'
 import type Database from 'better-sqlite3'
-import type {
-  ExplorationArtifact,
-  ExplorationArtifactKind,
-  ExplorationImage,
-} from '@cognac/shared'
 
 export function createExplorationArtifact(
   db: Database.Database,

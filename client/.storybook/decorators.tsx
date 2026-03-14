@@ -14,7 +14,10 @@ interface MockFetchRequest {
 interface MockRoute {
   path: string | RegExp
   method?: string
-  resolver: Response | Promise<Response> | ((request: MockFetchRequest) => Response | Promise<Response>)
+  resolver:
+    | Response
+    | Promise<Response>
+    | ((request: MockFetchRequest) => Response | Promise<Response>)
 }
 
 const defaultFetch = globalThis.fetch.bind(globalThis)
@@ -68,11 +71,7 @@ function matchRoute(route: MockRoute, request: MockFetchRequest) {
   return route.path.test(request.url)
 }
 
-function FetchMockScope({
-  children,
-}: {
-  children: ReactNode
-}) {
+function FetchMockScope({ children }: { children: ReactNode }) {
   useEffect(() => {
     return () => {
       globalThis.fetch = defaultFetch
@@ -88,7 +87,8 @@ export function withMockFetch(mockRoutes: MockRouteMap | MockRoute[] = {}): Deco
   return (Story) => {
     globalThis.fetch = async (input, init) => {
       const request: MockFetchRequest = {
-        url: typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url,
+        url:
+          typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url,
         method: (init?.method ?? (input instanceof Request ? input.method : 'GET')).toUpperCase(),
         input,
         init,
@@ -97,9 +97,10 @@ export function withMockFetch(mockRoutes: MockRouteMap | MockRoute[] = {}): Deco
       for (const route of routes) {
         if (!matchRoute(route, request)) continue
 
-        const resolved = typeof route.resolver === 'function'
-          ? await route.resolver(request)
-          : await route.resolver
+        const resolved =
+          typeof route.resolver === 'function'
+            ? await route.resolver(request)
+            : await route.resolver
 
         return resolved
       }

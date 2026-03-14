@@ -1,8 +1,8 @@
 // 探索CRUDのReact Queryフック
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
 import type { CreateExplorationInput } from '@cognac/shared'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { api } from '@/lib/api'
 
 export function useExplorations() {
   return useQuery({
@@ -86,9 +86,10 @@ export function useUpdateExploration() {
 export function useTaskifyExploration() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => api.explorations.taskify(id),
-    onSuccess: (_res, id) => {
-      qc.invalidateQueries({ queryKey: ['explorations', id] })
+    mutationFn: (params: { id: number; userInstruction?: string }) =>
+      api.explorations.taskify(params.id, params.userInstruction),
+    onSuccess: (_res, params) => {
+      qc.invalidateQueries({ queryKey: ['explorations', params.id] })
     },
   })
 }

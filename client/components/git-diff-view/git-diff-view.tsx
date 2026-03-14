@@ -1,7 +1,7 @@
 // Git diff 表示コンポーネント
 // unified diff をパースして行ごとに表示する
 
-import { X, Loader2, FileText } from 'lucide-react'
+import { FileText, Loader2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type DiffLineType = 'hunk' | 'addition' | 'deletion' | 'context'
@@ -59,12 +59,9 @@ function parseDiffLines(diff: string): ParsedLine[] {
 
 const LINE_STYLES: Record<DiffLineType, string> = {
   hunk: 'bg-diff-neutral-hunk-bg text-diff-neutral-hunk-text',
-  addition:
-    'bg-diff-added-bg text-diff-added-text hover:bg-diff-added-hover-bg',
-  deletion:
-    'bg-diff-removed-bg text-diff-removed-text hover:bg-diff-removed-hover-bg',
-  context:
-    'bg-diff-neutral-bg text-diff-neutral-text hover:bg-diff-neutral-hover-bg',
+  addition: 'bg-diff-added-bg text-diff-added-text hover:bg-diff-added-hover-bg',
+  deletion: 'bg-diff-removed-bg text-diff-removed-text hover:bg-diff-removed-hover-bg',
+  context: 'bg-diff-neutral-bg text-diff-neutral-text hover:bg-diff-neutral-hover-bg',
 }
 
 const BORDER_STYLES: Record<Exclude<DiffLineType, 'hunk'>, string> = {
@@ -165,11 +162,7 @@ export function GitDiffView({
           <table className="w-full border-collapse font-mono text-[13px] leading-6">
             <tbody>
               {lines.map((line, i) => (
-                <tr
-                  key={i}
-                  data-line-type={line.type}
-                  className={cn(LINE_STYLES[line.type])}
-                >
+                <tr key={i} data-line-type={line.type} className={cn(LINE_STYLES[line.type])}>
                   {line.type === 'hunk' ? (
                     <td colSpan={3} className="px-3 py-1.5 text-xs">
                       {line.content}

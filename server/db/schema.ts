@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS personas (
   name TEXT NOT NULL,
   focus TEXT NOT NULL,
   tone TEXT NOT NULL,
+  emoji TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
 )`
@@ -145,6 +146,7 @@ CREATE TABLE IF NOT EXISTS exploration_personas (
   name TEXT NOT NULL,
   focus TEXT NOT NULL,
   tone TEXT NOT NULL,
+  emoji TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (exploration_session_id) REFERENCES exploration_sessions(id) ON DELETE CASCADE
 )`
@@ -205,6 +207,7 @@ CREATE TABLE IF NOT EXISTS exploration_taskify_jobs (
     CHECK (status IN ('pending', 'running', 'completed', 'failed')),
   result_json TEXT,
   error_message TEXT,
+  user_instruction TEXT,
   requested_at TEXT NOT NULL DEFAULT (datetime('now')),
   started_at TEXT,
   completed_at TEXT,

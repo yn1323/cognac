@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @layer base {
   *,
@@ -231,7 +231,7 @@
 }
 
 @theme inline {
-  --font-sans: 'Noto Sans Variable', 'Noto Sans JP Variable', sans-serif;
+  --font-sans: "Noto Sans Variable", "Noto Sans JP Variable", sans-serif;
 
   /* 蝓ｺ譛ｬ繧ｫ繝ｩ繝ｼ */
   --color-background: var(--background);
@@ -265,9 +265,9 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   /* 繝悶Λ繝ｳ繝峨き繝ｩ繝ｼ */
-  --color-cognac: #B56B1F;
-  --color-cognac-light: #D4943A;
-  --color-cognac-dark: #1A2744;
+  --color-cognac: #b56b1f;
+  --color-cognac-light: #d4943a;
+  --color-cognac-dark: #1a2744;
 
   /* 繧ｹ繝・・繧ｿ繧ｹ */
   --color-status-executing: var(--status-executing);
@@ -322,7 +322,7 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: 'Noto Sans Variable', 'Noto Sans JP Variable', sans-serif;
+  font-family: "Noto Sans Variable", "Noto Sans JP Variable", sans-serif;
 }
 
 /* Toast 繧｢繝九Γ繝ｼ繧ｷ繝ｧ繝ｳ */

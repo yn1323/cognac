@@ -1,8 +1,8 @@
 // システム系のquery/mutationフック
 
+import type { SettingsPayload } from '@cognac/shared'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import type { SettingsPayload } from '@cognac/shared'
 
 export function useDeleteDatabase() {
   const qc = useQueryClient()

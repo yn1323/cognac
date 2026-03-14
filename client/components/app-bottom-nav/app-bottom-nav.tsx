@@ -1,8 +1,8 @@
 // SP共通ボトムナビゲーション
 // 全ページで同じ3アイテム（タスク・Git・設定）を表示する
 
+import { Compass, GitBranch, ListChecks, Settings, Terminal } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { ListChecks, Compass, GitBranch, Terminal, Settings } from 'lucide-react'
 import { SPBottomNav, SPNavItem } from '@/components/sp-bottom-nav'
 import { NAV_MAP } from '@/lib/constants'
 
@@ -31,11 +31,7 @@ export function AppBottomNav({ activeItem }: AppBottomNavProps) {
           icon={item.icon}
           label={item.label}
           active={item.label === activeItem}
-          onClick={
-            item.label === activeItem
-              ? undefined
-              : () => navigate(NAV_MAP[item.label])
-          }
+          onClick={item.label === activeItem ? undefined : () => navigate(NAV_MAP[item.label])}
         />
       ))}
     </SPBottomNav>

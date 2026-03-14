@@ -1,27 +1,25 @@
 // Phase 2-C: プラン策定
 // ディスカッション結果から実装計画とPhase 3用の実行プロンプトを生成する
 
-import type Database from 'better-sqlite3'
 import type {
-  Task,
   CognacConfig,
-  TaskEvent,
-  Persona,
   Discussion,
+  Persona,
   Plan,
   PlanResult,
+  Task,
+  TaskEvent,
 } from '@cognac/shared'
-import { createProvider } from './providers/index.js'
-import { extractJson } from './json-parser.js'
-import { getRepoStructure } from './context-cache.js'
+import type Database from 'better-sqlite3'
+import * as logQueries from '../db/queries/execution-logs.js'
 import * as planQueries from '../db/queries/plans.js'
 import * as imageQueries from '../db/queries/task-images.js'
-import * as logQueries from '../db/queries/execution-logs.js'
-import { groupDiscussionsByRound } from './discussion-utils.js'
+import { getRepoStructure } from './context-cache.js'
+import { formatDiscussions } from './discussion-utils.js'
+import { extractJson } from './json-parser.js'
+import { createProvider } from './providers/index.js'
 
 // プラン策定のシステムプロンプト
-// 一時コメントアウト: git commit指示を除去（不具合調査のノイズ除去）
-// 元の指示: 「実装が完了したらgit commitしといて」「コミットメッセージの形式は自由でOK」
 function buildSystemPrompt(): string {
   return `あなたはテックリードだ。ディスカッション結果を基に、実装計画と実行プロンプトを作成してくれ。
 
@@ -64,25 +62,6 @@ Phase 3でClaude Codeに渡す完全な指示を生成して。以下を含め�
 \`\`\`
 
 出力がJSONフォーマットに準拠しているか確認してから返して。`
-}
-
-// ディスカッションログをMarkdownに変換
-function formatDiscussions(discussions: Discussion[]): string {
-  if (discussions.length === 0) {
-    return '（ディスカッションなし）'
-  }
-
-  const grouped = groupDiscussionsByRound(discussions)
-
-  let markdown = ''
-  for (const [round, entries] of grouped) {
-    markdown += `### ラウンド ${round}\n\n`
-    for (const d of entries) {
-      markdown += `**${d.persona_name}**: ${d.content}\n`
-    }
-    markdown += '\n'
-  }
-  return markdown
 }
 
 // ユーザープロンプトを構築
@@ -141,15 +120,21 @@ export async function executePhasePlan(
   const userPrompt = buildUserPrompt(task, discussions, repoStructure, imagePaths)
 
   let planResult: PlanResult | null = null
-  let response = { result: '', sessionId: '', usage: { inputTokens: 0, outputTokens: 0 }, durationMs: 0 }
+  let response = {
+    result: '',
+    sessionId: '',
+    usage: { inputTokens: 0, outputTokens: 0 },
+    durationMs: 0,
+  }
 
   // 最大2回トライ（初回 + 1回リトライ）
   const provider = createProvider(config.provider)
   for (let attempt = 0; attempt < 2; attempt++) {
     // リトライ時はJSON出力を強制する追加指示を付与
-    const promptForAttempt = attempt === 0
-      ? userPrompt
-      : `${userPrompt}\n\n【重要】前回の応答がJSONフォーマットではありませんでした。会話的な応答は不要です。必ず\`\`\`json\`\`\`ブロックで囲んだJSONだけを返してください。`
+    const promptForAttempt =
+      attempt === 0
+        ? userPrompt
+        : `${userPrompt}\n\n【重要】前回の応答がJSONフォーマットではありませんでした。会話的な応答は不要です。必ず\`\`\`json\`\`\`ブロックで囲んだJSONだけを返してください。`
 
     response = await provider.execPrint(
       {
@@ -199,14 +184,10 @@ ${response.result}
   }
 
   // ペルソナ情報をJSON化
-  const personasUsed = JSON.stringify(
-    personas.map((p) => ({ id: p.persona_id, name: p.name })),
-  )
+  const personasUsed = JSON.stringify(personas.map((p) => ({ id: p.persona_id, name: p.name })))
 
   // ディスカッションの最終ラウンド番号
-  const totalRounds = discussions.length > 0
-    ? Math.max(...discussions.map((d) => d.round))
-    : 0
+  const totalRounds = discussions.length > 0 ? Math.max(...discussions.map((d) => d.round)) : 0
 
   // DB保存
   const plan = planQueries.createPlan(db, {

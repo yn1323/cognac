@@ -10,12 +10,7 @@ interface MobileModalFooterProps {
 
 export function MobileModalFooter({ children, className }: MobileModalFooterProps) {
   return (
-    <div
-      className={cn(
-        'mt-auto flex gap-3 pt-4 pb-[env(safe-area-inset-bottom)]',
-        className,
-      )}
-    >
+    <div className={cn('mt-auto flex gap-3 pt-4 pb-[env(safe-area-inset-bottom)]', className)}>
       {children}
     </div>
   )

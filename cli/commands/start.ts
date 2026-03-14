@@ -2,24 +2,29 @@
 // サーバー起動 + タスクランナー開始
 // 設定ファイルをjitiで読み込んで、DB初期化 → EventBus → TaskRunner → Honoアプリの順で起動
 
-import { resolve, dirname } from 'node:path'
 import { existsSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createJiti } from 'jiti'
-import { serve } from '@hono/node-server'
-import { defineConfig, type CognacConfig, type ExplorationEvent, type TaskEvent } from '@cognac/shared'
 import {
-  cleanupExpiredConsoleRuns,
   ConsoleManager,
+  cleanupExpiredConsoleRuns,
   createApp,
-  ExecutionCoordinator,
   EventBus,
+  ExecutionCoordinator,
   ExplorationRunner,
   openDb,
   runConsoleStartupRecovery,
   startConsoleCleanupScheduler,
   TaskRunner,
 } from '@cognac/server'
+import {
+  type CognacConfig,
+  defineConfig,
+  type ExplorationEvent,
+  type TaskEvent,
+} from '@cognac/shared'
+import { serve } from '@hono/node-server'
+import { createJiti } from 'jiti'
 
 /**
  * 設定ファイルを読み込む

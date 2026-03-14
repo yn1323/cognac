@@ -1,19 +1,19 @@
-import type Database from 'better-sqlite3'
 import type { ExplorationPersona } from '@cognac/shared'
+import type Database from 'better-sqlite3'
 
 export function createExplorationPersonas(
   db: Database.Database,
   explorationSessionId: number,
-  personas: { persona_id: string; name: string; focus: string; tone: string }[],
+  personas: { persona_id: string; name: string; focus: string; tone: string; emoji: string }[],
 ): ExplorationPersona[] {
   if (personas.length === 0) return []
 
   const stmt = db.prepare(`
     INSERT INTO exploration_personas (
-      exploration_session_id, persona_id, name, focus, tone
+      exploration_session_id, persona_id, name, focus, tone, emoji
     )
     VALUES (
-      @exploration_session_id, @persona_id, @name, @focus, @tone
+      @exploration_session_id, @persona_id, @name, @focus, @tone, @emoji
     )
   `)
 

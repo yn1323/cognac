@@ -1,6 +1,6 @@
 // Git操作のReact Queryフック
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 
 // --- Query hooks（データ取得） ---
@@ -41,7 +41,7 @@ export function useGitRemoteStatus() {
 export function useGitFileDiff(path: string | null) {
   return useQuery({
     queryKey: ['git', 'file-diff', path],
-    queryFn: () => api.git.fileDiff(path!),
+    queryFn: () => api.git.fileDiff(path as string),
     enabled: path !== null,
   })
 }
@@ -142,8 +142,7 @@ export function useExplainWorking() {
 export function useMerge() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ from, into }: { from: string; into: string }) =>
-      api.git.merge(from, into),
+    mutationFn: ({ from, into }: { from: string; into: string }) => api.git.merge(from, into),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['git', 'status'] })
       qc.invalidateQueries({ queryKey: ['git', 'log'] })

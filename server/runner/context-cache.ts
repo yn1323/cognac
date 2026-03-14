@@ -3,13 +3,7 @@
 
 import { execSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  unlinkSync,
-  writeFileSync,
-} from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import type Database from 'better-sqlite3'
 import * as taskQueries from '../db/queries/tasks.js'
@@ -117,8 +111,7 @@ export function getTaskHistory(db: Database.Database): string {
 
   // Markdownテーブル生成
   const rows = completedTasks.map(
-    (t) =>
-      `| ${t.id} | ${t.title} | ${t.completed_at?.split('T')[0] ?? '-'} |`,
+    (t) => `| ${t.id} | ${t.title} | ${t.completed_at?.split('T')[0] ?? '-'} |`,
   )
   const markdown = [
     '## 完了済みタスク履歴',
@@ -144,12 +137,7 @@ export function invalidateContextCache(): void {
   repoStructureMemCache = null
   taskHistoryMemCache = null
 
-  const files = [
-    REPO_STRUCTURE_FILE,
-    REPO_HASH_FILE,
-    TASK_HISTORY_FILE,
-    TASK_HISTORY_HASH_FILE,
-  ]
+  const files = [REPO_STRUCTURE_FILE, REPO_HASH_FILE, TASK_HISTORY_FILE, TASK_HISTORY_HASH_FILE]
   for (const file of files) {
     try {
       unlinkSync(file)

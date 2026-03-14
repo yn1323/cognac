@@ -2,9 +2,9 @@
 // GET /settings — 現在のCI設定を返す
 // PUT /settings — CI設定を更新（メモリ + cognac.config.ts）
 
+import type { CognacConfig, ConfigPatch, SettingsPayload } from '@cognac/shared'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import type { CognacConfig, ConfigPatch, SettingsPayload } from '@cognac/shared'
 import { writeConfigFile } from '../runner/config-writer.js'
 
 // 設定APIから現在値を読む代表ソース
@@ -34,7 +34,11 @@ const updateSettingsSchema = z.object({
   }),
 })
 
-export function settingsRouter(configSource: ConfigSource, accessors: ConfigAccessor[], cwd: string) {
+export function settingsRouter(
+  configSource: ConfigSource,
+  accessors: ConfigAccessor[],
+  cwd: string,
+) {
   const app = new Hono()
 
   // 現在の設定を返す

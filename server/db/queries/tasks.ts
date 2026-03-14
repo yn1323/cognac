@@ -1,8 +1,8 @@
 // タスクのCRUD操作
 // 基本的なやつ全部入り
 
-import type Database from 'better-sqlite3'
 import type { Task } from '@cognac/shared'
+import type Database from 'better-sqlite3'
 
 /**
  * タスクを作成する
@@ -24,7 +24,7 @@ export function createTask(
   })
 
   // 作ったばかりのタスクを返す
-  return getTask(db, Number(result.lastInsertRowid))!
+  return getTask(db, Number(result.lastInsertRowid)) as Task
 }
 
 /**

@@ -2,8 +2,8 @@
 // run の stdout/stderr をリアルタイムで蓄積し、ログ文字列として返す
 // 高頻度 run_output 対策として requestAnimationFrame でバッチ反映
 
-import { useEffect, useRef, useState, useCallback } from 'react'
 import type { ConsoleStreamEvent } from '@cognac/shared'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 const EVENT_TYPES: ConsoleStreamEvent['type'][] = [
   'run_started',

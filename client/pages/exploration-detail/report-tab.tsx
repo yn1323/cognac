@@ -2,26 +2,33 @@
 // 5ブロック固定表示 + 証跡画像 + AIでタスク化ボタン
 // Pencilデザイン準拠
 
-import { useMemo } from 'react'
+import type { ExplorationArtifact, ExplorationSession } from '@cognac/shared'
 import type { LucideIcon } from 'lucide-react'
 import {
-  Lightbulb,
-  Search,
-  MessageSquare,
-  TriangleAlert,
   CircleArrowRight,
   ImageIcon,
+  Lightbulb,
+  MessageSquare,
+  Search,
   Sparkles,
+  TriangleAlert,
 } from 'lucide-react'
-import type { ExplorationSession, ExplorationArtifact } from '@cognac/shared'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { useMemo, useState } from 'react'
+import { TaskifyModal } from '@/components/taskify-modal'
 import { useToast } from '@/components/toast'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { useExplorationReport, useTaskifyExploration } from '@/hooks/use-explorations'
 
 // --- レポートmarkdownパーサー ---
 
-const REPORT_HEADINGS = ['結論', '調査内容', 'ディスカッション要約', '課題', '次アクション'] as const
+const REPORT_HEADINGS = [
+  '結論',
+  '調査内容',
+  'ディスカッション要約',
+  '課題',
+  '次アクション',
+] as const
 
 interface ParsedReport {
   conclusion: string
@@ -58,9 +65,8 @@ function parseReportMarkdown(markdown: string): ParsedReport {
     // 次の ## heading までの範囲を取得
     const rest = markdown.slice(start)
     const nextHeading = rest.match(/^##\s+/m)
-    const content = nextHeading && nextHeading.index !== undefined
-      ? rest.slice(0, nextHeading.index)
-      : rest
+    const content =
+      nextHeading && nextHeading.index !== undefined ? rest.slice(0, nextHeading.index) : rest
 
     result[keys[i]] = content.trim()
   }
@@ -93,9 +99,7 @@ function ReportBlock({
         <span className={`${titleSize} font-semibold text-foreground`}>{title}</span>
       </div>
       <div className="h-px bg-border" />
-      <p className="whitespace-pre-wrap text-[13px] leading-normal text-foreground">
-        {content}
-      </p>
+      <p className="whitespace-pre-wrap text-[13px] leading-normal text-foreground">{content}</p>
     </Card>
   )
 }
@@ -119,7 +123,9 @@ function EvidenceSection({
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
           <ImageIcon className="h-4 w-4 text-blue-600" />
-          <span className={`${size === 'sm' ? 'text-[13px]' : 'text-sm'} font-semibold text-foreground`}>
+          <span
+            className={`${size === 'sm' ? 'text-[13px]' : 'text-sm'} font-semibold text-foreground`}
+          >
             証跡画像
           </span>
         </div>
@@ -156,11 +162,41 @@ function EvidenceSection({
 function ReportBlocks({ report, size = 'md' }: { report: ParsedReport; size?: 'md' | 'sm' }) {
   return (
     <>
-      <ReportBlock icon={Lightbulb} iconColor="text-blue-600" title="結論" content={report.conclusion} size={size} />
-      <ReportBlock icon={Search} iconColor="text-blue-600" title="調査内容" content={report.investigation} size={size} />
-      <ReportBlock icon={MessageSquare} iconColor="text-blue-600" title="ディスカッション要約" content={report.discussionSummary} size={size} />
-      <ReportBlock icon={TriangleAlert} iconColor="text-amber-500" title="課題" content={report.issues} size={size} />
-      <ReportBlock icon={CircleArrowRight} iconColor="text-green-600" title="次アクション" content={report.nextActions} size={size} />
+      <ReportBlock
+        icon={Lightbulb}
+        iconColor="text-blue-600"
+        title="結論"
+        content={report.conclusion}
+        size={size}
+      />
+      <ReportBlock
+        icon={Search}
+        iconColor="text-blue-600"
+        title="調査内容"
+        content={report.investigation}
+        size={size}
+      />
+      <ReportBlock
+        icon={MessageSquare}
+        iconColor="text-blue-600"
+        title="ディスカッション要約"
+        content={report.discussionSummary}
+        size={size}
+      />
+      <ReportBlock
+        icon={TriangleAlert}
+        iconColor="text-amber-500"
+        title="課題"
+        content={report.issues}
+        size={size}
+      />
+      <ReportBlock
+        icon={CircleArrowRight}
+        iconColor="text-green-600"
+        title="次アクション"
+        content={report.nextActions}
+        size={size}
+      />
     </>
   )
 }
@@ -169,22 +205,19 @@ function ReportBlocks({ report, size = 'md' }: { report: ParsedReport; size?: 'm
 
 export function PCReportTab({ exploration }: { exploration: ExplorationSession }) {
   const { toast } = useToast()
-  const { data: reportData } = useExplorationReport(exploration.id, exploration.status === 'completed')
+  const { data: reportData } = useExplorationReport(
+    exploration.id,
+    exploration.status === 'completed',
+  )
   const taskifyMutation = useTaskifyExploration()
+  const [taskifyModalOpen, setTaskifyModalOpen] = useState(false)
 
   const hasReport = exploration.status === 'completed' && exploration.final_report_markdown
 
   const parsed = useMemo(
-    () => reportData?.markdown ? parseReportMarkdown(reportData.markdown) : null,
+    () => (reportData?.markdown ? parseReportMarkdown(reportData.markdown) : null),
     [reportData?.markdown],
   )
-
-  const handleTaskify = () => {
-    taskifyMutation.mutate(exploration.id, {
-      onSuccess: () => toast('タスク化を開始しました', 'success'),
-      onError: (err) => toast(err.message, 'error'),
-    })
-  }
 
   if (!hasReport) {
     return (
@@ -201,7 +234,7 @@ export function PCReportTab({ exploration }: { exploration: ExplorationSession }
         <Button
           variant="primary"
           size="sm"
-          onClick={handleTaskify}
+          onClick={() => setTaskifyModalOpen(true)}
           disabled={taskifyMutation.isPending}
         >
           <Sparkles className="mr-2 h-3.5 w-3.5" />
@@ -220,6 +253,24 @@ export function PCReportTab({ exploration }: { exploration: ExplorationSession }
       )}
 
       <EvidenceSection images={reportData?.evidenceImages ?? []} />
+
+      <TaskifyModal
+        open={taskifyModalOpen}
+        onClose={() => setTaskifyModalOpen(false)}
+        onSubmit={(userInstruction) => {
+          taskifyMutation.mutate(
+            { id: exploration.id, userInstruction: userInstruction || undefined },
+            {
+              onSuccess: () => {
+                setTaskifyModalOpen(false)
+                toast('タスク化を開始しました', 'success')
+              },
+              onError: (err) => toast(err.message, 'error'),
+            },
+          )
+        }}
+        isPending={taskifyMutation.isPending}
+      />
     </div>
   )
 }
@@ -228,22 +279,19 @@ export function PCReportTab({ exploration }: { exploration: ExplorationSession }
 
 export function SPReportTab({ exploration }: { exploration: ExplorationSession }) {
   const { toast } = useToast()
-  const { data: reportData } = useExplorationReport(exploration.id, exploration.status === 'completed')
+  const { data: reportData } = useExplorationReport(
+    exploration.id,
+    exploration.status === 'completed',
+  )
   const taskifyMutation = useTaskifyExploration()
+  const [taskifyModalOpen, setTaskifyModalOpen] = useState(false)
 
   const hasReport = exploration.status === 'completed' && exploration.final_report_markdown
 
   const parsed = useMemo(
-    () => reportData?.markdown ? parseReportMarkdown(reportData.markdown) : null,
+    () => (reportData?.markdown ? parseReportMarkdown(reportData.markdown) : null),
     [reportData?.markdown],
   )
-
-  const handleTaskify = () => {
-    taskifyMutation.mutate(exploration.id, {
-      onSuccess: () => toast('タスク化を開始しました', 'success'),
-      onError: (err) => toast(err.message, 'error'),
-    })
-  }
 
   if (!hasReport) {
     return (
@@ -259,7 +307,7 @@ export function SPReportTab({ exploration }: { exploration: ExplorationSession }
         <Button
           size="sm"
           className="bg-blue-600 text-white hover:bg-blue-700"
-          onClick={handleTaskify}
+          onClick={() => setTaskifyModalOpen(true)}
           disabled={taskifyMutation.isPending}
         >
           <Sparkles className="mr-1 h-3 w-3" />
@@ -278,6 +326,24 @@ export function SPReportTab({ exploration }: { exploration: ExplorationSession }
       )}
 
       <EvidenceSection images={reportData?.evidenceImages ?? []} size="sm" />
+
+      <TaskifyModal
+        open={taskifyModalOpen}
+        onClose={() => setTaskifyModalOpen(false)}
+        onSubmit={(userInstruction) => {
+          taskifyMutation.mutate(
+            { id: exploration.id, userInstruction: userInstruction || undefined },
+            {
+              onSuccess: () => {
+                setTaskifyModalOpen(false)
+                toast('タスク化を開始しました', 'success')
+              },
+              onError: (err) => toast(err.message, 'error'),
+            },
+          )
+        }}
+        isPending={taskifyMutation.isPending}
+      />
     </div>
   )
 }

@@ -1,32 +1,32 @@
 // Git GUI APIルーター
 // /api/git/* エンドポイントを提供
 
-import { Hono } from 'hono'
 import type { CognacConfig } from '@cognac/shared'
-import { createProvider } from '../runner/providers/index.js'
+import { Hono } from 'hono'
 import { z } from 'zod'
 import {
-  getStatus,
-  getCurrentBranch,
-  getLog,
-  getBranches,
-  getRemoteStatus,
   checkout,
+  commitWithMessage,
   createBranch,
   deleteBranch,
   discardAll,
-  push,
   fetchAll,
-  merge,
-  validateBranchName,
-  stageAll,
-  getStagedDiff,
-  getRecentLogOneline,
-  commitWithMessage,
+  getBranches,
   getCommitDiff,
-  getWorkingDiff,
+  getCurrentBranch,
   getFileDiff,
+  getLog,
+  getRecentLogOneline,
+  getRemoteStatus,
+  getStagedDiff,
+  getStatus,
+  getWorkingDiff,
+  merge,
+  push,
+  stageAll,
+  validateBranchName,
 } from '../runner/git-api-ops.js'
+import { createProvider } from '../runner/providers/index.js'
 
 // バリデーションスキーマ
 const checkoutSchema = z.object({
@@ -135,7 +135,10 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
     // 未コミット変更チェック
     const files = getStatus(cwd)
     if (files.length > 0) {
-      return c.json({ error: '未コミットの変更があります。先にコミットまたは破棄してください。' }, 400)
+      return c.json(
+        { error: '未コミットの変更があります。先にコミットまたは破棄してください。' },
+        400,
+      )
     }
 
     try {
@@ -155,7 +158,13 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
     }
 
     if (!validateBranchName(parsed.data.name)) {
-      return c.json({ error: '不正なブランチ名です。英数字、スラッシュ、ドット、ハイフン、アンダースコアのみ使用できます。' }, 400)
+      return c.json(
+        {
+          error:
+            '不正なブランチ名です。英数字、スラッシュ、ドット、ハイフン、アンダースコアのみ使用できます。',
+        },
+        400,
+      )
     }
 
     try {
@@ -192,7 +201,10 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err)
       if (errMsg.includes('rejected') || errMsg.includes('non-fast-forward')) {
-        return c.json({ error: 'pushが拒否されました。fetchしてマージしてからpushしてください。' }, 409)
+        return c.json(
+          { error: 'pushが拒否されました。fetchしてマージしてからpushしてください。' },
+          409,
+        )
       }
       return c.json({ error: 'pushに失敗しました', detail: String(err) }, 500)
     }
@@ -229,7 +241,10 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
     // 未コミット変更チェック
     const files = getStatus(cwd)
     if (files.length > 0) {
-      return c.json({ error: '未コミットの変更があります。先にコミットまたは破棄してください。' }, 400)
+      return c.json(
+        { error: '未コミットの変更があります。先にコミットまたは破棄してください。' },
+        400,
+      )
     }
 
     try {
@@ -307,7 +322,11 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
 }
 
 // CLI を使ってコミットの変更内容を解説する
-async function generateCommitExplanation(diff: string, hash: string, getConfig: () => CognacConfig): Promise<string> {
+async function generateCommitExplanation(
+  diff: string,
+  hash: string,
+  getConfig: () => CognacConfig,
+): Promise<string> {
   const prompt = `以下のgitコミット (${hash}) の変更内容を日本語で簡潔に解説してください。
 
 ## 変更内容 (git show):
@@ -333,11 +352,16 @@ ${diff.substring(0, 8000)}
 }
 
 // CLI を使ってコミットメッセージを生成する
-async function generateCommitMessage(diff: string, recentLog: string, getConfig: () => CognacConfig): Promise<string> {
+async function generateCommitMessage(
+  diff: string,
+  recentLog: string,
+  getConfig: () => CognacConfig,
+): Promise<string> {
   const config = getConfig()
-  const langRule = config.git.commitMessageLanguage === 'ja'
-    ? '- 日本語でコミットメッセージを書いてください'
-    : '- Write the commit message in English'
+  const langRule =
+    config.git.commitMessageLanguage === 'ja'
+      ? '- 日本語でコミットメッセージを書いてください'
+      : '- Write the commit message in English'
 
   const prompt = `以下のgit diffに対して適切なコミットメッセージを生成してください。
 

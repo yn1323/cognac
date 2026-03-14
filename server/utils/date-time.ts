@@ -36,4 +36,3 @@ export function toUtcIso8601(value: string | Date): string {
   }
   return parsed.toISOString()
 }
-

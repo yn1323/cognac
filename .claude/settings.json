@@ -80,8 +80,6 @@
       "Read(//Users/natani/work/snaperro/server/**)"
     ],
     "deny": [],
-    "additionalDirectories": [
-      "/tmp"
-    ]
+    "additionalDirectories": ["/tmp"]
   }
 }

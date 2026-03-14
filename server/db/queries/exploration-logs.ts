@@ -1,9 +1,18 @@
-import type Database from 'better-sqlite3'
 import type { ExplorationLog } from '@cognac/shared'
+import type Database from 'better-sqlite3'
 import { toUtcIso8601 } from '../../utils/date-time.js'
-import { insertLog, selectLogsByParentId, selectLogById, deleteLogsByParentId, type LogTableConfig } from './log-helpers.js'
+import {
+  deleteLogsByParentId,
+  insertLog,
+  type LogTableConfig,
+  selectLogById,
+  selectLogsByParentId,
+} from './log-helpers.js'
 
-const CONFIG: LogTableConfig = { tableName: 'exploration_logs', parentColumn: 'exploration_session_id' }
+const CONFIG: LogTableConfig = {
+  tableName: 'exploration_logs',
+  parentColumn: 'exploration_session_id',
+}
 
 function normalizeLog(log: ExplorationLog): ExplorationLog {
   return {
@@ -28,7 +37,12 @@ export function createExplorationLog(
     error_message?: string
   },
 ): ExplorationLog {
-  return insertLog<ExplorationLog>(db, CONFIG, { parentId: data.exploration_session_id, ...data }, normalizeLog)
+  return insertLog<ExplorationLog>(
+    db,
+    CONFIG,
+    { parentId: data.exploration_session_id, ...data },
+    normalizeLog,
+  )
 }
 
 export function getExplorationLogsBySessionId(
@@ -38,10 +52,7 @@ export function getExplorationLogsBySessionId(
   return selectLogsByParentId<ExplorationLog>(db, CONFIG, explorationSessionId, normalizeLog)
 }
 
-export function getExplorationLog(
-  db: Database.Database,
-  id: number,
-): ExplorationLog | undefined {
+export function getExplorationLog(db: Database.Database, id: number): ExplorationLog | undefined {
   return selectLogById<ExplorationLog>(db, CONFIG, id, normalizeLog)
 }
 

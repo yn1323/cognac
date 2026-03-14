@@ -1,5 +1,4 @@
 import { basename, extname } from 'node:path'
-import type Database from 'better-sqlite3'
 import type {
   AgentStreamEvent,
   CognacConfig,
@@ -9,7 +8,7 @@ import type {
   ExplorationPersona,
   ExplorationSession,
 } from '@cognac/shared'
-import { createProvider } from './providers/index.js'
+import type Database from 'better-sqlite3'
 import * as artifactQueries from '../db/queries/exploration-artifacts.js'
 import * as imageQueries from '../db/queries/exploration-images.js'
 import * as logQueries from '../db/queries/exploration-logs.js'
@@ -20,11 +19,9 @@ import {
   getExplorationPlaywrightDir,
   isExistingCognacFile,
 } from './exploration-paths.js'
+import { createProvider } from './providers/index.js'
 
-function buildSystemPrompt(
-  explorationId: number,
-  cwd: string,
-): string {
+function buildSystemPrompt(explorationId: number, cwd: string): string {
   const evidenceDir = getExplorationPlaywrightDir(explorationId, cwd)
   return `あなたは探索担当エンジニアだ。以下の制約で調査して。
 
@@ -41,6 +38,7 @@ function buildSystemPrompt(
 - テキスト調査で十分なら使わない
 - 証跡を残す場合は ${evidenceDir} に保存する
 - 最後は必ず JSON だけを返す
+- severity は必ず "low" | "medium" | "high" のいずれかを指定する
 
 \`\`\`json
 {
@@ -155,13 +153,19 @@ export async function executeExplorationPhaseExplore(
     if (!existing) continue
 
     if (isImagePath(existing.relativePath)) {
-      if (!imageQueries.findExplorationImageBySessionAndPath(db, exploration.id, existing.relativePath)) {
+      if (
+        !imageQueries.findExplorationImageBySessionAndPath(
+          db,
+          exploration.id,
+          existing.relativePath,
+        )
+      ) {
         evidenceImages.push({
           exploration_session_id: exploration.id,
           source_type: 'playwright',
           file_path: existing.relativePath,
           original_name: basename(existing.relativePath) ?? null,
-          mime_type: 'image/' + extname(existing.relativePath).replace('.', '').replace('jpg', 'jpeg'),
+          mime_type: `image/${extname(existing.relativePath).replace('.', '').replace('jpg', 'jpeg')}`,
         })
       }
       continue

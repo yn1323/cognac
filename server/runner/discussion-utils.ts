@@ -21,6 +21,10 @@ export function groupDiscussionsByRound<T extends { round: number }>(
 export function formatDiscussions(
   discussions: { round: number; persona_name: string; content: string }[],
 ): string {
+  if (discussions.length === 0) {
+    return '（ディスカッションなし）'
+  }
+
   const grouped = groupDiscussionsByRound(discussions)
   let markdown = ''
   for (const [round, entries] of grouped) {

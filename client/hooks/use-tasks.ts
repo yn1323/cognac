@@ -1,8 +1,8 @@
 // タスクCRUDのReact Queryフック
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
 import type { CreateTaskInput, UpdateTaskInput } from '@cognac/shared'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { api } from '@/lib/api'
 
 export function useTasks() {
   return useQuery({
@@ -43,8 +43,7 @@ export function useDeleteTask() {
 export function useUpdateTask() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateTaskInput }) =>
-      api.tasks.update(id, data),
+    mutationFn: ({ id, data }: { id: number; data: UpdateTaskInput }) => api.tasks.update(id, data),
     onSuccess: (_res, vars) => {
       qc.invalidateQueries({ queryKey: ['tasks'], exact: true })
       qc.invalidateQueries({ queryKey: ['tasks', vars.id] })

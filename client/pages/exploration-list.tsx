@@ -2,31 +2,29 @@
 // PC: サイドバー + メインコンテンツ / SP: ヘッダー + ボディ + ボトムナビ
 // タスク一覧（dashboard.tsx）と同じパターン
 
+import type { ExplorationListItem, ExplorationStatus } from '@cognac/shared'
+import { CheckCircle, Clock, Loader, Plus, XCircle } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import {
-  Loader,
-  CheckCircle,
-  Clock,
-  XCircle,
-  Plus,
-} from 'lucide-react'
-import type { ExplorationStatus, ExplorationListItem } from '@cognac/shared'
-import { Sidebar } from '@/components/sidebar'
-import { PageHeader } from '@/components/page-header'
-import { MetricCard } from '@/components/metric-card'
-import { SPHeader } from '@/components/sp-header'
 import { AppBottomNav } from '@/components/app-bottom-nav'
+import { ExplorationModal } from '@/components/exploration-modal'
 import { Fab } from '@/components/fab'
+import { MetricCard } from '@/components/metric-card'
+import { PageHeader } from '@/components/page-header'
+import { Sidebar } from '@/components/sidebar'
+import { SPHeader } from '@/components/sp-header'
 import { SPMetric } from '@/components/sp-metric'
 import { SPTaskCard } from '@/components/sp-task-card'
+import { useToast } from '@/components/toast'
 import { Button } from '@/components/ui/button'
-import { ExplorationModal } from '@/components/exploration-modal'
-import { formatRelativeTime } from '@/lib/format'
-import { EXPLORATION_STATUS_CONFIG } from '@/lib/exploration-status-config'
+import { useExplorations, useRetryExploration } from '@/hooks/use-explorations'
 import { NAV_MAP } from '@/lib/constants'
+import {
+  EXPLORATION_RETRYABLE_STATUSES,
+  EXPLORATION_STATUS_CONFIG,
+} from '@/lib/exploration-status-config'
+import { formatRelativeTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { useExplorations } from '@/hooks/use-explorations'
 
 // --- フィルター定義 ---
 
@@ -44,25 +42,71 @@ const INITIAL_FILTERS = new Set<FilterCategory>(['pending', 'executing', 'comple
 const FILTER_STYLES: Record<
   FilterCategory,
   {
-    pc: { activeBg: string; activeBorder: string; activeLabelColor: string; activeValueColor: string; activeIconColor: string }
+    pc: {
+      activeBg: string
+      activeBorder: string
+      activeLabelColor: string
+      activeValueColor: string
+      activeIconColor: string
+    }
     sp: { activeTextColor: string; activeBgColor: string; activeBorderColor: string }
   }
 > = {
   executing: {
-    pc: { activeBg: 'bg-[#eff6ff]', activeBorder: 'border-[#2563eb]', activeLabelColor: 'text-[#2563eb]', activeValueColor: 'text-[#2563eb]', activeIconColor: 'text-[#2563eb]' },
-    sp: { activeTextColor: 'text-[#2563eb]', activeBgColor: 'bg-[#eff6ff]', activeBorderColor: 'border-[#2563eb]' },
+    pc: {
+      activeBg: 'bg-[#eff6ff]',
+      activeBorder: 'border-[#2563eb]',
+      activeLabelColor: 'text-[#2563eb]',
+      activeValueColor: 'text-[#2563eb]',
+      activeIconColor: 'text-[#2563eb]',
+    },
+    sp: {
+      activeTextColor: 'text-[#2563eb]',
+      activeBgColor: 'bg-[#eff6ff]',
+      activeBorderColor: 'border-[#2563eb]',
+    },
   },
   completed: {
-    pc: { activeBg: 'bg-[#f0fdf4]', activeBorder: 'border-[#16a34a]', activeLabelColor: 'text-[#16a34a]', activeValueColor: 'text-[#16a34a]', activeIconColor: 'text-[#16a34a]' },
-    sp: { activeTextColor: 'text-[#16a34a]', activeBgColor: 'bg-[#f0fdf4]', activeBorderColor: 'border-[#16a34a]' },
+    pc: {
+      activeBg: 'bg-[#f0fdf4]',
+      activeBorder: 'border-[#16a34a]',
+      activeLabelColor: 'text-[#16a34a]',
+      activeValueColor: 'text-[#16a34a]',
+      activeIconColor: 'text-[#16a34a]',
+    },
+    sp: {
+      activeTextColor: 'text-[#16a34a]',
+      activeBgColor: 'bg-[#f0fdf4]',
+      activeBorderColor: 'border-[#16a34a]',
+    },
   },
   pending: {
-    pc: { activeBg: 'bg-[#f9fafb]', activeBorder: 'border-[#6b7280]', activeLabelColor: 'text-[#6b7280]', activeValueColor: 'text-[#374151]', activeIconColor: 'text-[#6b7280]' },
-    sp: { activeTextColor: 'text-[#374151]', activeBgColor: 'bg-[#f9fafb]', activeBorderColor: 'border-[#6b7280]' },
+    pc: {
+      activeBg: 'bg-[#f9fafb]',
+      activeBorder: 'border-[#6b7280]',
+      activeLabelColor: 'text-[#6b7280]',
+      activeValueColor: 'text-[#374151]',
+      activeIconColor: 'text-[#6b7280]',
+    },
+    sp: {
+      activeTextColor: 'text-[#374151]',
+      activeBgColor: 'bg-[#f9fafb]',
+      activeBorderColor: 'border-[#6b7280]',
+    },
   },
   failed: {
-    pc: { activeBg: 'bg-[#fef2f2]', activeBorder: 'border-[#dc2626]', activeLabelColor: 'text-[#dc2626]', activeValueColor: 'text-[#dc2626]', activeIconColor: 'text-[#dc2626]' },
-    sp: { activeTextColor: 'text-[#dc2626]', activeBgColor: 'bg-[#fef2f2]', activeBorderColor: 'border-[#dc2626]' },
+    pc: {
+      activeBg: 'bg-[#fef2f2]',
+      activeBorder: 'border-[#dc2626]',
+      activeLabelColor: 'text-[#dc2626]',
+      activeValueColor: 'text-[#dc2626]',
+      activeIconColor: 'text-[#dc2626]',
+    },
+    sp: {
+      activeTextColor: 'text-[#dc2626]',
+      activeBgColor: 'bg-[#fef2f2]',
+      activeBorderColor: 'border-[#dc2626]',
+    },
   },
 }
 
@@ -85,7 +129,12 @@ function useMetrics(explorations: ExplorationListItem[]) {
       explorations.reduce(
         (acc, e) => {
           if (e.status === 'pending') acc.pending++
-          else if (e.status === 'discussing' || e.status === 'executing' || e.status === 'reviewing') acc.executing++
+          else if (
+            e.status === 'discussing' ||
+            e.status === 'executing' ||
+            e.status === 'reviewing'
+          )
+            acc.executing++
           else if (e.status === 'completed') acc.completed++
           else if (e.status === 'paused' || e.status === 'stopped') acc.failed++
           return acc
@@ -99,7 +148,10 @@ function useMetrics(explorations: ExplorationListItem[]) {
 function useExplorationFilters(explorations: ExplorationListItem[]) {
   const [activeFilters, setActiveFilters] = useState<Set<FilterCategory>>(INITIAL_FILTERS)
   const metrics = useMetrics(explorations)
-  const filtered = useMemo(() => filterExplorations(explorations, activeFilters), [explorations, activeFilters])
+  const filtered = useMemo(
+    () => filterExplorations(explorations, activeFilters),
+    [explorations, activeFilters],
+  )
   const toggle = useCallback(
     (cat: FilterCategory) =>
       setActiveFilters((prev) => {
@@ -115,7 +167,13 @@ function useExplorationFilters(explorations: ExplorationListItem[]) {
 
 // --- 探索カード（PC版） ---
 
-function ExplorationCard({ exploration }: { exploration: ExplorationListItem }) {
+function ExplorationCard({
+  exploration,
+  onRetry,
+}: {
+  exploration: ExplorationListItem
+  onRetry?: (id: number) => void
+}) {
   const config = EXPLORATION_STATUS_CONFIG[exploration.status]
   return (
     <Link to={`/explorations/${exploration.id}`} className="block">
@@ -149,6 +207,19 @@ function ExplorationCard({ exploration }: { exploration: ExplorationListItem }) 
             )}
           </div>
         </div>
+        {EXPLORATION_RETRYABLE_STATUSES.has(exploration.status) && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-auto self-center px-2.5 py-1 text-xs"
+            onClick={(e) => {
+              e.preventDefault()
+              onRetry?.(exploration.id)
+            }}
+          >
+            リトライ
+          </Button>
+        )}
         <div className="flex flex-col items-center self-center">
           <config.icon className={cn('h-5 w-5', config.color)} />
         </div>
@@ -161,16 +232,9 @@ function ExplorationCardBadge({ exploration }: { exploration: ExplorationListIte
   const config = EXPLORATION_STATUS_CONFIG[exploration.status]
 
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full px-2 py-0.5',
-        config.bgColor,
-      )}
-    >
+    <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5', config.bgColor)}>
       <span className={cn('h-1.5 w-1.5 rounded-full', config.dotColor)} />
-      <span className={cn('text-xs font-medium leading-[1.3]', config.color)}>
-        {config.label}
-      </span>
+      <span className={cn('text-xs font-medium leading-[1.3]', config.color)}>{config.label}</span>
     </span>
   )
 }
@@ -181,10 +245,12 @@ function PCExplorationList({
   explorations,
   onNewExploration,
   onNavigate,
+  onRetry,
 }: {
   explorations: ExplorationListItem[]
   onNewExploration: () => void
   onNavigate: (path: string) => void
+  onRetry: (id: number) => void
 }) {
   const { activeFilters, metrics, filtered, toggle } = useExplorationFilters(explorations)
 
@@ -244,20 +310,14 @@ function PCExplorationList({
 
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold leading-[1.4] text-foreground">
-              探索一覧
-            </h2>
-            <span className="text-sm text-muted-foreground">
-              {filtered.length} 件
-            </span>
+            <h2 className="text-base font-semibold leading-[1.4] text-foreground">探索一覧</h2>
+            <span className="text-sm text-muted-foreground">{filtered.length} 件</span>
           </div>
 
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
               <p className="text-sm text-muted-foreground">
-                {activeFilters.size === 0
-                  ? 'フィルターを選択してね〜'
-                  : '探索がまだないよ〜'}
+                {activeFilters.size === 0 ? 'フィルターを選択してね〜' : '探索がまだないよ〜'}
               </p>
               {activeFilters.size > 0 && (
                 <Button variant="primary" onClick={onNewExploration}>
@@ -269,7 +329,7 @@ function PCExplorationList({
           ) : (
             <div className="flex flex-col gap-2">
               {filtered.map((e) => (
-                <ExplorationCard key={e.id} exploration={e} />
+                <ExplorationCard key={e.id} exploration={e} onRetry={onRetry} />
               ))}
             </div>
           )}
@@ -284,12 +344,14 @@ function PCExplorationList({
 function SPExplorationList({
   explorations,
   onNewExploration,
-  onNavigate,
+  onNavigate: _onNavigate,
+  onRetry,
   isModalOpen,
 }: {
   explorations: ExplorationListItem[]
   onNewExploration: () => void
   onNavigate: (path: string) => void
+  onRetry: (id: number) => void
   isModalOpen: boolean
 }) {
   const { activeFilters, metrics, filtered, toggle } = useExplorationFilters(explorations)
@@ -300,9 +362,7 @@ function SPExplorationList({
 
       <main className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 pb-20">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold leading-[1.3] text-foreground">
-            探索
-          </h1>
+          <h1 className="text-xl font-semibold leading-[1.3] text-foreground">探索</h1>
         </div>
 
         <div className="flex gap-2">
@@ -339,9 +399,7 @@ function SPExplorationList({
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
             <p className="text-sm text-muted-foreground">
-              {activeFilters.size === 0
-                ? 'フィルターを選択してね〜'
-                : '探索がまだないよ〜'}
+              {activeFilters.size === 0 ? 'フィルターを選択してね〜' : '探索がまだないよ〜'}
             </p>
           </div>
         ) : (
@@ -355,6 +413,21 @@ function SPExplorationList({
                     subtitle={formatRelativeTime(e.started_at ?? e.created_at)}
                     badge={<ExplorationCardBadge exploration={e} />}
                     borderColor={config.borderColor || 'border-border'}
+                    actions={
+                      EXPLORATION_RETRYABLE_STATUSES.has(e.status) ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-auto px-2.5 py-1 text-xs"
+                          onClick={(ev) => {
+                            ev.preventDefault()
+                            onRetry(e.id)
+                          }}
+                        >
+                          リトライ
+                        </Button>
+                      ) : undefined
+                    }
                   />
                 </Link>
               )
@@ -378,6 +451,15 @@ export function ExplorationListPage() {
   const handleNew = useCallback(() => navigate('?new-exploration=true'), [navigate])
 
   const { data: explorations = [] } = useExplorations()
+  const retryMutation = useRetryExploration()
+  const { toast } = useToast()
+
+  const handleRetry = (id: number) => {
+    retryMutation.mutate(id, {
+      onSuccess: () => toast('探索を最初から再実行する状態に戻しました', 'success'),
+      onError: (err) => toast(err.message, 'error'),
+    })
+  }
 
   return (
     <>
@@ -387,6 +469,7 @@ export function ExplorationListPage() {
           explorations={explorations}
           onNewExploration={handleNew}
           onNavigate={navigate}
+          onRetry={handleRetry}
         />
       </div>
       <div className="md:hidden">
@@ -394,6 +477,7 @@ export function ExplorationListPage() {
           explorations={explorations}
           onNewExploration={handleNew}
           onNavigate={navigate}
+          onRetry={handleRetry}
           isModalOpen={isModalOpen}
         />
       </div>

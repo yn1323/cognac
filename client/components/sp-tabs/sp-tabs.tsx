@@ -33,9 +33,5 @@ interface SPTabBarProps {
 }
 
 export function SPTabBar({ children, className }: SPTabBarProps) {
-  return (
-    <div className={cn('flex px-4', className)}>
-      {children}
-    </div>
-  )
+  return <div className={cn('flex px-4', className)}>{children}</div>
 }

@@ -1,8 +1,8 @@
 // SP詳細ヘッダー
 // モバイル詳細ページ用。戻るボタン + タイトル + タブバー
 
-import type { ReactNode } from 'react'
 import { ArrowLeft } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 interface SPDetailHeaderProps {
@@ -23,12 +23,7 @@ export function SPDetailHeader({
   className,
 }: SPDetailHeaderProps) {
   return (
-    <div
-      className={cn(
-        'flex flex-col border-b bg-background',
-        className,
-      )}
-    >
+    <div className={cn('sticky top-0 z-10 flex flex-col border-b bg-background', className)}>
       {/* 上段: 戻る + タイトル */}
       <div className="flex items-center gap-3 px-4 py-3">
         {onBack && (
@@ -41,20 +36,14 @@ export function SPDetailHeader({
             {title}
           </span>
           {subtitle && (
-            <span className="text-xs leading-[1.4] text-muted-foreground">
-              {subtitle}
-            </span>
+            <span className="text-xs leading-[1.4] text-muted-foreground">{subtitle}</span>
           )}
         </div>
         {actions}
       </div>
 
       {/* 下段: タブバースロット */}
-      {children && (
-        <div className="flex px-4">
-          {children}
-        </div>
-      )}
+      {children && <div className="flex px-4">{children}</div>}
     </div>
   )
 }

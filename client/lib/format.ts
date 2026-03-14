@@ -2,7 +2,7 @@
 
 // SQLiteのdatetime('now')はTZ情報なしのUTC文字列を返すため、Zを補完してUTCとして正しくパース
 function normalizeUtc(dateStr: string): string {
-  return dateStr.includes('Z') || dateStr.includes('+') ? dateStr : dateStr + 'Z'
+  return dateStr.includes('Z') || dateStr.includes('+') ? dateStr : `${dateStr}Z`
 }
 
 // UTCのDateをJST(UTC+9)に変換
@@ -37,7 +37,7 @@ export function formatNumber(n: number): string {
 export function formatDateTime(dateStr: string | null): string {
   if (!dateStr) return '-'
   const d = new Date(normalizeUtc(dateStr))
-  if (isNaN(d.getTime())) return '-'
+  if (Number.isNaN(d.getTime())) return '-'
   const jst = toJst(d)
   return `${jst.getUTCFullYear()}/${jst.getUTCMonth() + 1}/${jst.getUTCDate()} ${jst.getUTCHours()}:${String(jst.getUTCMinutes()).padStart(2, '0')}`
 }
@@ -65,7 +65,7 @@ export function formatRelativeTime(dateStr: string): string {
 export function formatLogTime(dateStr: string | null | undefined): string {
   if (!dateStr) return '--:--:--'
   const d = new Date(normalizeUtc(dateStr))
-  if (isNaN(d.getTime())) return '--:--:--'
+  if (Number.isNaN(d.getTime())) return '--:--:--'
   const jst = toJst(d)
   const hh = String(jst.getUTCHours()).padStart(2, '0')
   const mm = String(jst.getUTCMinutes()).padStart(2, '0')

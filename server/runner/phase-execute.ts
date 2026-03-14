@@ -1,4 +1,4 @@
-import type { AgentStreamEvent, Task, CognacConfig, TaskEvent } from '@cognac/shared'
+import type { AgentStreamEvent, CognacConfig, Task, TaskEvent } from '@cognac/shared'
 import { createProvider } from './providers/index.js'
 
 // Phase 3用システムプロンプト
@@ -12,8 +12,6 @@ function buildSystemPrompt(): string {
 
 // ブートストラップ用のPhase 3実行プロンプトを構築する
 // Phase 2はスキップなので、タスク情報から直接プロンプトを組み立てる
-// 一時コメントアウト: git commit指示を除去（不具合調査のノイズ除去）
-// 元の指示: 「実装が完了したらgit commitしといて」「コミットメッセージの形式は自由でOK」
 function buildExecutionPrompt(task: Task): string {
   return `以下のタスクを実装してくれ。
 
@@ -37,13 +35,15 @@ export async function executePhase3(
   signal?: AbortSignal,
 ): Promise<{ sessionId: string; tokenInput: number; tokenOutput: number; durationMs: number }> {
   const prompt = executionPrompt ?? buildExecutionPrompt(task)
-  const onStream = onEvent ? (event: AgentStreamEvent): void => {
-    if (event.type === 'agent_output') {
-      onEvent({ type: 'claude_output', content: event.content })
-      return
-    }
-    onEvent(event)
-  } : undefined
+  const onStream = onEvent
+    ? (event: AgentStreamEvent): void => {
+        if (event.type === 'agent_output') {
+          onEvent({ type: 'claude_output', content: event.content })
+          return
+        }
+        onEvent(event)
+      }
+    : undefined
 
   const provider = createProvider(config.provider)
   const response = await provider.execStream(

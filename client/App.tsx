@@ -1,15 +1,15 @@
 // アプリケーションルート
 // ルーティングとレイアウトの定義
 
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Layout } from '@/components/layout'
+import { ConsolePage } from '@/pages/console'
 import { DashboardPage } from '@/pages/dashboard'
+import { ExplorationDetailPage } from '@/pages/exploration-detail'
+import { ExplorationListPage } from '@/pages/exploration-list'
+import { GitPage } from '@/pages/git'
 import { SettingsPage } from '@/pages/settings'
 import { TaskPage } from '@/pages/task-page'
-import { GitPage } from '@/pages/git'
-import { ConsolePage } from '@/pages/console'
-import { ExplorationListPage } from '@/pages/exploration-list'
-import { ExplorationDetailPage } from '@/pages/exploration-detail'
 
 export function App() {
   return (

@@ -3,17 +3,26 @@
 
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { createJiti } from 'jiti'
+import {
+  type CognacConfig,
+  defineConfig,
+  type ExplorationEvent,
+  type TaskEvent,
+} from '@cognac/shared'
 import { serve } from '@hono/node-server'
-import { createApp } from './index.js'
-import { EventBus } from './sse/event-bus.js'
-import { openDb } from './db/connection.js'
-import { TaskRunner } from './runner/task-runner.js'
-import { ExplorationRunner } from './runner/exploration-runner.js'
-import { ExecutionCoordinator } from './runner/execution-coordinator.js'
+import { createJiti } from 'jiti'
+import {
+  cleanupExpiredConsoleRuns,
+  runConsoleStartupRecovery,
+  startConsoleCleanupScheduler,
+} from './console/cleanup.js'
 import { ConsoleManager } from './console/console-manager.js'
-import { cleanupExpiredConsoleRuns, runConsoleStartupRecovery, startConsoleCleanupScheduler } from './console/cleanup.js'
-import { defineConfig, type CognacConfig, type ExplorationEvent, type TaskEvent } from '@cognac/shared'
+import { openDb } from './db/connection.js'
+import { createApp } from './index.js'
+import { ExecutionCoordinator } from './runner/execution-coordinator.js'
+import { ExplorationRunner } from './runner/exploration-runner.js'
+import { TaskRunner } from './runner/task-runner.js'
+import { EventBus } from './sse/event-bus.js'
 
 const cwd = resolve(process.cwd(), '..')
 

@@ -4,7 +4,8 @@
   "packageManager": "pnpm@10.6.2",
   "scripts": {
     "typecheck": "pnpm -r --parallel typecheck",
-    "lint": "pnpm -r --parallel lint",
+    "lint": "biome check .",
+    "format": "biome format --write .",
     "test": "pnpm -r --parallel test",
     "build": "pnpm -r build",
     "dev": "pnpm --parallel --filter @cognac/server --filter @cognac/client dev",
@@ -17,6 +18,7 @@
     "start": "cognac start"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.6",
     "@yn1323/cognac": "workspace:*",
     "typescript": "^5.7.3"
   },

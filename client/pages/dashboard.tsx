@@ -3,34 +3,26 @@
 // デザイン design.pen PC=EUZoe, SP=S77Vv に準拠
 
 import type { Task, TaskStatus } from '@cognac/shared'
-import {
-  Clock,
-  Play,
-  CheckCircle,
-  AlertCircle,
-  Pause,
-  Plus,
-  Loader2,
-} from 'lucide-react'
-import { Sidebar } from '@/components/sidebar'
-import { PageHeader } from '@/components/page-header'
-import { MetricCard } from '@/components/metric-card'
-import { TaskCard } from '@/components/task-card'
-import { SPHeader } from '@/components/sp-header'
+import { AlertCircle, CheckCircle, Clock, Loader2, Pause, Play, Plus } from 'lucide-react'
+import { useCallback, useMemo, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { AppBottomNav } from '@/components/app-bottom-nav'
 import { Fab } from '@/components/fab'
+import { MetricCard } from '@/components/metric-card'
+import { PageHeader } from '@/components/page-header'
+import { Sidebar } from '@/components/sidebar'
+import { SPHeader } from '@/components/sp-header'
 import { SPMetric } from '@/components/sp-metric'
 import { SPTaskCard } from '@/components/sp-task-card'
 import { StatusBadge } from '@/components/status-badge'
-import { Button } from '@/components/ui/button'
+import { TaskCard } from '@/components/task-card'
 import { TaskModal } from '@/components/task-modal'
+import { useToast } from '@/components/toast'
+import { Button } from '@/components/ui/button'
+import { useRetryTask, useStopAllTasks, useTasks } from '@/hooks/use-tasks'
+import { NAV_MAP } from '@/lib/constants'
 import { formatRelativeTime } from '@/lib/format'
 import { ACTIVE_STATUSES, RETRYABLE_STATUSES, STATUS_CONFIG } from '@/lib/status-config'
-import { NAV_MAP } from '@/lib/constants'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { useCallback, useMemo, useState } from 'react'
-import { useToast } from '@/components/toast'
-import { useTasks, useRetryTask, useStopAllTasks } from '@/hooks/use-tasks'
 
 // --- フィルター定義 ---
 
@@ -49,25 +41,71 @@ const INITIAL_FILTERS = new Set<FilterCategory>(['pending', 'executing', 'failed
 const FILTER_STYLES: Record<
   FilterCategory,
   {
-    pc: { activeBg: string; activeBorder: string; activeLabelColor: string; activeValueColor: string; activeIconColor: string }
+    pc: {
+      activeBg: string
+      activeBorder: string
+      activeLabelColor: string
+      activeValueColor: string
+      activeIconColor: string
+    }
     sp: { activeTextColor: string; activeBgColor: string; activeBorderColor: string }
   }
 > = {
   pending: {
-    pc: { activeBg: 'bg-[#f9fafb]', activeBorder: 'border-[#6b7280]', activeLabelColor: 'text-[#6b7280]', activeValueColor: 'text-[#374151]', activeIconColor: 'text-[#6b7280]' },
-    sp: { activeTextColor: 'text-[#374151]', activeBgColor: 'bg-[#f9fafb]', activeBorderColor: 'border-[#6b7280]' },
+    pc: {
+      activeBg: 'bg-[#f9fafb]',
+      activeBorder: 'border-[#6b7280]',
+      activeLabelColor: 'text-[#6b7280]',
+      activeValueColor: 'text-[#374151]',
+      activeIconColor: 'text-[#6b7280]',
+    },
+    sp: {
+      activeTextColor: 'text-[#374151]',
+      activeBgColor: 'bg-[#f9fafb]',
+      activeBorderColor: 'border-[#6b7280]',
+    },
   },
   executing: {
-    pc: { activeBg: 'bg-[#eff6ff]', activeBorder: 'border-[#2563eb]', activeLabelColor: 'text-[#2563eb]', activeValueColor: 'text-[#2563eb]', activeIconColor: 'text-[#2563eb]' },
-    sp: { activeTextColor: 'text-[#2563eb]', activeBgColor: 'bg-[#eff6ff]', activeBorderColor: 'border-[#2563eb]' },
+    pc: {
+      activeBg: 'bg-[#eff6ff]',
+      activeBorder: 'border-[#2563eb]',
+      activeLabelColor: 'text-[#2563eb]',
+      activeValueColor: 'text-[#2563eb]',
+      activeIconColor: 'text-[#2563eb]',
+    },
+    sp: {
+      activeTextColor: 'text-[#2563eb]',
+      activeBgColor: 'bg-[#eff6ff]',
+      activeBorderColor: 'border-[#2563eb]',
+    },
   },
   completed: {
-    pc: { activeBg: 'bg-[#f0fdf4]', activeBorder: 'border-[#16a34a]', activeLabelColor: 'text-[#16a34a]', activeValueColor: 'text-[#16a34a]', activeIconColor: 'text-[#16a34a]' },
-    sp: { activeTextColor: 'text-[#16a34a]', activeBgColor: 'bg-[#f0fdf4]', activeBorderColor: 'border-[#16a34a]' },
+    pc: {
+      activeBg: 'bg-[#f0fdf4]',
+      activeBorder: 'border-[#16a34a]',
+      activeLabelColor: 'text-[#16a34a]',
+      activeValueColor: 'text-[#16a34a]',
+      activeIconColor: 'text-[#16a34a]',
+    },
+    sp: {
+      activeTextColor: 'text-[#16a34a]',
+      activeBgColor: 'bg-[#f0fdf4]',
+      activeBorderColor: 'border-[#16a34a]',
+    },
   },
   failed: {
-    pc: { activeBg: 'bg-[#fef2f2]', activeBorder: 'border-[#dc2626]', activeLabelColor: 'text-[#dc2626]', activeValueColor: 'text-[#dc2626]', activeIconColor: 'text-[#dc2626]' },
-    sp: { activeTextColor: 'text-[#dc2626]', activeBgColor: 'bg-[#fef2f2]', activeBorderColor: 'border-[#dc2626]' },
+    pc: {
+      activeBg: 'bg-[#fef2f2]',
+      activeBorder: 'border-[#dc2626]',
+      activeLabelColor: 'text-[#dc2626]',
+      activeValueColor: 'text-[#dc2626]',
+      activeIconColor: 'text-[#dc2626]',
+    },
+    sp: {
+      activeTextColor: 'text-[#dc2626]',
+      activeBgColor: 'bg-[#fef2f2]',
+      activeBorderColor: 'border-[#dc2626]',
+    },
   },
 }
 
@@ -149,7 +187,16 @@ interface PCDashboardProps extends DashboardProps {
 
 // --- PC版 ---
 
-function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry, onStopAll, isStoppingAll }: PCDashboardProps) {
+function PCDashboard({
+  tasks,
+  isLoading,
+  error,
+  onNewTask,
+  onNavigate,
+  onRetry,
+  onStopAll,
+  isStoppingAll,
+}: PCDashboardProps) {
   const { activeFilters, metrics, filteredTasks, toggle } = useDashboardFilters(tasks)
 
   return (
@@ -164,20 +211,16 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry, 
 
       <main className="flex flex-1 flex-col gap-6 overflow-y-auto p-8">
         {/* ページヘッダー */}
-        <PageHeader
-          title="タスク"
-          subtitle="AI駆動の開発タスクを管理・監視します"
-        >
+        <PageHeader title="タスク" subtitle="AI駆動の開発タスクを管理・監視します">
           <Button variant="outline" onClick={onStopAll} disabled={isStoppingAll}>
-            {isStoppingAll
-              ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              : <Pause className="mr-2 h-4 w-4" />}
+            {isStoppingAll ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Pause className="mr-2 h-4 w-4" />
+            )}
             全停止
           </Button>
-          <Button
-            variant="primary"
-            onClick={onNewTask}
-          >
+          <Button variant="primary" onClick={onNewTask}>
             <Plus className="mr-2 h-4 w-4" />
             新規タスク
           </Button>
@@ -223,12 +266,8 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry, 
         <div className="flex flex-col gap-4">
           {/* ヘッダー */}
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold leading-[1.4] text-foreground">
-              タスクキュー
-            </h2>
-            <span className="text-sm text-muted-foreground">
-              {filteredTasks.length} 件
-            </span>
+            <h2 className="text-base font-semibold leading-[1.4] text-foreground">タスクキュー</h2>
+            <span className="text-sm text-muted-foreground">{filteredTasks.length} 件</span>
           </div>
 
           {/* タスクカード */}
@@ -239,22 +278,15 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry, 
           ) : error ? (
             <div className="flex flex-col items-center gap-2 py-12 text-center">
               <AlertCircle className="h-8 w-8 text-destructive" />
-              <p className="text-sm text-muted-foreground">
-                タスクの取得に失敗しました
-              </p>
+              <p className="text-sm text-muted-foreground">タスクの取得に失敗しました</p>
             </div>
           ) : filteredTasks.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
               <p className="text-sm text-muted-foreground">
-                {activeFilters.size === 0
-                  ? 'フィルターを選択してね〜'
-                  : 'タスクがまだないよ〜'}
+                {activeFilters.size === 0 ? 'フィルターを選択してね〜' : 'タスクがまだないよ〜'}
               </p>
               {activeFilters.size === 0 ? null : (
-                <Button
-                  variant="primary"
-                  onClick={onNewTask}
-                >
+                <Button variant="primary" onClick={onNewTask}>
                   <Plus className="mr-2 h-4 w-4" />
                   新規タスク
                 </Button>
@@ -275,7 +307,15 @@ function PCDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry, 
 
 // --- SP版 ---
 
-function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry, isTaskModalOpen }: DashboardProps) {
+function SPDashboard({
+  tasks,
+  isLoading,
+  error,
+  onNewTask,
+  onNavigate: _onNavigate,
+  onRetry,
+  isTaskModalOpen,
+}: DashboardProps) {
   const { activeFilters, metrics, filteredTasks, toggle } = useDashboardFilters(tasks)
 
   return (
@@ -285,9 +325,7 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry, 
       <main className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 pb-20">
         {/* タイトル */}
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold leading-[1.3] text-foreground">
-            タスク
-          </h1>
+          <h1 className="text-xl font-semibold leading-[1.3] text-foreground">タスク</h1>
         </div>
 
         {/* メトリクス（フィルター兼用） */}
@@ -330,16 +368,12 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry, 
         ) : error ? (
           <div className="flex flex-col items-center gap-2 py-8 text-center">
             <AlertCircle className="h-8 w-8 text-destructive" />
-            <p className="text-sm text-muted-foreground">
-              タスクの取得に失敗しました
-            </p>
+            <p className="text-sm text-muted-foreground">タスクの取得に失敗しました</p>
           </div>
         ) : filteredTasks.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
             <p className="text-sm text-muted-foreground">
-              {activeFilters.size === 0
-                ? 'フィルターを選択してね〜'
-                : 'タスクがまだないよ〜'}
+              {activeFilters.size === 0 ? 'フィルターを選択してね〜' : 'タスクがまだないよ〜'}
             </p>
           </div>
         ) : (
@@ -349,7 +383,7 @@ function SPDashboard({ tasks, isLoading, error, onNewTask, onNavigate, onRetry, 
                 <SPTaskCard
                   title={task.title}
                   subtitle={getSPSubtitle(task)}
-                  badge={<StatusBadge status={task.status} />}
+                  badge={<StatusBadge status={task.status} configMap={STATUS_CONFIG} />}
                   borderColor={getSPBorderColor(task)}
                   actions={
                     RETRYABLE_STATUSES.has(task.status) ? (
@@ -391,12 +425,15 @@ export function DashboardPage() {
   const retryTask = useRetryTask()
   const stopAllTasks = useStopAllTasks()
   const { toast } = useToast()
-  const handleRetry = useCallback((taskId: number) => {
-    retryTask.mutate(taskId, {
-      onSuccess: () => toast('タスクをリトライキューに戻しました', 'success'),
-      onError: () => toast('リトライに失敗しました', 'error'),
-    })
-  }, [retryTask, toast])
+  const handleRetry = useCallback(
+    (taskId: number) => {
+      retryTask.mutate(taskId, {
+        onSuccess: () => toast('タスクをリトライキューに戻しました', 'success'),
+        onError: () => toast('リトライに失敗しました', 'error'),
+      })
+    },
+    [retryTask, toast],
+  )
   const handleStopAll = useCallback(() => {
     stopAllTasks.mutate(undefined, {
       onSuccess: (res) => toast(`${res.stoppedCount}件のタスクを停止しました`, 'success'),

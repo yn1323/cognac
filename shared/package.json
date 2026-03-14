@@ -18,7 +18,7 @@
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",
-    "lint": "echo 'no lint configured yet'",
+
     "test": "echo 'no tests yet'"
   },
   "devDependencies": {
