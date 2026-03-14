@@ -23,6 +23,7 @@ import {
   getWorkingDiff,
   merge,
   push,
+  revert,
   stageAll,
   validateBranchName,
 } from '../runner/git-api-ops.js'
@@ -38,7 +39,8 @@ const createBranchSchema = z.object({
   base: z.string().optional(),
 })
 
-const explainSchema = z.object({
+// コミットハッシュ指定用の共通スキーマ（explain, revert で共用）
+const hashSchema = z.object({
   hash: z.string().min(1, 'コミットハッシュを指定してください'),
 })
 
@@ -271,6 +273,35 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
     }
   })
 
+  // POST /revert — コミットのリバート
+  app.post('/revert', async (c) => {
+    const body = await c.req.json()
+    const parsed = hashSchema.safeParse(body)
+    if (!parsed.success) {
+      return c.json({ error: 'バリデーションエラー', details: parsed.error.issues }, 400)
+    }
+
+    // 未コミット変更チェック
+    const files = getStatus(cwd)
+    if (files.length > 0) {
+      return c.json(
+        { error: '未コミットの変更があります。先にコミットまたは破棄してください。' },
+        400,
+      )
+    }
+
+    try {
+      const result = revert(cwd, parsed.data.hash)
+      return c.json({ ok: true, ...result })
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err)
+      if (errMsg.includes('コンフリクト')) {
+        return c.json({ error: errMsg }, 409)
+      }
+      return c.json({ error: 'リバートに失敗しました', detail: String(err) }, 500)
+    }
+  })
+
   // GET /file-diff?path=xxx — ファイル単位の未コミットdiffを取得
   app.get('/file-diff', (c) => {
     const filePath = c.req.query('path')
@@ -291,7 +322,7 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
   // POST /explain — AIによるコミット解説
   app.post('/explain', async (c) => {
     const body = await c.req.json()
-    const parsed = explainSchema.safeParse(body)
+    const parsed = hashSchema.safeParse(body)
     if (!parsed.success) {
       return c.json({ error: 'バリデーションエラー', details: parsed.error.issues }, 400)
     }
