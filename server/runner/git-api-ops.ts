@@ -190,11 +190,24 @@ export function fetchAll(cwd: string): void {
   git('fetch --all --prune', cwd)
 }
 
-// マージする（--no-ff）
+// 特定ブランチをfetchする（リモートマージ用）
+export function fetchBranch(cwd: string, branch: string): void {
+  git(`fetch origin ${branch}`, cwd)
+}
+
+// マージする（ローカル: --no-ff、リモート: fetchしてffありマージ）
 export function merge(cwd: string, from: string): { hash: string; message: string } {
   if (!validateBranchName(from)) throw new Error('不正なブランチ名です')
   try {
-    git(`merge ${from} --no-ff --no-edit`, cwd)
+    // リモートブランチの場合: ピンポイントfetch → ffありマージ
+    if (from.startsWith('origin/')) {
+      const remoteBranch = from.replace('origin/', '')
+      fetchBranch(cwd, remoteBranch)
+      git(`merge ${from} --no-edit`, cwd)
+    } else {
+      // ローカル同士: 従来通り --no-ff
+      git(`merge ${from} --no-ff --no-edit`, cwd)
+    }
     const hash = git('rev-parse --short HEAD', cwd)
     const message = git('log -1 --format=%s', cwd)
     return { hash, message }
