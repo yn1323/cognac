@@ -112,3 +112,13 @@ export interface GitMergeRequest {
   from: string
   into: string
 }
+
+export interface GitRevertRequest {
+  hash: string
+}
+
+export interface GitRevertResponse {
+  ok: boolean
+  hash: string
+  message: string
+}

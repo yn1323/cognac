@@ -28,6 +28,7 @@ import type {
   GitMergeResponse,
   GitPushResponse,
   GitRemoteStatusResponse,
+  GitRevertResponse,
   GitStatusResponse,
   Persona,
   Plan,
@@ -212,6 +213,11 @@ export const api = {
       fetchJson<GitMergeResponse>('/git/merge', {
         method: 'POST',
         body: JSON.stringify({ from, into }),
+      }),
+    revert: (hash: string) =>
+      fetchJson<GitRevertResponse>('/git/revert', {
+        method: 'POST',
+        body: JSON.stringify({ hash }),
       }),
     explain: (hash: string) =>
       fetchJson<GitExplainResponse>('/git/explain', {
