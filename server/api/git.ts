@@ -190,9 +190,12 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
     }
   })
 
-  // DELETE /branch/:name — ブランチ削除（ローカルのみ）
-  app.delete('/branch/:name{.+}', (c) => {
-    const name = decodeURIComponent(c.req.param('name'))
+  // DELETE /branch?name=xxx — ブランチ削除（ローカルのみ）
+  app.delete('/branch', (c) => {
+    const name = c.req.query('name')
+    if (!name) {
+      return c.json({ error: 'ブランチ名が指定されていません' }, 400)
+    }
 
     // 現在のブランチは削除不可
     const current = getCurrentBranch(cwd)

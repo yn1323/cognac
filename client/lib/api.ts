@@ -208,7 +208,9 @@ export const api = {
         body: JSON.stringify({ name, base }),
       }),
     deleteBranch: (name: string) =>
-      fetchJson<{ ok: boolean }>(`/git/branch/${encodeURIComponent(name)}`, { method: 'DELETE' }),
+      fetchJson<{ ok: boolean }>(`/git/branch?name=${encodeURIComponent(name)}`, {
+        method: 'DELETE',
+      }),
     push: () => fetchJson<GitPushResponse>('/git/push', { method: 'POST' }),
     fetch: () => fetchJson<{ ok: boolean }>('/git/fetch', { method: 'POST' }),
     merge: (from: string, into: string) =>
