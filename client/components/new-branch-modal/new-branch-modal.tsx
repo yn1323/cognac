@@ -92,7 +92,7 @@ export function NewBranchModal({ open, onClose, branches, onCreate }: NewBranchM
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 px-6 pb-6 pt-4">
+        <div className="flex justify-end gap-3 px-6 pb-6 pt-4">
           <Button variant="outline" onClick={onClose}>
             キャンセル
           </Button>

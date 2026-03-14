@@ -78,8 +78,8 @@ export function ConfirmDialog({
           )}
         </div>
 
-        {/* Actions — justify:end, gap:8, padding:[16,24,24,24] */}
-        <div className="flex justify-end gap-2 px-6 pb-6 pt-4">
+        {/* Actions — justify:end, gap:12, padding:[16,24,24,24] */}
+        <div className="flex justify-end gap-3 px-6 pb-6 pt-4">
           <Button variant="outline" onClick={onCancel} disabled={isLoading}>
             {cancelLabel}
           </Button>

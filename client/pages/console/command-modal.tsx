@@ -105,12 +105,12 @@ export function CommandModal({ open, onClose, onSubmit, initialData }: CommandMo
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 px-6 pb-6">
-          <Button variant="primary" onClick={handleSubmit} disabled={!canSubmit}>
-            {isEdit ? '更新' : '登録'}
-          </Button>
+        <div className="flex justify-end gap-3 px-6 pb-6">
           <Button variant="outline" onClick={onClose}>
             キャンセル
+          </Button>
+          <Button variant="primary" onClick={handleSubmit} disabled={!canSubmit}>
+            {isEdit ? '更新' : '登録'}
           </Button>
         </div>
       </div>
