@@ -13,6 +13,7 @@ import {
   GitMerge,
   Loader2,
   RefreshCw,
+  Trash2,
   Upload,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -33,6 +34,7 @@ import {
   useAiCommit,
   useCheckout,
   useCreateBranch,
+  useDeleteBranch,
   useDiscardAll,
   useExplainCommit,
   useExplainWorking,
@@ -52,10 +54,13 @@ import { ChangedFilesPanel } from './changed-files-panel'
 
 // --- ブランチセレクター ---
 
+const PROTECTED_BRANCHES = ['main', 'master', 'develop']
+
 interface BranchSelectorProps {
   branches: GitBranchType[]
   currentBranch: string
   onCheckout: (branch: string) => void
+  onDeleteBranch?: (branch: string) => void
   disabled?: boolean
   className?: string
 }
@@ -64,6 +69,7 @@ function BranchSelector({
   branches,
   currentBranch,
   onCheckout,
+  onDeleteBranch,
   disabled,
   className,
 }: BranchSelectorProps) {
@@ -88,7 +94,7 @@ function BranchSelector({
         <>
           {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute z-50 mt-1 min-w-[200px] rounded-md border border-[#e5e5e5] bg-white shadow-lg">
+          <div className="absolute z-50 mt-1 min-w-[240px] rounded-md border border-[#e5e5e5] bg-white shadow-lg">
             <div className="px-3 py-2 text-xs font-semibold text-muted-foreground">ローカル</div>
             {localBranches.map((b) => (
               <button
@@ -98,15 +104,30 @@ function BranchSelector({
                   if (b.name !== currentBranch) onCheckout(b.name)
                   setOpen(false)
                 }}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-neutral-50"
+                className="group flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-neutral-50"
               >
                 <span
-                  className={
+                  className={`flex-1 truncate ${
                     b.name === currentBranch ? 'font-semibold text-[#1d4ed8]' : 'text-foreground'
-                  }
+                  }`}
                 >
                   {b.name}
                 </span>
+                {b.name !== currentBranch &&
+                  !PROTECTED_BRANCHES.includes(b.name) &&
+                  onDeleteBranch && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setOpen(false)
+                        onDeleteBranch(b.name)
+                      }}
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground opacity-100 transition-opacity hover:text-destructive md:opacity-0 md:group-hover:opacity-100"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
               </button>
             ))}
             {remoteBranches.length > 0 && (
@@ -174,6 +195,7 @@ interface GitPageViewProps {
   onToggleNewBranchModal: () => void
   onToggleDiscardDialog: () => void
   onCheckout: (branch: string) => void
+  onDeleteBranch: (branch: string) => void
   onPush: () => void
   onFetch: () => void
   isPushing: boolean
@@ -204,6 +226,7 @@ function PCGitPage({
   onToggleNewBranchModal,
   onToggleDiscardDialog,
   onCheckout,
+  onDeleteBranch,
   onPush,
   onFetch,
   isPushing: _isPushing,
@@ -265,6 +288,7 @@ function PCGitPage({
               branches={branches}
               currentBranch={currentBranch}
               onCheckout={onCheckout}
+              onDeleteBranch={onDeleteBranch}
               disabled={pushPhase !== 'idle'}
             />
           </div>
@@ -341,6 +365,7 @@ function SPGitPage({
   onToggleNewBranchModal,
   onToggleDiscardDialog,
   onCheckout,
+  onDeleteBranch,
   onPush,
   onFetch,
   isPushing: _isPushing,
@@ -412,6 +437,7 @@ function SPGitPage({
               branches={branches}
               currentBranch={currentBranch}
               onCheckout={onCheckout}
+              onDeleteBranch={onDeleteBranch}
               disabled={pushPhase !== 'idle'}
               className="w-full [&>button]:w-full"
             />
@@ -484,6 +510,7 @@ export function GitPage() {
   const [showMergeModal, setShowMergeModal] = useState(false)
   const [showNewBranchModal, setShowNewBranchModal] = useState(false)
   const [showDiscardDialog, setShowDiscardDialog] = useState(false)
+  const [deletingBranch, setDeletingBranch] = useState<string | null>(null)
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null)
   const [explainTarget, setExplainTarget] = useState<
     { type: 'commit'; hash: string; message: string } | { type: 'working' } | null
@@ -515,6 +542,7 @@ export function GitPage() {
   const fetchMutation = useGitFetch()
   const mergeMutation = useMerge()
   const createBranchMutation = useCreateBranch()
+  const deleteBranchMutation = useDeleteBranch()
   const explainMutation = useExplainCommit()
   const explainWorkingMutation = useExplainWorking()
 
@@ -623,6 +651,24 @@ export function GitPage() {
     )
   }
 
+  const handleDeleteBranch = (name: string) => {
+    setDeletingBranch(name)
+  }
+
+  const handleConfirmDelete = () => {
+    if (!deletingBranch) return
+    deleteBranchMutation.mutate(deletingBranch, {
+      onSuccess: () => {
+        toast('ブランチを削除しました', 'success')
+        setDeletingBranch(null)
+      },
+      onError: () => {
+        toast('ブランチの削除に失敗しました', 'error')
+        setDeletingBranch(null)
+      },
+    })
+  }
+
   const viewProps: GitPageViewProps = {
     onNavigate: handleNavigate,
     isCommitting: commitMutation.isPending,
@@ -637,6 +683,7 @@ export function GitPage() {
     onToggleNewBranchModal: handleToggleNewBranchModal,
     onToggleDiscardDialog: handleToggleDiscardDialog,
     onCheckout: handleCheckout,
+    onDeleteBranch: handleDeleteBranch,
     onPush: handlePush,
     onFetch: handleFetch,
     isPushing: pushMutation.isPending,
@@ -712,6 +759,17 @@ export function GitPage() {
         confirmLabel="全て破棄"
         cancelLabel="キャンセル"
         variant="destructive"
+      />
+      <ConfirmDialog
+        open={deletingBranch !== null}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeletingBranch(null)}
+        title="ブランチを削除"
+        description={`ブランチ「${deletingBranch}」を削除しますか？この操作は取り消せません。`}
+        confirmLabel="削除する"
+        cancelLabel="キャンセル"
+        variant="destructive"
+        isLoading={deleteBranchMutation.isPending}
       />
     </>
   )

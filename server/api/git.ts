@@ -185,6 +185,12 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
       return c.json({ error: '現在のブランチは削除できません' }, 400)
     }
 
+    // 保護ブランチは削除不可
+    const protectedBranches = ['main', 'master', 'develop']
+    if (protectedBranches.includes(name)) {
+      return c.json({ error: '保護ブランチは削除できません' }, 400)
+    }
+
     try {
       deleteBranch(cwd, name)
       return c.json({ ok: true })
