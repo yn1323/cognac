@@ -383,10 +383,31 @@ export function updateGhPr(
 
 // ベースブランチとの差分を取得する（PR内容生成用）
 export function getDiffAgainstBase(cwd: string, baseBranch: string): string {
+  // baseBranch → origin/${baseBranch} → エラー の3段フォールバック
   try {
     return git(`diff ${baseBranch}...HEAD`, cwd)
   } catch {
-    return git('diff HEAD~1..HEAD', cwd)
+    // ローカルにbaseBranchがない場合、リモート参照で再試行
+    try {
+      return git(`diff origin/${baseBranch}...HEAD`, cwd)
+    } catch {
+      throw new Error(
+        `ベースブランチ '${baseBranch}' との差分を取得できません。fetchを実行してください。`,
+      )
+    }
+  }
+}
+
+// ベースブランチとの差分のstat（ファイル一覧サマリー）を取得する
+export function getDiffStatAgainstBase(cwd: string, baseBranch: string): string {
+  try {
+    return git(`diff ${baseBranch}...HEAD --stat`, cwd)
+  } catch {
+    try {
+      return git(`diff origin/${baseBranch}...HEAD --stat`, cwd)
+    } catch {
+      return ''
+    }
   }
 }
 

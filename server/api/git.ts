@@ -19,6 +19,7 @@ import {
   getCommitDiff,
   getCurrentBranch,
   getDiffAgainstBase,
+  getDiffStatAgainstBase,
   getFileDiff,
   getLog,
   getLogAgainstBase,
@@ -391,9 +392,10 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
       // Step 4: PR作成 or 更新
       updateStep('create-pr', 'in-progress')
       const diff = getDiffAgainstBase(cwd, baseBranch)
+      const diffStat = getDiffStatAgainstBase(cwd, baseBranch)
       const commitLog = getLogAgainstBase(cwd, baseBranch)
       const { title, body: prBody } = await withTimeout(
-        generatePrContent(diff, commitLog, baseBranch, currentBranch, getConfig),
+        generatePrContent(diff, diffStat, commitLog, baseBranch, currentBranch, getConfig),
         60000,
         'PR内容生成',
       )
@@ -569,6 +571,7 @@ ${langRule}
 // CLI を使ってPRタイトルと本文を生成する
 async function generatePrContent(
   diff: string,
+  diffStat: string,
   commitLog: string,
   baseBranch: string,
   headBranch: string,
@@ -583,16 +586,21 @@ async function generatePrContent(
 ## コミットログ:
 ${commitLog || '(コミットなし)'}
 
+## 変更ファイル一覧 (stat):
+${diffStat || '(取得できませんでした)'}
+
 ## 変更内容 (diff):
-${diff.substring(0, 8000)}
+${diff.substring(0, 30000)}
 
 ## ルール:
-- 1行目: PRタイトル（50文字程度、prefix付き: feat:, fix:, refactor: 等）
+- 1行目: PRタイトル（プレーンテキスト、50文字程度、prefix付き: feat:, fix:, refactor: 等）
 - 2行目: 空行
 - 3行目以降: PR本文（Markdown形式、日本語）
   - 「## 概要」セクションで変更の目的を1-2文で説明
   - 「## 変更内容」セクションで主な変更を箇条書き
-- タイトルと本文以外のテキストは出力しないこと`
+  - 変更ファイル一覧(stat)で全体像を把握し、diff本文で詳細を確認した上で網羅的に記述すること
+- バッククォート・コードブロック・その他Markdown装飾はタイトル（1行目）には一切使わないこと
+- タイトルと本文以外のテキスト（前置き・補足説明）は出力しないこと`
 
   try {
     const config = getConfig()
@@ -602,7 +610,9 @@ ${diff.substring(0, 8000)}
     if (!result) throw new Error('PR内容の生成結果が空です')
 
     const lines = result.split('\n')
-    const title = lines[0].trim()
+    const rawTitle = lines[0].trim()
+    // AIが付けがちなバッククォートやMarkdown装飾を除去
+    const title = rawTitle.replace(/^[`#*\s]+|[`#*\s]+$/g, '').trim()
     const body = lines.slice(2).join('\n').trim()
 
     if (!title) throw new Error('PRタイトルの生成に失敗しました')
