@@ -38,7 +38,10 @@ async function loadConfig(cwd: string): Promise<CognacConfig> {
     return defineConfig({})
   }
 
-  const jiti = createJiti(cwd, { alias: { '@yn1323/cognac': '@cognac/shared' } })
+  const cliDir = dirname(fileURLToPath(import.meta.url))
+  const jiti = createJiti(cwd, {
+    alias: { '@yn1323/cognac': resolve(cliDir, 'config.js') },
+  })
   const mod = (await jiti.import(configPath)) as { default?: Partial<CognacConfig> }
   const userConfig = mod.default ?? {}
   return defineConfig(userConfig)
