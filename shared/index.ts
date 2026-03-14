@@ -58,8 +58,6 @@ export type {
   CommitResult,
   CommitStep,
   CommitStepStatus,
-  GeneratePrContentResponse,
-  GhStatus,
   GitBranch,
   GitBranchesResponse,
   GitCheckoutRequest,
@@ -77,8 +75,6 @@ export type {
   GitRemoteStatus,
   GitRemoteStatusResponse,
   GitStatusResponse,
-  PullRequestRequest,
-  PullRequestResponse,
 } from './types/git.js'
 export type { BaseLog, StoredEvent, StoredExplorationEvent, StoredTaskEvent } from './types/log.js'
 export type { Persona, PersonaSelection } from './types/persona.js'

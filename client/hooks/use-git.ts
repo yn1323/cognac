@@ -150,22 +150,3 @@ export function useMerge() {
     },
   })
 }
-
-export function useGhStatus() {
-  return useMutation({
-    mutationFn: api.git.ghStatus,
-  })
-}
-
-export function useCreatePullRequest() {
-  return useMutation({
-    mutationFn: (data: { title: string; base: string; head: string; body?: string }) =>
-      api.git.createPullRequest(data),
-  })
-}
-
-export function useGeneratePrContent() {
-  return useMutation({
-    mutationFn: (data: { base: string; head: string }) => api.git.generatePrContent(data),
-  })
-}
