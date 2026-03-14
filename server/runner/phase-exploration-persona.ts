@@ -5,7 +5,7 @@ import type {
   ExplorationSession,
   PersonaSelection,
 } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../db/types.js'
 import * as logQueries from '../db/queries/exploration-logs.js'
 import * as personaQueries from '../db/queries/exploration-personas.js'
 import { getRepoStructure } from './context-cache.js'
@@ -98,7 +98,7 @@ function getFallbackPersonas(): PersonaSelection {
 export async function executeExplorationPhasePersona(
   exploration: ExplorationSession,
   images: ExplorationImage[],
-  db: Database.Database,
+  db: CognacDb,
   config: CognacConfig,
   signal?: AbortSignal,
 ): Promise<{

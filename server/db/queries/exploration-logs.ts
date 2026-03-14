@@ -1,5 +1,5 @@
 import type { ExplorationLog } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../types.js'
 import { toUtcIso8601 } from '../../utils/date-time.js'
 import {
   deleteLogsByParentId,
@@ -22,7 +22,7 @@ function normalizeLog(log: ExplorationLog): ExplorationLog {
 }
 
 export function createExplorationLog(
-  db: Database.Database,
+  db: CognacDb,
   data: {
     exploration_session_id: number
     phase: string
@@ -46,18 +46,18 @@ export function createExplorationLog(
 }
 
 export function getExplorationLogsBySessionId(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
 ): ExplorationLog[] {
   return selectLogsByParentId<ExplorationLog>(db, CONFIG, explorationSessionId, normalizeLog)
 }
 
-export function getExplorationLog(db: Database.Database, id: number): ExplorationLog | undefined {
+export function getExplorationLog(db: CognacDb, id: number): ExplorationLog | undefined {
   return selectLogById<ExplorationLog>(db, CONFIG, id, normalizeLog)
 }
 
 export function deleteExplorationLogsBySessionId(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
 ): number {
   return deleteLogsByParentId(db, CONFIG, explorationSessionId)

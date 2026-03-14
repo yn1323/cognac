@@ -10,7 +10,7 @@ import type {
   CreateConsoleCommandInput,
   UpdateConsoleCommandInput,
 } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../db/types.js'
 import * as consoleCommandQueries from '../db/queries/console-commands.js'
 import * as consoleRunQueries from '../db/queries/console-runs.js'
 import { EventBus } from '../sse/event-bus.js'
@@ -55,7 +55,7 @@ export class ConsoleManager {
   private readonly commandLocks = new Map<number, Promise<void>>()
 
   constructor(
-    private readonly db: Database.Database,
+    private readonly db: CognacDb,
     private readonly cwd: string = process.cwd(),
   ) {
     ensureConsoleLogRoot(this.cwd)

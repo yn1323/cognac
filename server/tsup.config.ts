@@ -5,5 +5,17 @@ export default defineConfig({
   format: ['esm'],
   dts: true,
   clean: true,
-  external: ['better-sqlite3'],
+  external: ['node:sqlite'],
+  esbuildPlugins: [
+    {
+      name: 'preserve-node-prefix',
+      setup(build) {
+        // esbuildが node: プレフィックスを落とすのを防ぐ
+        build.onResolve({ filter: /^node:/ }, (args) => ({
+          path: args.path,
+          external: true,
+        }))
+      },
+    },
+  ],
 })

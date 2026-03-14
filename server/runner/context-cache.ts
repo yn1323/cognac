@@ -5,7 +5,7 @@ import { execSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../db/types.js'
 import * as taskQueries from '../db/queries/tasks.js'
 
 const CONTEXT_DIR = path.resolve('.cognac', 'tmp', 'context')
@@ -83,7 +83,7 @@ export function getRepoStructure(cwd: string = process.cwd()): string {
  * 完了済みタスクの履歴をMarkdownテーブルで返す
  * 完了タスクIDのハッシュで差分検出し、変更がなければキャッシュを返す
  */
-export function getTaskHistory(db: Database.Database): string {
+export function getTaskHistory(db: CognacDb): string {
   if (taskHistoryMemCache) return taskHistoryMemCache
 
   const allTasks = taskQueries.listTasks(db)

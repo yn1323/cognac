@@ -1,5 +1,5 @@
 import type { CognacConfig, ConfigPatch, Phase, Task, TaskEvent } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../db/types.js'
 import type { RunnerStatus } from '../api/system.js'
 import * as logQueries from '../db/queries/execution-logs.js'
 import * as taskEventQueries from '../db/queries/task-events.js'
@@ -27,7 +27,7 @@ export class TaskRunner implements RunnerStatus {
   private phaseEvents: TaskEvent[] = []
 
   constructor(
-    private db: Database.Database,
+    private db: CognacDb,
     private eventBus: EventBus<TaskEvent>,
     private config: CognacConfig,
     private coordinator?: ExecutionCoordinator,

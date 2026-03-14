@@ -1,10 +1,10 @@
 import type { ConsoleRun, ConsoleRunStatus } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../types.js'
 
 const ACTIVE_STATUSES = ['starting', 'running', 'stopping'] as const
 
 export function createRun(
-  db: Database.Database,
+  db: CognacDb,
   input: {
     command_id: number
     status: ConsoleRunStatus
@@ -25,37 +25,31 @@ export function createRun(
   return getRun(db, Number(result.lastInsertRowid)) as ConsoleRun
 }
 
-export function getRun(db: Database.Database, id: number): ConsoleRun | undefined {
+export function getRun(db: CognacDb, id: number): ConsoleRun | undefined {
   const stmt = db.prepare(`SELECT * FROM console_runs WHERE id = ?`)
-  return stmt.get(id) as ConsoleRun | undefined
+  return stmt.get(id) as unknown as ConsoleRun | undefined
 }
 
-export function listRunsByCommandId(db: Database.Database, commandId: number): ConsoleRun[] {
+export function listRunsByCommandId(db: CognacDb, commandId: number): ConsoleRun[] {
   const stmt = db.prepare(`
     SELECT * FROM console_runs
     WHERE command_id = ?
     ORDER BY started_at DESC, id DESC
   `)
-  return stmt.all(commandId) as ConsoleRun[]
+  return stmt.all(commandId) as unknown as ConsoleRun[]
 }
 
-export function getLatestRunByCommandId(
-  db: Database.Database,
-  commandId: number,
-): ConsoleRun | undefined {
+export function getLatestRunByCommandId(db: CognacDb, commandId: number): ConsoleRun | undefined {
   const stmt = db.prepare(`
     SELECT * FROM console_runs
     WHERE command_id = ?
     ORDER BY started_at DESC, id DESC
     LIMIT 1
   `)
-  return stmt.get(commandId) as ConsoleRun | undefined
+  return stmt.get(commandId) as unknown as ConsoleRun | undefined
 }
 
-export function getActiveRunByCommandId(
-  db: Database.Database,
-  commandId: number,
-): ConsoleRun | undefined {
+export function getActiveRunByCommandId(db: CognacDb, commandId: number): ConsoleRun | undefined {
   const placeholders = ACTIVE_STATUSES.map(() => '?').join(', ')
   const stmt = db.prepare(`
     SELECT * FROM console_runs
@@ -64,14 +58,10 @@ export function getActiveRunByCommandId(
     ORDER BY started_at DESC, id DESC
     LIMIT 1
   `)
-  return stmt.get(commandId, ...ACTIVE_STATUSES) as ConsoleRun | undefined
+  return stmt.get(commandId, ...ACTIVE_STATUSES) as unknown as ConsoleRun | undefined
 }
 
-export function setRunPid(
-  db: Database.Database,
-  runId: number,
-  pid: number | null,
-): ConsoleRun | undefined {
+export function setRunPid(db: CognacDb, runId: number, pid: number | null): ConsoleRun | undefined {
   const stmt = db.prepare(`
     UPDATE console_runs
     SET pid = @pid
@@ -83,7 +73,7 @@ export function setRunPid(
 }
 
 export function setRunStatus(
-  db: Database.Database,
+  db: CognacDb,
   runId: number,
   status: ConsoleRunStatus,
 ): ConsoleRun | undefined {
@@ -98,7 +88,7 @@ export function setRunStatus(
 }
 
 export function finishRun(
-  db: Database.Database,
+  db: CognacDb,
   runId: number,
   input: {
     status: Extract<ConsoleRunStatus, 'completed' | 'failed' | 'killed'>
@@ -126,7 +116,7 @@ export function finishRun(
   return getRun(db, runId)
 }
 
-export function markActiveRunsKilledOnBoot(db: Database.Database, endedAt: string): number {
+export function markActiveRunsKilledOnBoot(db: CognacDb, endedAt: string): number {
   const placeholders = ACTIVE_STATUSES.map(() => '?').join(', ')
   const stmt = db.prepare(`
     UPDATE console_runs
@@ -136,20 +126,20 @@ export function markActiveRunsKilledOnBoot(db: Database.Database, endedAt: strin
     WHERE status IN (${placeholders})
   `)
   const result = stmt.run(endedAt, ...ACTIVE_STATUSES)
-  return result.changes
+  return Number(result.changes)
 }
 
-export function listExpiredRuns(db: Database.Database, olderThanIso: string): ConsoleRun[] {
+export function listExpiredRuns(db: CognacDb, olderThanIso: string): ConsoleRun[] {
   const stmt = db.prepare(`
     SELECT * FROM console_runs
     WHERE ended_at IS NOT NULL
       AND ended_at < ?
     ORDER BY ended_at ASC, id ASC
   `)
-  return stmt.all(olderThanIso) as ConsoleRun[]
+  return stmt.all(olderThanIso) as unknown as ConsoleRun[]
 }
 
-export function deleteRuns(db: Database.Database, runIds: number[]): number {
+export function deleteRuns(db: CognacDb, runIds: number[]): number {
   if (runIds.length === 0) return 0
 
   const placeholders = runIds.map(() => '?').join(', ')
@@ -158,5 +148,5 @@ export function deleteRuns(db: Database.Database, runIds: number[]): number {
     WHERE id IN (${placeholders})
   `)
   const result = stmt.run(...runIds)
-  return result.changes
+  return Number(result.changes)
 }

@@ -8,7 +8,7 @@ import type {
   ExplorationPersona,
   ExplorationSession,
 } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../db/types.js'
 import * as artifactQueries from '../db/queries/exploration-artifacts.js'
 import * as imageQueries from '../db/queries/exploration-images.js'
 import * as logQueries from '../db/queries/exploration-logs.js'
@@ -91,7 +91,7 @@ export async function executeExplorationPhaseExplore(
   personas: ExplorationPersona[],
   discussions: ExplorationDiscussion[],
   images: ExplorationImage[],
-  db: Database.Database,
+  db: CognacDb,
   config: CognacConfig,
   cwd: string,
   onStream?: (event: AgentStreamEvent) => void,

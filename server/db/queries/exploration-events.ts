@@ -1,10 +1,10 @@
 // 探索イベントの個別永続化クエリ
 
 import type { StoredExplorationEvent } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../types.js'
 
 export function insertEvent(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
   eventType: string,
   eventData: string,
@@ -15,7 +15,7 @@ export function insertEvent(
 }
 
 export function getEventsByExplorationId(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
 ): StoredExplorationEvent[] {
   return db
@@ -24,13 +24,10 @@ export function getEventsByExplorationId(
     WHERE exploration_session_id = ?
     ORDER BY created_at ASC, id ASC
   `)
-    .all(explorationSessionId) as StoredExplorationEvent[]
+    .all(explorationSessionId) as unknown as StoredExplorationEvent[]
 }
 
-export function deleteEventsByExplorationId(
-  db: Database.Database,
-  explorationSessionId: number,
-): number {
+export function deleteEventsByExplorationId(db: CognacDb, explorationSessionId: number): number {
   return db
     .prepare('DELETE FROM exploration_events WHERE exploration_session_id = ?')
     .run(explorationSessionId).changes

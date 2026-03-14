@@ -2,7 +2,7 @@
 // タスクに最適な専門家チーム（2〜4名）を選出する
 
 import type { CognacConfig, Persona, PersonaSelection, Task, TaskEvent } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../db/types.js'
 import * as logQueries from '../db/queries/execution-logs.js'
 import * as personaQueries from '../db/queries/personas.js'
 import { getRepoStructure, getTaskHistory } from './context-cache.js'
@@ -89,7 +89,7 @@ function getGenericPersonas(): PersonaSelection {
 
 export async function executePhasePersona(
   task: Task,
-  db: Database.Database,
+  db: CognacDb,
   config: CognacConfig,
   onEvent?: (event: TaskEvent) => void,
   signal?: AbortSignal,

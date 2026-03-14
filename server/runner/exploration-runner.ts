@@ -7,7 +7,7 @@ import type {
   ExplorationPhase,
   ExplorationSession,
 } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../db/types.js'
 import type { RunnerStatus } from '../api/system.js'
 import * as explorationArtifactQueries from '../db/queries/exploration-artifacts.js'
 import * as explorationEventQueries from '../db/queries/exploration-events.js'
@@ -53,8 +53,8 @@ function serializeGitStatus(cwd: string): string {
 
 function hasUnexpectedRepoChange(before: string, after: string): boolean {
   if (before === after) return false
-  const beforeEntries = JSON.parse(before) as Array<{ path: string; status: string }>
-  const afterEntries = JSON.parse(after) as Array<{ path: string; status: string }>
+  const beforeEntries = JSON.parse(before) as unknown as Array<{ path: string; status: string }>
+  const afterEntries = JSON.parse(after) as unknown as Array<{ path: string; status: string }>
   const changedPaths = new Set<string>()
 
   for (const entry of beforeEntries) changedPaths.add(entry.path)
@@ -97,7 +97,7 @@ export class ExplorationRunner implements RunnerStatus {
   private timer: ReturnType<typeof setTimeout> | null = null
 
   constructor(
-    private db: Database.Database,
+    private db: CognacDb,
     private eventBus: EventBus<ExplorationEvent>,
     private config: CognacConfig,
     private coordinator: ExecutionCoordinator,

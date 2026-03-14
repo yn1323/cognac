@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { mkdir, unlink, writeFile } from 'node:fs/promises'
 import { extname, resolve } from 'node:path'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../db/types.js'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import * as discussionQueries from '../db/queries/discussions.js'
@@ -44,7 +44,7 @@ export interface TaskCanceller {
   stopAll(): number
 }
 
-export function tasksRouter(db: Database.Database, canceller?: TaskCanceller) {
+export function tasksRouter(db: CognacDb, canceller?: TaskCanceller) {
   const app = new Hono()
 
   // タスク一覧
@@ -83,7 +83,7 @@ export function tasksRouter(db: Database.Database, canceller?: TaskCanceller) {
     }
 
     const formData = await c.req.formData()
-    const files = formData.getAll('images') as File[]
+    const files = formData.getAll('images') as unknown as File[]
 
     if (files.length === 0) {
       return c.json({ error: 'ファイルが選択されてない' }, 400)

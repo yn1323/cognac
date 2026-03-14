@@ -3,25 +3,26 @@
 
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
-import Database from 'better-sqlite3'
+import { DatabaseSync } from 'node:sqlite'
 import { initializeSchema } from './schema.js'
+import type { CognacDb } from './types.js'
 
 /**
  * データベースを開く
  * ディレクトリがなければ作るし、WAL・外部キー・スキーマ初期化も全部やってくれる
  */
-export function openDb(dbPath: string): Database.Database {
+export function openDb(dbPath: string): CognacDb {
   // ディレクトリがなかったら作っとく
   mkdirSync(dirname(dbPath), { recursive: true })
 
   // DB接続
-  const db = new Database(dbPath)
+  const db = new DatabaseSync(dbPath)
 
-  // BigIntじゃなくてnumberで返してほしいよね
-  db.defaultSafeIntegers(false)
+  // DatabaseSync → CognacDb にキャスト（node:sqliteの厳密な型を緩める）
+  const cognacDb = db as unknown as CognacDb
 
   // スキーマ初期化（WALとforeign keysもここで有効化される）
-  initializeSchema(db)
+  initializeSchema(cognacDb)
 
-  return db
+  return cognacDb
 }

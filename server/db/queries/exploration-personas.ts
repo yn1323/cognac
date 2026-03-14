@@ -1,8 +1,9 @@
 import type { ExplorationPersona } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../types.js'
+import { transaction } from '../transaction.js'
 
 export function createExplorationPersonas(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
   personas: { persona_id: string; name: string; focus: string; tone: string; emoji: string }[],
 ): ExplorationPersona[] {
@@ -18,7 +19,7 @@ export function createExplorationPersonas(
   `)
 
   const results: ExplorationPersona[] = []
-  const insertAll = db.transaction(() => {
+  const insertAll = transaction(db, () => {
     for (const persona of personas) {
       const result = stmt.run({
         exploration_session_id: explorationSessionId,
@@ -38,7 +39,7 @@ export function createExplorationPersonas(
 }
 
 export function getExplorationPersonasBySessionId(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
 ): ExplorationPersona[] {
   const stmt = db.prepare(`
@@ -47,16 +48,16 @@ export function getExplorationPersonasBySessionId(
     WHERE exploration_session_id = ?
     ORDER BY id ASC
   `)
-  return stmt.all(explorationSessionId) as ExplorationPersona[]
+  return stmt.all(explorationSessionId) as unknown as ExplorationPersona[]
 }
 
 export function deleteExplorationPersonasBySessionId(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
 ): number {
   const stmt = db.prepare(`
     DELETE FROM exploration_personas
     WHERE exploration_session_id = ?
   `)
-  return stmt.run(explorationSessionId).changes
+  return Number(stmt.run(explorationSessionId).changes)
 }

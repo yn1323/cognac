@@ -1,13 +1,13 @@
 // プランのCRUD操作
 
 import type { Plan } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../types.js'
 
 /**
  * プランを作成する
  */
 export function createPlan(
-  db: Database.Database,
+  db: CognacDb,
   data: {
     task_id: number
     plan_markdown: string
@@ -40,15 +40,15 @@ export function createPlan(
 /**
  * タスクIDでプランを取得する（最新のものを返す）
  */
-export function getPlanByTaskId(db: Database.Database, taskId: number): Plan | undefined {
+export function getPlanByTaskId(db: CognacDb, taskId: number): Plan | undefined {
   const stmt = db.prepare(`SELECT * FROM plans WHERE task_id = ? ORDER BY id DESC LIMIT 1`)
-  return stmt.get(taskId) as Plan | undefined
+  return stmt.get(taskId) as unknown as Plan | undefined
 }
 
 /**
  * タスクIDでプランを全削除する（リトライ時のクリーンアップ用）
  */
-export function deletePlanByTaskId(db: Database.Database, taskId: number): number {
+export function deletePlanByTaskId(db: CognacDb, taskId: number): number {
   const stmt = db.prepare('DELETE FROM plans WHERE task_id = ?')
-  return stmt.run(taskId).changes
+  return Number(stmt.run(taskId).changes)
 }

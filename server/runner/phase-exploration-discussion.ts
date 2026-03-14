@@ -7,7 +7,7 @@ import type {
   ExplorationPersona,
   ExplorationSession,
 } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../db/types.js'
 import * as discussionQueries from '../db/queries/exploration-discussions.js'
 import * as logQueries from '../db/queries/exploration-logs.js'
 import { getRepoStructure } from './context-cache.js'
@@ -122,7 +122,7 @@ export async function executeExplorationPhaseDiscussion(
   exploration: ExplorationSession,
   personas: ExplorationPersona[],
   images: ExplorationImage[],
-  db: Database.Database,
+  db: CognacDb,
   config: CognacConfig,
   onEvent?: (event: ExplorationEvent) => void,
   signal?: AbortSignal,

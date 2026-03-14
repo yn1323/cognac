@@ -1,13 +1,14 @@
 // ペルソナのCRUD操作
 
 import type { Persona } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../types.js'
+import { transaction } from '../transaction.js'
 
 /**
  * ペルソナを一括作成する（トランザクション）
  */
 export function createPersonas(
-  db: Database.Database,
+  db: CognacDb,
   taskId: number,
   personas: { persona_id: string; name: string; focus: string; tone: string; emoji: string }[],
 ): Persona[] {
@@ -20,7 +21,7 @@ export function createPersonas(
 
   const results: Persona[] = []
 
-  const insertAll = db.transaction(() => {
+  const insertAll = transaction(db, () => {
     for (const persona of personas) {
       const result = stmt.run({ task_id: taskId, ...persona })
       results.push({
@@ -39,15 +40,15 @@ export function createPersonas(
 /**
  * タスクIDでペルソナ一覧を取得する
  */
-export function getPersonasByTaskId(db: Database.Database, taskId: number): Persona[] {
+export function getPersonasByTaskId(db: CognacDb, taskId: number): Persona[] {
   const stmt = db.prepare(`SELECT * FROM personas WHERE task_id = ? ORDER BY id ASC`)
-  return stmt.all(taskId) as Persona[]
+  return stmt.all(taskId) as unknown as Persona[]
 }
 
 /**
  * タスクIDでペルソナを全削除する（リトライ時のクリーンアップ用）
  */
-export function deletePersonasByTaskId(db: Database.Database, taskId: number): number {
+export function deletePersonasByTaskId(db: CognacDb, taskId: number): number {
   const stmt = db.prepare('DELETE FROM personas WHERE task_id = ?')
-  return stmt.run(taskId).changes
+  return Number(stmt.run(taskId).changes)
 }

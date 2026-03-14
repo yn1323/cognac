@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { CiStep, CognacConfig, TaskEvent } from '@cognac/shared'
 import { hashFiles } from '@cognac/shared/utils/hash'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../db/types.js'
 import * as ciCacheQueries from '../db/queries/ci-cache.js'
 
 // CI関連の設定ファイル（ハッシュ変更でキャッシュ無効化）
@@ -37,7 +37,7 @@ function detectFromPackageJson(cwd: string): CiStep[] {
 
 // CIステップを取得する（キャッシュ or 検出）
 export function getCiSteps(
-  db: Database.Database,
+  db: CognacDb,
   config: CognacConfig,
   cwd: string = process.cwd(),
 ): CiStep[] {
