@@ -4,6 +4,7 @@
 import type { Task } from '@cognac/shared'
 import { Check, Copy, FileText, Terminal } from 'lucide-react'
 import { useState } from 'react'
+import { MarkdownRenderer } from '@/components/markdown-renderer'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -70,9 +71,7 @@ export function PCPlanTab({ task }: { task: Task }) {
         </div>
 
         <div className="p-6">
-          <pre className="whitespace-pre-wrap text-sm leading-[1.6] text-foreground">
-            {plan.plan_markdown}
-          </pre>
+          <MarkdownRenderer content={plan.plan_markdown} variant="full" />
         </div>
       </Card>
 
@@ -130,9 +129,7 @@ export function SPPlanTab({ task }: { task: Task }) {
 
       {/* プランカード */}
       <Card className="overflow-hidden p-3.5">
-        <pre className="whitespace-pre-wrap text-[13px] leading-[1.5] text-foreground">
-          {plan.plan_markdown}
-        </pre>
+        <MarkdownRenderer content={plan.plan_markdown} variant="full" className="text-[13px]" />
       </Card>
 
       {/* 実行プロンプト */}

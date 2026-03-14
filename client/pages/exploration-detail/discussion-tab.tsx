@@ -5,6 +5,7 @@
 import type { ExplorationSession } from '@cognac/shared'
 import { useMemo } from 'react'
 import { ConsensusMarker, RoundSeparator } from '@/components/discussion-markers'
+import { MarkdownRenderer } from '@/components/markdown-renderer'
 import { Card } from '@/components/ui/card'
 import { useExplorationDiscussions, useExplorationPersonas } from '@/hooks/use-explorations'
 import { groupByRound } from '@/lib/discussion-utils'
@@ -113,9 +114,7 @@ export function PCDiscussionTab({ exploration }: { exploration: ExplorationSessi
                     </span>
                   )}
                   <div className="rounded-2xl bg-secondary px-3 py-2">
-                    <p className="whitespace-pre-wrap text-sm leading-[1.5] text-foreground">
-                      {d.content}
-                    </p>
+                    <MarkdownRenderer content={d.content} variant="inline" />
                   </div>
                 </div>
               </div>
@@ -199,9 +198,11 @@ export function SPDiscussionTab({ exploration }: { exploration: ExplorationSessi
                     </span>
                   )}
                   <div className="rounded-2xl bg-secondary px-2.5 py-1.5">
-                    <p className="whitespace-pre-wrap text-[13px] leading-[1.5] text-foreground">
-                      {d.content}
-                    </p>
+                    <MarkdownRenderer
+                      content={d.content}
+                      variant="inline"
+                      className="text-[13px]"
+                    />
                   </div>
                 </div>
               </div>

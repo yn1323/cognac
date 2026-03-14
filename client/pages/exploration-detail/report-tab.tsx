@@ -14,6 +14,7 @@ import {
   TriangleAlert,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { MarkdownRenderer } from '@/components/markdown-renderer'
 import { TaskifyModal } from '@/components/taskify-modal'
 import { useToast } from '@/components/toast'
 import { Button } from '@/components/ui/button'
@@ -99,7 +100,7 @@ function ReportBlock({
         <span className={`${titleSize} font-semibold text-foreground`}>{title}</span>
       </div>
       <div className="h-px bg-border" />
-      <p className="whitespace-pre-wrap text-[13px] leading-normal text-foreground">{content}</p>
+      <MarkdownRenderer content={content} variant="full" className="text-[13px]" />
     </Card>
   )
 }
@@ -246,9 +247,11 @@ export function PCReportTab({ exploration }: { exploration: ExplorationSession }
         <ReportBlocks report={parsed} />
       ) : (
         <Card className="p-5">
-          <p className="whitespace-pre-wrap text-[13px] leading-normal text-foreground">
-            {reportData?.markdown ?? exploration.final_report_markdown}
-          </p>
+          <MarkdownRenderer
+            content={reportData?.markdown ?? exploration.final_report_markdown ?? ''}
+            variant="full"
+            className="text-[13px]"
+          />
         </Card>
       )}
 
@@ -319,9 +322,11 @@ export function SPReportTab({ exploration }: { exploration: ExplorationSession }
         <ReportBlocks report={parsed} size="sm" />
       ) : (
         <Card className="p-4">
-          <p className="whitespace-pre-wrap text-[13px] leading-normal text-foreground">
-            {reportData?.markdown ?? exploration.final_report_markdown}
-          </p>
+          <MarkdownRenderer
+            content={reportData?.markdown ?? exploration.final_report_markdown ?? ''}
+            variant="full"
+            className="text-[13px]"
+          />
         </Card>
       )}
 
