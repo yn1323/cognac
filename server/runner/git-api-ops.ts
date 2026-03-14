@@ -340,16 +340,19 @@ export function createGhPr(
       params.base,
       '--head',
       params.head,
-      '--json',
-      'number,url',
     ],
     { cwd, encoding: 'utf8', timeout: 30000 },
   )
   if (result.status !== 0) {
     throw new Error(result.stderr || 'PR作成に失敗しました')
   }
-  const parsed = JSON.parse(result.stdout.trim()) as { number: number; url: string }
-  return parsed
+  // gh pr create はPRのURLを標準出力に返す（例: https://github.com/owner/repo/pull/42）
+  const url = result.stdout.trim()
+  const match = url.match(/\/pull\/(\d+)\s*$/)
+  if (!match) {
+    throw new Error(`PR URLのパースに失敗: ${url}`)
+  }
+  return { number: Number(match[1]), url }
 }
 
 // gh CLIで既存PRを更新する
