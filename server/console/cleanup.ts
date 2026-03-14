@@ -1,5 +1,5 @@
-import type { CognacDb } from '../db/types.js'
 import * as consoleRunQueries from '../db/queries/console-runs.js'
+import type { CognacDb } from '../db/types.js'
 import { deleteRunLog, ensureConsoleLogRoot } from './log-store.js'
 
 const DEFAULT_RETENTION_MS = 24 * 60 * 60 * 1000

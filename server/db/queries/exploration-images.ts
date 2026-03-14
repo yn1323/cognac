@@ -1,6 +1,6 @@
 import type { ExplorationImage, ExplorationImageSourceType } from '@cognac/shared'
-import type { CognacDb } from '../types.js'
 import { transaction } from '../transaction.js'
+import type { CognacDb } from '../types.js'
 
 export function createExplorationImages(
   db: CognacDb,

@@ -10,10 +10,10 @@ import type {
   Task,
   TaskEvent,
 } from '@cognac/shared'
-import type { CognacDb } from '../db/types.js'
 import * as logQueries from '../db/queries/execution-logs.js'
 import * as planQueries from '../db/queries/plans.js'
 import * as imageQueries from '../db/queries/task-images.js'
+import type { CognacDb } from '../db/types.js'
 import { getRepoStructure } from './context-cache.js'
 import { formatDiscussions } from './discussion-utils.js'
 import { extractJson } from './json-parser.js'

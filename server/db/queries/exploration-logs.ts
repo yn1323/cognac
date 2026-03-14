@@ -1,6 +1,6 @@
 import type { ExplorationLog } from '@cognac/shared'
-import type { CognacDb } from '../types.js'
 import { toUtcIso8601 } from '../../utils/date-time.js'
+import type { CognacDb } from '../types.js'
 import {
   deleteLogsByParentId,
   insertLog,

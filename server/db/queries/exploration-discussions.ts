@@ -1,6 +1,6 @@
 import type { ExplorationDiscussion } from '@cognac/shared'
-import type { CognacDb } from '../types.js'
 import { transaction } from '../transaction.js'
+import type { CognacDb } from '../types.js'
 
 type RawExplorationDiscussion = Omit<ExplorationDiscussion, 'should_continue'> & {
   should_continue: number

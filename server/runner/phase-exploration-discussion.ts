@@ -7,9 +7,9 @@ import type {
   ExplorationPersona,
   ExplorationSession,
 } from '@cognac/shared'
-import type { CognacDb } from '../db/types.js'
 import * as discussionQueries from '../db/queries/exploration-discussions.js'
 import * as logQueries from '../db/queries/exploration-logs.js'
+import type { CognacDb } from '../db/types.js'
 import { getRepoStructure } from './context-cache.js'
 import { groupDiscussionsByRound } from './discussion-utils.js'
 import { extractJson } from './json-parser.js'
