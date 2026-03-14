@@ -27,8 +27,10 @@ pnpm install              # 全依存関係のインストール
 pnpm dev                  # 開発モード起動 (server :4000 + Vite :5173)
 pnpm build                # 全パッケージビルド (依存順に直列実行)
 pnpm typecheck            # 全パッケージの型チェック (並列)
-pnpm lint                 # 全パッケージのlint (並列) — 現在はスタブ
+pnpm lint                 # 全パッケージのlint (biome check .)
+pnpm format               # コード整形 (biome format --write .)
 pnpm test                 # 全パッケージのテスト (並列) — 現在はスタブ
+pnpm dev:win              # Windows用開発モード起動
 pnpm storybook            # Storybook起動 :6006
 
 # パッケージ単位
@@ -44,13 +46,31 @@ pnpm --filter @cognac/shared typecheck
 
 ### Server (`server/`)
 
-- **API** (`api/`): タスクのREST CRUD + SSEストリーミング + システムステータス、Zodバリデーション
-- **DB** (`db/`): `better-sqlite3`によるSQLite、WALモード、スキーマ自動初期化。テーブル: tasks, personas, discussions, plans, execution_logs, ci_cache, task_images
-- **Runner** (`runner/`): TaskRunnerが1秒ごとにポーリングし、パイプライン全体を実行。主要ファイル:
-  - `claude-caller.ts` — `claude -p --output-format stream-json`をspawn、stdout タイムアウト監視
-  - `stream-parser.ts` — Claude CLIのstream-jsonをTaskEventに変換
-  - `phase-execute.ts` — 実行プロンプトを構築し、`--dangerously-skip-permissions`でClaudeを呼び出す
-  - `ci-runner.ts` — package.jsonからCIステップを自動検出、spawnSyncで各ステップを実行
+- **API** (`api/`): Zodバリデーション付きREST API群
+  - `tasks.ts` — タスクCRUD + 状態遷移
+  - `explorations.ts` — 探索セッションCRUD
+  - `git.ts` — Git操作（ブランチ一覧、diff、コミット、マージ）
+  - `console.ts` — コンソールコマンド管理・実行
+  - `settings.ts` — アプリケーション設定
+  - `stream.ts` — SSEストリーミングエンドポイント
+  - `system.ts` — システムステータス
+- **Console** (`console/`): ターミナルコマンドの管理・実行エンジン
+  - `console-manager.ts` — コマンドのspawn、プロセスライフサイクル管理
+  - `log-store.ts` — 実行ログの保存・取得
+  - `process-tree.ts` — プロセスツリーの管理
+  - `cleanup.ts` — プロセスのクリーンアップ処理
+- **DB** (`db/`): `better-sqlite3`によるSQLite、WALモード、スキーマ自動初期化
+  - タスク系: tasks, task_images, personas, discussions, plans, execution_logs, task_events
+  - 探索系: exploration_sessions, exploration_images, exploration_personas, exploration_discussions, exploration_artifacts, exploration_logs, exploration_events, exploration_taskify_jobs
+  - コンソール系: console_commands, console_runs
+  - その他: ci_cache
+- **Runner** (`runner/`): TaskRunnerが1秒ごとにポーリングし、パイプライン全体を実行
+  - `task-runner.ts` — タスクパイプラインのオーケストレーション
+  - `exploration-runner.ts` — 探索パイプラインのオーケストレーション
+  - `providers/` — CLIプロバイダー抽象化レイヤー（Claude CLI / Codex CLI）
+  - `stream-parser.ts` — CLIのstream-jsonをイベントに変換
+  - `phase-*.ts` — 各フェーズの実行ロジック（persona, discussion, plan, execute等）
+  - `ci-runner.ts` — package.jsonからCIステップを自動検出、実行
   - `git-ops.ts` — ブランチ作成、no-ffマージ、クリーンアップ
   - `error-classifier.ts` — エラーをapp（リトライ可能）またはinfra（一時停止）に分類
 - **SSE** (`sse/`): タスクIDごとのpub/subを持つEventBus
@@ -62,10 +82,26 @@ React 19 + Vite 6 + TailwindCSS v4 + React Router v7 + TanStack Query v5。コ�
 ### タスク状態マシン
 
 ```
-pending → discussing → planned → executing → testing → completed
-                                    ↓
-                                 paused (infraエラー) / stopped (リトライ上限到達)
+pending → discussing → executing → reviewing → completed
+              ↓            ↓
+           paused / stopped (infraエラー / リトライ上限到達)
 ```
+
+- `discussing`: ペルソナ選定 → ディスカッション → プラン策定（Phase 2全体）
+- `executing`: コード実行（Phase 3）
+- `reviewing`: CI実行
+
+### 探索状態マシン
+
+```
+pending → discussing → executing → reviewing → completed
+              ↓            ↓           ↓
+           paused / stopped (infraエラー / リトライ上限到達)
+```
+
+- `discussing`: ペルソナ選定 → ディスカッション
+- `executing`: 探索実行（Claude/Codex エージェント）
+- `reviewing`: レポート生成
 
 ### AIワークフローフェーズ
 
@@ -78,11 +114,11 @@ pending → discussing → planned → executing → testing → completed
 - **ブランチ命名**: `task/<task-id>-<slugified-title>` (slug部分は最大30文字)
 - **Node.js 22**必須 (CIでNode 22を使用)
 - **`packageManager: pnpm@10.6.2`** — npm/yarnではなくpnpmを使用
-- **画面名とpencil NodeIDの紐づけ** — `doc/spec/pencilDesignId.md`
+- **画面名とpencil NodeIDの紐づけ** — `doc/design/index.md`
 
 ## CI
 
-pushトリガーの4つのGitHub Actionsワークフロー: `build.yml`、`lint.yml`、`test.yml`、`typecheck.yml`。全て共有のcomposite action (`.github/actions/setup/`) を使用し、pnpm + Node 22 + frozen lockfileで統一。
+pushトリガーの5つのGitHub Actionsワークフロー: `build.yml`、`lint.yml`、`test.yml`、`typecheck.yml`、`publish.yml`。全て共有のcomposite action (`.github/actions/setup/`) を使用し、pnpm + Node 22 + frozen lockfileで統一。
 
 ## ポート一覧
 
@@ -97,6 +133,7 @@ pushトリガーの4つのGitHub Actionsワークフロー: `build.yml`、`lint.
 ## 品質
 
 - タスク完了時に下記コマンドで異常がないか確認すること
+   - `pnpm format`
    - `pnpm test`
    - `pnpm lint` (エラーがあれば修正する)
    - `pnpm typecheck`
@@ -141,5 +178,5 @@ pushトリガーの4つのGitHub Actionsワークフロー: `build.yml`、`lint.
 
 ## CLI設計
 
-- IMPORTANT: Windonws, Mac両方で正常に動作すること
+- IMPORTANT: Windows, Mac両方で正常に動作すること
 - IMPORTANT: Claude Cli, Codex Cli を設定画面から選択して利用可能。実装、修正時は両方考慮すること。
