@@ -479,6 +479,7 @@ export function SettingsPage() {
           steps: ciSteps.filter((s) => s.name.trim() && s.command.trim()),
         },
         git: {
+          defaultBranch: settings?.git?.defaultBranch ?? 'main',
           commitLogLimit: commitLogLimitNum,
           commitMessageLanguage,
         },

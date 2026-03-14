@@ -11,6 +11,7 @@ import {
   GitBranch,
   GitBranchPlus,
   GitMerge,
+  GitPullRequest,
   Loader2,
   RefreshCw,
   Trash2,
@@ -25,6 +26,7 @@ import { GitDiffView } from '@/components/git-diff-view'
 import { MergeModal } from '@/components/merge-modal'
 import { NewBranchModal } from '@/components/new-branch-modal'
 import { PageHeader } from '@/components/page-header'
+import { PrModal } from '@/components/pr-modal'
 import { Sidebar } from '@/components/sidebar'
 import { SPHeader } from '@/components/sp-header'
 import { useToast } from '@/components/toast'
@@ -34,6 +36,7 @@ import {
   useAiCommit,
   useCheckout,
   useCreateBranch,
+  useCreatePullRequest,
   useDeleteBranch,
   useDiscardAll,
   useExplainCommit,
@@ -210,6 +213,9 @@ interface GitPageViewProps {
   fileDiff: string | null
   isFileDiffLoading: boolean
   onRevertCommit: (hash: string, message: string) => void
+  onTogglePrModal: () => void
+  isOnDefaultBranch: boolean
+  defaultBranch: string
 }
 
 // --- PC版 ---
@@ -242,6 +248,8 @@ function PCGitPage({
   fileDiff,
   isFileDiffLoading,
   onRevertCommit,
+  onTogglePrModal,
+  isOnDefaultBranch,
 }: GitPageViewProps) {
   return (
     <div className="flex h-screen bg-[#fafafa]">
@@ -258,20 +266,32 @@ function PCGitPage({
       <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-8">
         {/* ページヘッダー */}
         <PageHeader title="Git" subtitle="ブランチ管理、変更の確認、コミット操作">
-          <Button variant="outline" size="sm" onClick={onFetch} disabled={isFetching}>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-9 w-9"
+            onClick={onFetch}
+            disabled={isFetching}
+            title="Fetch"
+          >
             <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-            Fetch
-          </Button>
-          <Button variant="outline" size="sm" onClick={onToggleMergeModal}>
-            <GitMerge className="h-4 w-4" />
-            マージ
           </Button>
           <Button
-            variant="primary"
-            size="sm"
+            variant="outline"
+            size="icon"
+            className="h-9 w-9"
+            onClick={onToggleMergeModal}
+            title="マージ"
+          >
+            <GitMerge className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className={`h-9 w-9 ${pushPhase === 'success' ? 'bg-green-600 text-white hover:bg-green-600' : ''}`}
             onClick={onPush}
             disabled={pushPhase !== 'idle'}
-            className={pushPhase === 'success' ? 'bg-green-600 hover:bg-green-600' : ''}
+            title="Push"
           >
             {pushPhase === 'pushing' ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -280,7 +300,16 @@ function PCGitPage({
             ) : (
               <Upload className="h-4 w-4" />
             )}
-            {pushPhase === 'pushing' ? 'Pushing...' : pushPhase === 'success' ? 'Pushed!' : 'Push'}
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={onTogglePrModal}
+            disabled={isOnDefaultBranch}
+            title={isOnDefaultBranch ? 'デフォルトブランチではPR作成できません' : undefined}
+          >
+            <GitPullRequest className="h-4 w-4" />
+            PR作成
           </Button>
         </PageHeader>
 
@@ -383,6 +412,8 @@ function SPGitPage({
   fileDiff,
   isFileDiffLoading,
   onRevertCommit,
+  onTogglePrModal,
+  isOnDefaultBranch,
 }: GitPageViewProps) {
   useScrollLock(!!selectedFilePath)
 
@@ -418,9 +449,9 @@ function SPGitPage({
               <GitMerge className="h-4 w-4" />
             </Button>
             <Button
-              variant="primary"
+              variant="outline"
               size="icon"
-              className={`h-8 w-8 ${pushPhase === 'success' ? 'bg-green-600 hover:bg-green-600' : ''}`}
+              className={`h-8 w-8 ${pushPhase === 'success' ? 'bg-green-600 text-white hover:bg-green-600' : ''}`}
               onClick={onPush}
               disabled={pushPhase !== 'idle'}
             >
@@ -431,6 +462,16 @@ function SPGitPage({
               ) : (
                 <Upload className="h-4 w-4" />
               )}
+            </Button>
+            <Button
+              variant="primary"
+              size="icon"
+              className="h-8 w-8"
+              onClick={onTogglePrModal}
+              disabled={isOnDefaultBranch}
+              title={isOnDefaultBranch ? 'デフォルトブランチではPR作成できません' : undefined}
+            >
+              <GitPullRequest className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -516,6 +557,7 @@ export function GitPage() {
   const [showMergeModal, setShowMergeModal] = useState(false)
   const [showNewBranchModal, setShowNewBranchModal] = useState(false)
   const [showDiscardDialog, setShowDiscardDialog] = useState(false)
+  const [showPrModal, setShowPrModal] = useState(false)
   const [deletingBranch, setDeletingBranch] = useState<string | null>(null)
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null)
   const [explainTarget, setExplainTarget] = useState<
@@ -553,6 +595,7 @@ export function GitPage() {
   const explainMutation = useExplainCommit()
   const explainWorkingMutation = useExplainWorking()
   const revertMutation = useRevert()
+  const prMutation = useCreatePullRequest()
 
   // 選択中ファイルが一覧から消えたらリセット
   const files = statusData?.files ?? []
@@ -572,6 +615,9 @@ export function GitPage() {
   const currentBranch = statusData?.currentBranch ?? ''
   const ahead = remoteStatus?.ahead ?? 0
   const behind = remoteStatus?.behind ?? 0
+
+  const defaultBranch = settings?.git?.defaultBranch || 'main'
+  const isOnDefaultBranch = currentBranch === defaultBranch
 
   const handleNavigate = (path: string) => navigate(path)
   const handleStartCommit = () =>
@@ -681,6 +727,26 @@ export function GitPage() {
     setDeletingBranch(name)
   }
 
+  const handleTogglePrModal = () => {
+    if (!showPrModal) {
+      prMutation.reset()
+    }
+    setShowPrModal((v) => !v)
+  }
+
+  const handleCreatePr = () => {
+    prMutation.mutate(defaultBranch, {
+      onSuccess: (data) => {
+        if (data.success) {
+          toast(data.isUpdate ? 'PRを更新しました' : 'PRを作成しました', 'success')
+        } else {
+          toast(data.error || 'PR作成に失敗しました', 'error')
+        }
+      },
+      onError: () => toast('PR作成に失敗しました', 'error'),
+    })
+  }
+
   const handleConfirmDelete = () => {
     if (!deletingBranch) return
     deleteBranchMutation.mutate(deletingBranch, {
@@ -723,6 +789,9 @@ export function GitPage() {
     fileDiff: fileDiffData?.diff ?? null,
     isFileDiffLoading,
     onRevertCommit: handleRevertCommit,
+    onTogglePrModal: handleTogglePrModal,
+    isOnDefaultBranch,
+    defaultBranch,
   }
 
   return (
@@ -737,6 +806,26 @@ export function GitPage() {
       </div>
 
       {/* モーダルは一度だけレンダリング */}
+      <PrModal
+        open={showPrModal}
+        onClose={handleTogglePrModal}
+        currentBranch={currentBranch}
+        baseBranch={defaultBranch}
+        onSubmit={handleCreatePr}
+        isPending={prMutation.isPending}
+        result={
+          prMutation.data ??
+          (prMutation.isError
+            ? {
+                success: false,
+                steps: [],
+                isUpdate: false,
+                error: prMutation.error?.message,
+              }
+            : undefined)
+        }
+        error={prMutation.error instanceof Error ? prMutation.error : null}
+      />
       <MergeModal
         open={showMergeModal}
         onClose={handleToggleMergeModal}

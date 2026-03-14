@@ -71,12 +71,17 @@ export type {
   GitLogResponse,
   GitMergeRequest,
   GitMergeResponse,
+  GitPullRequestRequest,
+  GitPullRequestResponse,
   GitPushResponse,
   GitRemoteStatus,
   GitRemoteStatusResponse,
   GitRevertRequest,
   GitRevertResponse,
   GitStatusResponse,
+  PrResult,
+  PrStep,
+  PrStepStatus,
 } from './types/git.js'
 export type { BaseLog, StoredEvent, StoredExplorationEvent, StoredTaskEvent } from './types/log.js'
 export type { Persona, PersonaSelection } from './types/persona.js'

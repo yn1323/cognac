@@ -122,3 +122,32 @@ export interface GitRevertResponse {
   hash: string
   message: string
 }
+
+// --- PR作成 ---
+
+// PR作成ステップの進捗ステータス
+export type PrStepStatus = 'done' | 'in-progress' | 'pending' | 'skipped'
+
+export interface PrStep {
+  id: string
+  label: string
+  status: PrStepStatus
+}
+
+export interface PrResult {
+  success: boolean
+  steps: PrStep[]
+  pr?: {
+    number: number
+    title: string
+    url: string
+  }
+  isUpdate: boolean
+  error?: string
+}
+
+export interface GitPullRequestRequest {
+  baseBranch: string
+}
+
+export interface GitPullRequestResponse extends PrResult {}

@@ -162,3 +162,15 @@ export function useRevert() {
     },
   })
 }
+
+export function useCreatePullRequest() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (baseBranch: string) => api.git.pullRequest(baseBranch),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['git', 'status'] })
+      qc.invalidateQueries({ queryKey: ['git', 'log'] })
+      qc.invalidateQueries({ queryKey: ['git', 'remote-status'] })
+    },
+  })
+}

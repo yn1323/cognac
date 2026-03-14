@@ -1,21 +1,27 @@
 // Git GUI APIルーター
 // /api/git/* エンドポイントを提供
 
-import type { CognacConfig } from '@cognac/shared'
+import type { CognacConfig, PrStep } from '@cognac/shared'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import {
+  checkGhAuth,
+  checkGhInstalled,
   checkout,
   commitWithMessage,
   createBranch,
+  createGhPr,
   deleteBranch,
   discardAll,
   fetchAll,
+  findExistingPr,
   getBranches,
   getCommitDiff,
   getCurrentBranch,
+  getDiffAgainstBase,
   getFileDiff,
   getLog,
+  getLogAgainstBase,
   getRecentLogOneline,
   getRemoteStatus,
   getStagedDiff,
@@ -25,6 +31,7 @@ import {
   push,
   revert,
   stageAll,
+  updateGhPr,
   validateBranchName,
 } from '../runner/git-api-ops.js'
 import { createProvider } from '../runner/providers/index.js'
@@ -47,6 +54,10 @@ const hashSchema = z.object({
 const mergeSchema = z.object({
   from: z.string().min(1, 'マージ元ブランチを指定してください'),
   into: z.string().min(1, 'マージ先ブランチを指定してください'),
+})
+
+const pullRequestSchema = z.object({
+  baseBranch: z.string().min(1, 'ベースブランチを指定してください'),
 })
 
 export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
@@ -302,6 +313,125 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
     }
   })
 
+  // POST /pull-request — PR作成（全自動: stage→AIコミット→push→PR作成/更新）
+  app.post('/pull-request', async (c) => {
+    const body = await c.req.json()
+    const parsed = pullRequestSchema.safeParse(body)
+    if (!parsed.success) {
+      return c.json({ error: 'バリデーションエラー', details: parsed.error.issues }, 400)
+    }
+    const { baseBranch } = parsed.data
+
+    // 事前チェック
+    const currentBranch = getCurrentBranch(cwd)
+    if (!currentBranch) {
+      return c.json({ error: 'detached HEAD状態ではPRを作成できません' }, 400)
+    }
+    if (currentBranch === baseBranch) {
+      return c.json({ error: 'デフォルトブランチではPRを作成できません' }, 400)
+    }
+
+    try {
+      checkGhInstalled()
+      checkGhAuth()
+    } catch (err) {
+      return c.json({ error: err instanceof Error ? err.message : 'gh CLIエラー' }, 400)
+    }
+
+    // ステップ初期化
+    const steps: PrStep[] = [
+      { id: 'stage', label: '変更をステージング', status: 'pending' },
+      { id: 'commit', label: 'AIコミット', status: 'pending' },
+      { id: 'push', label: 'リモートにPush', status: 'pending' },
+      { id: 'create-pr', label: 'PR作成', status: 'pending' },
+    ]
+
+    const updateStep = (id: string, status: PrStep['status']) => {
+      const step = steps.find((s) => s.id === id)
+      if (step) step.status = status
+    }
+
+    try {
+      // Step 1: ステージング
+      const files = getStatus(cwd)
+      if (files.length > 0) {
+        updateStep('stage', 'in-progress')
+        stageAll(cwd)
+        updateStep('stage', 'done')
+      } else {
+        updateStep('stage', 'skipped')
+      }
+
+      // Step 2: AIコミット
+      const stagedDiff = getStagedDiff(cwd)
+      if (stagedDiff) {
+        updateStep('commit', 'in-progress')
+        const recentLog = getRecentLogOneline(cwd)
+        const commitMsg = await withTimeout(
+          generateCommitMessage(stagedDiff, recentLog, getConfig),
+          60000,
+          'コミットメッセージ生成',
+        )
+        // 空文字チェック
+        const trimmed = commitMsg.trim()
+        if (!trimmed) {
+          throw new Error('コミットメッセージの生成結果が空です')
+        }
+        commitWithMessage(cwd, trimmed)
+        updateStep('commit', 'done')
+      } else {
+        updateStep('commit', 'skipped')
+      }
+
+      // Step 3: Push
+      updateStep('push', 'in-progress')
+      push(cwd)
+      updateStep('push', 'done')
+
+      // Step 4: PR作成 or 更新
+      updateStep('create-pr', 'in-progress')
+      const diff = getDiffAgainstBase(cwd, baseBranch)
+      const commitLog = getLogAgainstBase(cwd, baseBranch)
+      const { title, body: prBody } = await withTimeout(
+        generatePrContent(diff, commitLog, baseBranch, currentBranch, getConfig),
+        60000,
+        'PR内容生成',
+      )
+
+      const existingPr = findExistingPr(cwd, currentBranch)
+      let prInfo: { number: number; url: string }
+      let isUpdate = false
+
+      if (existingPr) {
+        prInfo = updateGhPr(cwd, existingPr.number, { title, body: prBody })
+        isUpdate = true
+      } else {
+        prInfo = createGhPr(cwd, {
+          title,
+          body: prBody,
+          base: baseBranch,
+          head: currentBranch,
+        })
+      }
+      updateStep('create-pr', 'done')
+
+      return c.json({
+        success: true,
+        steps,
+        pr: { number: prInfo.number, title, url: prInfo.url },
+        isUpdate,
+      })
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'PR作成中にエラーが発生しました'
+      return c.json({
+        success: false,
+        steps,
+        isUpdate: false,
+        error: errorMsg,
+      })
+    }
+  })
+
   // GET /file-diff?path=xxx — ファイル単位の未コミットdiffを取得
   app.get('/file-diff', (c) => {
     const filePath = c.req.query('path')
@@ -356,6 +486,17 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
   })
 
   return app
+}
+
+// AI呼び出しのタイムアウトラッパー（60秒）
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`${label}がタイムアウトしました（${ms / 1000}秒）`)),
+      ms,
+    )
+    promise.then(resolve, reject).finally(() => clearTimeout(timer))
+  })
 }
 
 // CLI を使ってコミットの変更内容を解説する
@@ -422,5 +563,54 @@ ${langRule}
   } catch (err) {
     console.error('[generateCommitMessage] CLI 失敗:', err)
     return 'chore: update files'
+  }
+}
+
+// CLI を使ってPRタイトルと本文を生成する
+async function generatePrContent(
+  diff: string,
+  commitLog: string,
+  baseBranch: string,
+  headBranch: string,
+  getConfig: () => CognacConfig,
+): Promise<{ title: string; body: string }> {
+  const prompt = `以下の変更内容に対して、GitHubのPull Requestのタイトルと本文を生成してください。
+
+## ブランチ情報:
+- ベース: ${baseBranch}
+- ヘッド: ${headBranch}
+
+## コミットログ:
+${commitLog || '(コミットなし)'}
+
+## 変更内容 (diff):
+${diff.substring(0, 8000)}
+
+## ルール:
+- 1行目: PRタイトル（50文字程度、prefix付き: feat:, fix:, refactor: 等）
+- 2行目: 空行
+- 3行目以降: PR本文（Markdown形式、日本語）
+  - 「## 概要」セクションで変更の目的を1-2文で説明
+  - 「## 変更内容」セクションで主な変更を箇条書き
+- タイトルと本文以外のテキストは出力しないこと`
+
+  try {
+    const config = getConfig()
+    const provider = createProvider(config.provider)
+    const response = await withTimeout(provider.execPrint({ prompt }, config), 60000, 'PR内容生成')
+    const result = response.result.trim()
+    if (!result) throw new Error('PR内容の生成結果が空です')
+
+    const lines = result.split('\n')
+    const title = lines[0].trim()
+    const body = lines.slice(2).join('\n').trim()
+
+    if (!title) throw new Error('PRタイトルの生成に失敗しました')
+
+    return { title, body: body || '' }
+  } catch (err) {
+    if (err instanceof Error && err.message.includes('タイムアウト')) throw err
+    console.error('[generatePrContent] CLI 失敗:', err)
+    throw new Error('PR内容の生成に失敗しました')
   }
 }
