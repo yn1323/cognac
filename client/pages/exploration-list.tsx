@@ -207,11 +207,6 @@ function ExplorationCard({
                 · ⏱ {formatDuration(elapsedMs)}
               </span>
             )}
-            {exploration.issue_count > 0 && (
-              <span className="text-xs font-medium text-muted-foreground">
-                課題 {exploration.issue_count}件
-              </span>
-            )}
           </div>
         </div>
         {EXPLORATION_RETRYABLE_STATUSES.has(exploration.status) && (
@@ -359,8 +354,7 @@ function SPExplorationCardItem({
   const elapsedMs = useElapsedTime(exploration.started_at, exploration.completed_at)
   const time = formatRelativeTime(exploration.started_at ?? exploration.created_at)
   const elapsed = elapsedMs != null ? ` · ⏱ ${formatDuration(elapsedMs)}` : ''
-  const issueText = exploration.issue_count > 0 ? ` · 課題 ${exploration.issue_count}件` : ''
-  const subtitle = `${time}${elapsed}${issueText}`
+  const subtitle = `${time}${elapsed}`
 
   return (
     <Link to={`/explorations/${exploration.id}`} className="block">
