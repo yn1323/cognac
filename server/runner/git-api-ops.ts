@@ -322,6 +322,28 @@ export function findExistingPr(
   }
 }
 
+// state情報を含むPR検索（Git画面表示用）
+export function findExistingPrWithState(
+  cwd: string,
+  headBranch: string,
+): { number: number; url: string; state: 'open' | 'merged' | 'closed' } | null {
+  try {
+    const output = execSync(
+      `gh pr list --head ${headBranch} --state all --json number,url,state --limit 1`,
+      { cwd, encoding: 'utf8', timeout: 10000 },
+    ).trim()
+    const prs = JSON.parse(output) as { number: number; url: string; state: string }[]
+    if (prs.length === 0) return null
+    return {
+      number: prs[0].number,
+      url: prs[0].url,
+      state: prs[0].state as 'open' | 'merged' | 'closed',
+    }
+  } catch {
+    return null
+  }
+}
+
 // gh CLIでPRを作成する
 export function createGhPr(
   cwd: string,

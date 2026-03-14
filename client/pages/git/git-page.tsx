@@ -2,12 +2,13 @@
 // PC: サイドバー + メインコンテンツ(2カラム) / SP: ヘッダー + ボディ + ボトムナビ
 // デザイン design.pen PC=TySUT, SP=A0mek に準拠
 
-import type { GitBranch as GitBranchType, GitCommit, GitFile } from '@cognac/shared'
+import type { GitBranch as GitBranchType, GitCommit, GitFile, GitPrInfo } from '@cognac/shared'
 import {
   ArrowDown,
   ArrowUp,
   Check,
   ChevronDown,
+  ExternalLink,
   GitBranch,
   GitBranchPlus,
   GitMerge,
@@ -45,6 +46,7 @@ import {
   useGitFetch,
   useGitFileDiff,
   useGitLog,
+  useGitPullRequest,
   useGitRemoteStatus,
   useGitStatus,
   useMerge,
@@ -54,6 +56,7 @@ import {
 import { useScrollLock } from '@/hooks/use-scroll-lock'
 import { useSettings } from '@/hooks/use-system'
 import { NAV_MAP } from '@/lib/constants'
+import { cn } from '@/lib/utils'
 import { ChangedFilesPanel } from './changed-files-panel'
 
 // --- ブランチセレクター ---
@@ -183,6 +186,32 @@ function RemoteStatusBadge({ ahead, behind }: { ahead: number; behind: number })
   )
 }
 
+// --- PRバッジ ---
+
+function PrBadge({ pr }: { pr: GitPrInfo }) {
+  const colorClass =
+    pr.state === 'open'
+      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+      : pr.state === 'merged'
+        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+        : 'bg-muted text-muted-foreground'
+
+  return (
+    <a
+      href={pr.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-opacity hover:opacity-80',
+        colorClass,
+      )}
+    >
+      PR #{pr.number}
+      <ExternalLink className="h-3 w-3" />
+    </a>
+  )
+}
+
 // --- 共通Props ---
 
 interface GitPageViewProps {
@@ -216,6 +245,7 @@ interface GitPageViewProps {
   onTogglePrModal: () => void
   isOnDefaultBranch: boolean
   defaultBranch: string
+  prInfo: GitPrInfo | null | undefined
 }
 
 // --- PC版 ---
@@ -250,6 +280,7 @@ function PCGitPage({
   onRevertCommit,
   onTogglePrModal,
   isOnDefaultBranch,
+  prInfo,
 }: GitPageViewProps) {
   return (
     <div className="flex h-screen bg-[#fafafa]">
@@ -309,7 +340,7 @@ function PCGitPage({
             title={isOnDefaultBranch ? 'デフォルトブランチではPR作成できません' : undefined}
           >
             <GitPullRequest className="h-4 w-4" />
-            PR作成
+            {prInfo?.state === 'open' ? 'PRを更新' : 'PR作成'}
           </Button>
         </PageHeader>
 
@@ -324,6 +355,7 @@ function PCGitPage({
               disabled={pushPhase !== 'idle'}
             />
           </div>
+          {prInfo && <PrBadge pr={prInfo} />}
           <Button variant="outline" size="sm" onClick={onToggleNewBranchModal}>
             <GitBranchPlus className="h-4 w-4" />
             新規ブランチ
@@ -414,6 +446,7 @@ function SPGitPage({
   onRevertCommit,
   onTogglePrModal,
   isOnDefaultBranch,
+  prInfo,
 }: GitPageViewProps) {
   useScrollLock(!!selectedFilePath)
 
@@ -469,7 +502,14 @@ function SPGitPage({
               className="h-8 w-8"
               onClick={onTogglePrModal}
               disabled={isOnDefaultBranch}
-              title={isOnDefaultBranch ? 'デフォルトブランチではPR作成できません' : undefined}
+              title={
+                isOnDefaultBranch
+                  ? 'デフォルトブランチではPR作成できません'
+                  : prInfo?.state === 'open'
+                    ? 'PRを更新'
+                    : 'PR作成'
+              }
+              aria-label={prInfo?.state === 'open' ? 'PRを更新' : 'PR作成'}
             >
               <GitPullRequest className="h-4 w-4" />
             </Button>
@@ -488,6 +528,7 @@ function SPGitPage({
               className="w-full [&>button]:w-full"
             />
           </div>
+          {prInfo && <PrBadge pr={prInfo} />}
           <RemoteStatusBadge ahead={ahead} behind={behind} />
         </div>
 
@@ -580,6 +621,7 @@ export function GitPage() {
   const { data: branchData } = useGitBranches()
   const { data: remoteStatus } = useGitRemoteStatus()
   const { data: fileDiffData, isLoading: isFileDiffLoading } = useGitFileDiff(selectedFilePath)
+  const { data: prData } = useGitPullRequest()
 
   const { toast } = useToast()
 
@@ -792,6 +834,7 @@ export function GitPage() {
     onTogglePrModal: handleTogglePrModal,
     isOnDefaultBranch,
     defaultBranch,
+    prInfo: prData?.pr,
   }
 
   return (

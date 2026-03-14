@@ -26,6 +26,7 @@ import type {
   GitFileDiffResponse,
   GitLogResponse,
   GitMergeResponse,
+  GitPrInfoResponse,
   GitPullRequestResponse,
   GitPushResponse,
   GitRemoteStatusResponse,
@@ -228,6 +229,7 @@ export const api = {
     explainWorking: () => fetchJson<GitExplainResponse>('/git/explain-working', { method: 'POST' }),
     fileDiff: (path: string) =>
       fetchJson<GitFileDiffResponse>(`/git/file-diff?path=${encodeURIComponent(path)}`),
+    pullRequestInfo: () => fetchJson<GitPrInfoResponse>('/git/pull-request'),
     pullRequest: (baseBranch: string) =>
       fetchJson<GitPullRequestResponse>('/git/pull-request', {
         method: 'POST',

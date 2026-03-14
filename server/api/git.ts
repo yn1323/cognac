@@ -15,6 +15,7 @@ import {
   discardAll,
   fetchAll,
   findExistingPr,
+  findExistingPrWithState,
   getBranches,
   getCommitDiff,
   getCurrentBranch,
@@ -312,6 +313,13 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
       }
       return c.json({ error: 'リバートに失敗しました', detail: String(err) }, 500)
     }
+  })
+
+  // GET /pull-request — 現在のブランチのPR情報を取得
+  app.get('/pull-request', (c) => {
+    const currentBranch = getCurrentBranch(cwd)
+    const pr = findExistingPrWithState(cwd, currentBranch)
+    return c.json({ pr })
   })
 
   // POST /pull-request — PR作成（全自動: stage→AIコミット→push→PR作成/更新）

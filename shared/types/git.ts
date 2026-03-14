@@ -151,3 +151,14 @@ export interface GitPullRequestRequest {
 }
 
 export interface GitPullRequestResponse extends PrResult {}
+
+// PR情報（GET /api/git/pull-request のレスポンス用）
+export interface GitPrInfo {
+  number: number
+  url: string
+  state: 'open' | 'merged' | 'closed'
+}
+
+export interface GitPrInfoResponse {
+  pr: GitPrInfo | null
+}
