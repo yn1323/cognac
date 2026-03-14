@@ -1,6 +1,6 @@
 {
   "name": "@yn1323/cognac",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "AI駆動のタスク自動実行ツール",
   "type": "module",
   "bin": {
@@ -27,7 +27,6 @@
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",
-
     "test": "echo 'no tests yet'"
   },
   "dependencies": {
