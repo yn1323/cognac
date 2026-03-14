@@ -74,8 +74,6 @@ export type {
   GitPushResponse,
   GitRemoteStatus,
   GitRemoteStatusResponse,
-  GitRevertRequest,
-  GitRevertResponse,
   GitStatusResponse,
 } from './types/git.js'
 export type { BaseLog, StoredEvent, StoredExplorationEvent, StoredTaskEvent } from './types/log.js'

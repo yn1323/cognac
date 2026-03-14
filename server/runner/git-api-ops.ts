@@ -213,34 +213,6 @@ export function merge(cwd: string, from: string): { hash: string; message: strin
   }
 }
 
-// コミットをリバートする
-export function revert(cwd: string, hash: string): { hash: string; message: string } {
-  if (!validateCommitHash(hash)) throw new Error('不正なコミットハッシュです')
-  try {
-    // マージコミット判定: rev-listの出力は "hash parent1 parent2..." 形式
-    // 親が2つ以上（= split結果が3以上）ならマージコミット → -m 1 を付与
-    const parts = git(`rev-list --parents -1 ${hash}`, cwd).split(' ')
-    const isMergeCommit = parts.length > 2
-    const mergeFlag = isMergeCommit ? '-m 1 ' : ''
-    git(`revert ${mergeFlag}--no-edit ${hash}`, cwd)
-    const newHash = git('rev-parse --short HEAD', cwd)
-    const message = git('log -1 --format=%s', cwd)
-    return { hash: newHash, message }
-  } catch (err) {
-    // コンフリクト時は abort して throw（abort失敗は無視）
-    try {
-      git('revert --abort', cwd)
-    } catch {
-      /* abort失敗は無視 */
-    }
-    const errMsg = err instanceof Error ? err.message : String(err)
-    if (errMsg.includes('CONFLICT') || errMsg.includes('conflict')) {
-      throw new Error('コンフリクトが発生したためリバートを中断しました。')
-    }
-    throw err
-  }
-}
-
 // 全変更をステージングする（AIコミット用）
 export function stageAll(cwd: string): void {
   git('add -A', cwd)

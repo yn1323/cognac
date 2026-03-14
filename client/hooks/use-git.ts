@@ -150,15 +150,3 @@ export function useMerge() {
     },
   })
 }
-
-export function useRevert() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (hash: string) => api.git.revert(hash),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['git', 'log'] })
-      qc.invalidateQueries({ queryKey: ['git', 'status'] })
-      qc.invalidateQueries({ queryKey: ['git', 'remote-status'] })
-    },
-  })
-}

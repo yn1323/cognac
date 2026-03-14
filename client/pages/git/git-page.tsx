@@ -46,7 +46,6 @@ import {
   useGitStatus,
   useMerge,
   usePush,
-  useRevert,
 } from '@/hooks/use-git'
 import { useScrollLock } from '@/hooks/use-scroll-lock'
 import { useSettings } from '@/hooks/use-system'
@@ -209,7 +208,6 @@ interface GitPageViewProps {
   onFileSelect: (path: string) => void
   fileDiff: string | null
   isFileDiffLoading: boolean
-  onRevertCommit: (hash: string, message: string) => void
 }
 
 // --- PC版 ---
@@ -241,7 +239,6 @@ function PCGitPage({
   onFileSelect,
   fileDiff,
   isFileDiffLoading,
-  onRevertCommit,
 }: GitPageViewProps) {
   return (
     <div className="flex h-screen bg-[#fafafa]">
@@ -340,7 +337,6 @@ function PCGitPage({
                       commit={commit}
                       isLast={i === commits.length - 1}
                       onExplain={() => onExplainCommit(commit.hash, commit.message)}
-                      onRevert={() => onRevertCommit(commit.hash, commit.message)}
                     />
                   ))}
                 </div>
@@ -382,7 +378,6 @@ function SPGitPage({
   onFileSelect,
   fileDiff,
   isFileDiffLoading,
-  onRevertCommit,
 }: GitPageViewProps) {
   useScrollLock(!!selectedFilePath)
 
@@ -496,7 +491,6 @@ function SPGitPage({
                 commit={commit}
                 isLast={i === commits.length - 1}
                 onExplain={() => onExplainCommit(commit.hash, commit.message)}
-                onRevert={() => onRevertCommit(commit.hash, commit.message)}
               />
             ))}
           </div>
@@ -521,7 +515,6 @@ export function GitPage() {
   const [explainTarget, setExplainTarget] = useState<
     { type: 'commit'; hash: string; message: string } | { type: 'working' } | null
   >(null)
-  const [revertTarget, setRevertTarget] = useState<{ hash: string; message: string } | null>(null)
   const [pushPhase, setPushPhase] = useState<'idle' | 'pushing' | 'success'>('idle')
   const pushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -552,7 +545,6 @@ export function GitPage() {
   const deleteBranchMutation = useDeleteBranch()
   const explainMutation = useExplainCommit()
   const explainWorkingMutation = useExplainWorking()
-  const revertMutation = useRevert()
 
   // 選択中ファイルが一覧から消えたらリセット
   const files = statusData?.files ?? []
@@ -638,24 +630,6 @@ export function GitPage() {
     explainMutation.mutate(hash)
   }
 
-  const handleRevertCommit = (hash: string, message: string) => {
-    setRevertTarget({ hash, message })
-  }
-
-  const handleConfirmRevert = () => {
-    if (!revertTarget) return
-    revertMutation.mutate(revertTarget.hash, {
-      onSuccess: () => {
-        toast('リバートしました', 'success')
-        setRevertTarget(null)
-      },
-      onError: (err) => {
-        toast(err instanceof Error ? err.message : 'リバートに失敗しました', 'error')
-        setRevertTarget(null)
-      },
-    })
-  }
-
   const handleExplainWorking = () => {
     explainWorkingMutation.reset()
     setExplainTarget({ type: 'working' })
@@ -722,7 +696,6 @@ export function GitPage() {
     onFileSelect: handleFileSelect,
     fileDiff: fileDiffData?.diff ?? null,
     isFileDiffLoading,
-    onRevertCommit: handleRevertCommit,
   }
 
   return (
@@ -797,26 +770,6 @@ export function GitPage() {
         cancelLabel="キャンセル"
         variant="destructive"
         isLoading={deleteBranchMutation.isPending}
-      />
-      <ConfirmDialog
-        open={revertTarget !== null}
-        onConfirm={handleConfirmRevert}
-        onCancel={() => setRevertTarget(null)}
-        title="コミットをリバート"
-        description={
-          revertTarget && (
-            <>
-              コミット{' '}
-              <code className="rounded bg-muted px-1 font-mono text-xs">{revertTarget.hash}</code>{' '}
-              をリバートします。
-              <p className="mt-1 truncate">{revertTarget.message}</p>
-            </>
-          )
-        }
-        confirmLabel="リバートする"
-        cancelLabel="キャンセル"
-        variant="destructive"
-        isLoading={revertMutation.isPending}
       />
     </>
   )
