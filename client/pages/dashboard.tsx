@@ -19,9 +19,10 @@ import { TaskCard } from '@/components/task-card'
 import { TaskModal } from '@/components/task-modal'
 import { useToast } from '@/components/toast'
 import { Button } from '@/components/ui/button'
+import { useElapsedTime } from '@/hooks/use-elapsed-time'
 import { useRetryTask, useStopAllTasks, useTasks } from '@/hooks/use-tasks'
 import { NAV_MAP } from '@/lib/constants'
-import { formatRelativeTime } from '@/lib/format'
+import { formatDuration, formatRelativeTime } from '@/lib/format'
 import { ACTIVE_STATUSES, RETRYABLE_STATUSES, STATUS_CONFIG } from '@/lib/status-config'
 
 // --- フィルター定義 ---
@@ -157,11 +158,40 @@ function useDashboardFilters(tasks: Task[]) {
 
 // --- SP用ヘルパー ---
 
-function getSPSubtitle(task: Task): string {
+function SPTaskCardItem({ task, onRetry }: { task: Task; onRetry: (id: number) => void }) {
+  const elapsedMs = useElapsedTime(task.started_at, task.completed_at)
   const time = formatRelativeTime(task.started_at ?? task.created_at)
-  if (task.status === 'stopped' && task.retry_count > 0)
-    return `CI失敗 (${task.retry_count}/5) · ${time}`
-  return time
+  const elapsed = elapsedMs != null ? ` · ⏱ ${formatDuration(elapsedMs)}` : ''
+  const subtitle =
+    task.status === 'stopped' && task.retry_count > 0
+      ? `CI失敗 (${task.retry_count}/5) · ${time}${elapsed}`
+      : `${time}${elapsed}`
+
+  return (
+    <Link to={`/tasks/${task.id}`} className="block">
+      <SPTaskCard
+        title={task.title}
+        subtitle={subtitle}
+        badge={<StatusBadge status={task.status} configMap={STATUS_CONFIG} />}
+        borderColor={getSPBorderColor(task)}
+        actions={
+          RETRYABLE_STATUSES.has(task.status) ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-auto px-2.5 py-1 text-xs"
+              onClick={(ev) => {
+                ev.preventDefault()
+                onRetry(task.id)
+              }}
+            >
+              リトライ
+            </Button>
+          ) : undefined
+        }
+      />
+    </Link>
+  )
 }
 
 function getSPBorderColor(task: Task): string {
@@ -379,29 +409,7 @@ function SPDashboard({
         ) : (
           <div className="flex flex-col gap-2.5">
             {filteredTasks.map((task) => (
-              <Link key={task.id} to={`/tasks/${task.id}`} className="block">
-                <SPTaskCard
-                  title={task.title}
-                  subtitle={getSPSubtitle(task)}
-                  badge={<StatusBadge status={task.status} configMap={STATUS_CONFIG} />}
-                  borderColor={getSPBorderColor(task)}
-                  actions={
-                    RETRYABLE_STATUSES.has(task.status) ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-auto px-2.5 py-1 text-xs"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          onRetry(task.id)
-                        }}
-                      >
-                        リトライ
-                      </Button>
-                    ) : undefined
-                  }
-                />
-              </Link>
+              <SPTaskCardItem key={task.id} task={task} onRetry={onRetry} />
             ))}
           </div>
         )}

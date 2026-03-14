@@ -6,9 +6,10 @@ import type { ExplorationImage, ExplorationSession } from '@cognac/shared'
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
+import { useElapsedTime } from '@/hooks/use-elapsed-time'
 import { useExplorationImages } from '@/hooks/use-explorations'
 import { EXPLORATION_STATUS_CONFIG } from '@/lib/exploration-status-config'
-import { formatDateTime } from '@/lib/format'
+import { formatDateTime, formatElapsedTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 // --- 画像セクション ---
@@ -79,6 +80,7 @@ function ExplorationImagesSection({
 export function PCOverviewTab({ exploration }: { exploration: ExplorationSession }) {
   const { data: images = [] } = useExplorationImages(exploration.id)
   const config = EXPLORATION_STATUS_CONFIG[exploration.status]
+  const elapsedMs = useElapsedTime(exploration.started_at, exploration.completed_at)
 
   return (
     <div className="flex flex-col gap-6">
@@ -109,6 +111,14 @@ export function PCOverviewTab({ exploration }: { exploration: ExplorationSession
               {formatDateTime(exploration.created_at)}
             </span>
           </div>
+          {elapsedMs != null && (
+            <div className="flex items-center gap-2">
+              <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
+                所要時間
+              </span>
+              <span className="text-[13px] text-foreground">{formatElapsedTime(elapsedMs)}</span>
+            </div>
+          )}
           <div className="flex flex-col gap-2">
             <span className="text-[13px] font-medium text-muted-foreground">説明</span>
             <p className="whitespace-pre-wrap text-[13px] leading-[1.6] text-foreground">
@@ -128,6 +138,7 @@ export function PCOverviewTab({ exploration }: { exploration: ExplorationSession
 export function SPOverviewTab({ exploration }: { exploration: ExplorationSession }) {
   const { data: images = [] } = useExplorationImages(exploration.id)
   const config = EXPLORATION_STATUS_CONFIG[exploration.status]
+  const elapsedMs = useElapsedTime(exploration.started_at, exploration.completed_at)
 
   return (
     <div className="flex flex-col gap-4">
@@ -148,6 +159,14 @@ export function SPOverviewTab({ exploration }: { exploration: ExplorationSession
               <span className="text-xs text-foreground">
                 {formatDateTime(exploration.started_at)}
               </span>
+            </div>
+          )}
+          {elapsedMs != null && (
+            <div className="flex items-center gap-2">
+              <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
+                所要時間
+              </span>
+              <span className="text-xs text-foreground">{formatElapsedTime(elapsedMs)}</span>
             </div>
           )}
           <div className="flex flex-col gap-1">

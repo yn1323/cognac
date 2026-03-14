@@ -17,13 +17,14 @@ import { SPMetric } from '@/components/sp-metric'
 import { SPTaskCard } from '@/components/sp-task-card'
 import { useToast } from '@/components/toast'
 import { Button } from '@/components/ui/button'
+import { useElapsedTime } from '@/hooks/use-elapsed-time'
 import { useExplorations, useRetryExploration } from '@/hooks/use-explorations'
 import { NAV_MAP } from '@/lib/constants'
 import {
   EXPLORATION_RETRYABLE_STATUSES,
   EXPLORATION_STATUS_CONFIG,
 } from '@/lib/exploration-status-config'
-import { formatRelativeTime } from '@/lib/format'
+import { formatDuration, formatRelativeTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 // --- フィルター定義 ---
@@ -175,6 +176,7 @@ function ExplorationCard({
   onRetry?: (id: number) => void
 }) {
   const config = EXPLORATION_STATUS_CONFIG[exploration.status]
+  const elapsedMs = useElapsedTime(exploration.started_at, exploration.completed_at)
   return (
     <Link to={`/explorations/${exploration.id}`} className="block">
       <div
@@ -200,6 +202,11 @@ function ExplorationCard({
             <span className="text-xs leading-[1.3] text-muted-foreground">
               {formatRelativeTime(exploration.started_at ?? exploration.created_at)}
             </span>
+            {elapsedMs != null && (
+              <span className="text-xs leading-[1.3] text-muted-foreground">
+                · ⏱ {formatDuration(elapsedMs)}
+              </span>
+            )}
             {exploration.issue_count > 0 && (
               <span className="text-xs font-medium text-muted-foreground">
                 課題 {exploration.issue_count}件
@@ -339,6 +346,49 @@ function PCExplorationList({
   )
 }
 
+// --- SP用ラッパー ---
+
+function SPExplorationCardItem({
+  exploration,
+  onRetry,
+}: {
+  exploration: ExplorationListItem
+  onRetry: (id: number) => void
+}) {
+  const config = EXPLORATION_STATUS_CONFIG[exploration.status]
+  const elapsedMs = useElapsedTime(exploration.started_at, exploration.completed_at)
+  const time = formatRelativeTime(exploration.started_at ?? exploration.created_at)
+  const elapsed = elapsedMs != null ? ` · ⏱ ${formatDuration(elapsedMs)}` : ''
+  const issueText = exploration.issue_count > 0 ? ` · 課題 ${exploration.issue_count}件` : ''
+  const subtitle = `${time}${elapsed}${issueText}`
+
+  return (
+    <Link to={`/explorations/${exploration.id}`} className="block">
+      <SPTaskCard
+        title={exploration.title}
+        subtitle={subtitle}
+        badge={<ExplorationCardBadge exploration={exploration} />}
+        borderColor={config.borderColor || 'border-border'}
+        actions={
+          EXPLORATION_RETRYABLE_STATUSES.has(exploration.status) ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-auto px-2.5 py-1 text-xs"
+              onClick={(ev) => {
+                ev.preventDefault()
+                onRetry(exploration.id)
+              }}
+            >
+              リトライ
+            </Button>
+          ) : undefined
+        }
+      />
+    </Link>
+  )
+}
+
 // --- SP版 ---
 
 function SPExplorationList({
@@ -404,34 +454,9 @@ function SPExplorationList({
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
-            {filtered.map((e) => {
-              const config = EXPLORATION_STATUS_CONFIG[e.status]
-              return (
-                <Link key={e.id} to={`/explorations/${e.id}`} className="block">
-                  <SPTaskCard
-                    title={e.title}
-                    subtitle={formatRelativeTime(e.started_at ?? e.created_at)}
-                    badge={<ExplorationCardBadge exploration={e} />}
-                    borderColor={config.borderColor || 'border-border'}
-                    actions={
-                      EXPLORATION_RETRYABLE_STATUSES.has(e.status) ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-auto px-2.5 py-1 text-xs"
-                          onClick={(ev) => {
-                            ev.preventDefault()
-                            onRetry(e.id)
-                          }}
-                        >
-                          リトライ
-                        </Button>
-                      ) : undefined
-                    }
-                  />
-                </Link>
-              )
-            })}
+            {filtered.map((e) => (
+              <SPExplorationCardItem key={e.id} exploration={e} onRetry={onRetry} />
+            ))}
           </div>
         )}
       </main>

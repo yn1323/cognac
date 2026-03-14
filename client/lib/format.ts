@@ -1,7 +1,7 @@
 // フォーマット用ユーティリティ
 
 // SQLiteのdatetime('now')はTZ情報なしのUTC文字列を返すため、Zを補完してUTCとして正しくパース
-function normalizeUtc(dateStr: string): string {
+export function normalizeUtc(dateStr: string): string {
   return dateStr.includes('Z') || dateStr.includes('+') ? dateStr : `${dateStr}Z`
 }
 
@@ -71,4 +71,19 @@ export function formatLogTime(dateStr: string | null | undefined): string {
   const mm = String(jst.getUTCMinutes()).padStart(2, '0')
   const ss = String(jst.getUTCSeconds()).padStart(2, '0')
   return `${hh}:${mm}:${ss}`
+}
+
+/**
+ * ミリ秒を日本語の経過時間テキストに変換する
+ * 例: "3分25秒", "1時間23分", "2時間0分"
+ */
+export function formatElapsedTime(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000)
+  if (totalSeconds < 60) return `${totalSeconds}秒`
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  if (minutes < 60) return `${minutes}分${seconds}秒`
+  const hours = Math.floor(minutes / 60)
+  const remainMinutes = minutes % 60
+  return `${hours}時間${remainMinutes}分`
 }
