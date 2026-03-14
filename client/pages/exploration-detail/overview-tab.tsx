@@ -2,14 +2,14 @@
 // タスクのoverview-tab.tsxと同じパターン
 // ペルソナはディスカッションタブに配置（コード正）
 
+import type { ExplorationImage, ExplorationSession } from '@cognac/shared'
 import { useState } from 'react'
-import type { ExplorationSession, ExplorationImage } from '@cognac/shared'
-import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
-import { formatDateTime } from '@/lib/format'
-import { EXPLORATION_STATUS_CONFIG } from '@/lib/exploration-status-config'
+import { Card } from '@/components/ui/card'
 import { useExplorationImages } from '@/hooks/use-explorations'
+import { EXPLORATION_STATUS_CONFIG } from '@/lib/exploration-status-config'
+import { formatDateTime } from '@/lib/format'
+import { cn } from '@/lib/utils'
 
 // --- 画像セクション ---
 
@@ -83,9 +83,7 @@ export function PCOverviewTab({ exploration }: { exploration: ExplorationSession
   return (
     <div className="flex flex-col gap-6">
       <Card className="p-6">
-        <h2 className="mb-4 text-base font-semibold text-foreground">
-          探索情報
-        </h2>
+        <h2 className="mb-4 text-base font-semibold text-foreground">探索情報</h2>
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
@@ -112,9 +110,7 @@ export function PCOverviewTab({ exploration }: { exploration: ExplorationSession
             </span>
           </div>
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-medium text-muted-foreground">
-              説明
-            </span>
+            <span className="text-[13px] font-medium text-muted-foreground">説明</span>
             <p className="whitespace-pre-wrap text-[13px] leading-[1.6] text-foreground">
               {exploration.request || '説明なし'}
             </p>
@@ -136,9 +132,7 @@ export function SPOverviewTab({ exploration }: { exploration: ExplorationSession
   return (
     <div className="flex flex-col gap-4">
       <Card className="p-4">
-        <h3 className="mb-3 text-[15px] font-semibold text-foreground">
-          探索情報
-        </h3>
+        <h3 className="mb-3 text-[15px] font-semibold text-foreground">探索情報</h3>
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
             <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
@@ -157,9 +151,7 @@ export function SPOverviewTab({ exploration }: { exploration: ExplorationSession
             </div>
           )}
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-muted-foreground">
-              説明
-            </span>
+            <span className="text-xs font-medium text-muted-foreground">説明</span>
             <p className="whitespace-pre-wrap text-xs leading-[1.5] text-foreground">
               {exploration.request || '説明なし'}
             </p>

@@ -1,8 +1,8 @@
 // 確認ダイアログ
 // デザインシステム: UgIg0 (Confirm Dialog)
 
-import { useEffect, useId, useCallback } from 'react'
 import { Loader2, TriangleAlert } from 'lucide-react'
+import { useCallback, useEffect, useId } from 'react'
 import { Button } from '@/components/ui/button'
 import { useScrollLock } from '@/hooks/use-scroll-lock'
 
@@ -53,10 +53,7 @@ export function ConfirmDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* オーバーレイ */}
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-      <div
-        className="absolute inset-0 bg-black/38"
-        onClick={isLoading ? undefined : onCancel}
-      />
+      <div className="absolute inset-0 bg-black/38" onClick={isLoading ? undefined : onCancel} />
 
       {/* ダイアログ本体 — UgIg0 準拠: w-[400px], rounded-lg, border, shadow */}
       <div
@@ -72,17 +69,12 @@ export function ConfirmDialog({
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50">
               <TriangleAlert className="h-5 w-5 text-destructive" />
             </div>
-            <h2
-              id={titleId}
-              className="text-lg font-semibold leading-[1.4] text-foreground"
-            >
+            <h2 id={titleId} className="text-lg font-semibold leading-[1.4] text-foreground">
               {title}
             </h2>
           </div>
           {description && (
-            <p className="text-sm leading-[1.43] text-muted-foreground">
-              {description}
-            </p>
+            <p className="text-sm leading-[1.43] text-muted-foreground">{description}</p>
           )}
         </div>
 
@@ -91,11 +83,7 @@ export function ConfirmDialog({
           <Button variant="outline" onClick={onCancel} disabled={isLoading}>
             {cancelLabel}
           </Button>
-          <Button
-            variant={variant}
-            onClick={onConfirm}
-            disabled={isLoading}
-          >
+          <Button variant={variant} onClick={onConfirm} disabled={isLoading}>
             {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
             {confirmLabel}
           </Button>

@@ -1,7 +1,7 @@
 // 選択済み画像ファイルのプレビューサムネイル一覧
 
-import { useMemo, useEffect } from 'react'
 import { X } from 'lucide-react'
+import { useEffect, useMemo } from 'react'
 
 interface ImagePreviewListProps {
   files: File[]
@@ -12,7 +12,9 @@ export function ImagePreviewList({ files, onRemove }: ImagePreviewListProps) {
   // blob URLをメモ化して、files変更時のみ再生成 + クリーンアップでリーク防止
   const urls = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files])
   useEffect(() => {
-    return () => urls.forEach((u) => URL.revokeObjectURL(u))
+    return () => {
+      for (const u of urls) URL.revokeObjectURL(u)
+    }
   }, [urls])
 
   if (files.length === 0) return null

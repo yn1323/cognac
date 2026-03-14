@@ -1,5 +1,5 @@
-import type Database from 'better-sqlite3'
 import type { ConsoleRun, ConsoleRunStatus } from '@cognac/shared'
+import type Database from 'better-sqlite3'
 
 const ACTIVE_STATUSES = ['starting', 'running', 'stopping'] as const
 
@@ -22,7 +22,7 @@ export function createRun(
     pid: input.pid ?? null,
     log_file_path: input.log_file_path,
   })
-  return getRun(db, Number(result.lastInsertRowid))!
+  return getRun(db, Number(result.lastInsertRowid)) as ConsoleRun
 }
 
 export function getRun(db: Database.Database, id: number): ConsoleRun | undefined {
@@ -139,10 +139,7 @@ export function markActiveRunsKilledOnBoot(db: Database.Database, endedAt: strin
   return result.changes
 }
 
-export function listExpiredRuns(
-  db: Database.Database,
-  olderThanIso: string,
-): ConsoleRun[] {
+export function listExpiredRuns(db: Database.Database, olderThanIso: string): ConsoleRun[] {
   const stmt = db.prepare(`
     SELECT * FROM console_runs
     WHERE ended_at IS NOT NULL

@@ -1,14 +1,14 @@
 // タスク詳細ページ — 概要タブ
 // デザイン design.pen PC=9d5bz, SP=lNPXJ に準拠
 
-import { useState } from 'react'
 import type { Task, TaskImage } from '@cognac/shared'
-import { Card } from '@/components/ui/card'
+import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
+import { Card } from '@/components/ui/card'
+import { useTaskImages } from '@/hooks/use-tasks'
 import { formatDateTime } from '@/lib/format'
 import { STATUS_CONFIG } from '@/lib/status-config'
-import { useTaskImages } from '@/hooks/use-tasks'
+import { cn } from '@/lib/utils'
 
 // --- 画像セクション ---
 
@@ -23,10 +23,12 @@ function TaskImagesSection({ taskId, size = 'md' }: { taskId: number; size?: 'md
   return (
     <>
       <Card className={size === 'sm' ? 'p-4' : 'p-6'}>
-        <h2 className={cn(
-          'font-semibold text-foreground',
-          size === 'sm' ? 'mb-3 text-[15px]' : 'mb-4 text-base',
-        )}>
+        <h2
+          className={cn(
+            'font-semibold text-foreground',
+            size === 'sm' ? 'mb-3 text-[15px]' : 'mb-4 text-base',
+          )}
+        >
           添付画像
         </h2>
         <div className="flex flex-wrap gap-3">
@@ -40,7 +42,10 @@ function TaskImagesSection({ taskId, size = 'md' }: { taskId: number; size?: 'md
               <img
                 src={`/${img.file_path}`}
                 alt={img.original_name}
-                className={cn(thumbSize, 'rounded-lg object-cover border border-border hover:ring-2 hover:ring-blue-500 transition-all')}
+                className={cn(
+                  thumbSize,
+                  'rounded-lg object-cover border border-border hover:ring-2 hover:ring-blue-500 transition-all',
+                )}
               />
             </button>
           ))}
@@ -70,30 +75,22 @@ export function PCOverviewTab({ task }: { task: Task }) {
     <div className="flex flex-col gap-6">
       {/* Task Information カード */}
       <Card className="p-6">
-        <h2 className="mb-4 text-base font-semibold text-foreground">
-          タスク情報
-        </h2>
+        <h2 className="mb-4 text-base font-semibold text-foreground">タスク情報</h2>
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
               ステータス
             </span>
-            <Badge variant={task.status}>
-              {STATUS_CONFIG[task.status].label}
-            </Badge>
+            <Badge variant={task.status}>{STATUS_CONFIG[task.status].label}</Badge>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
               作成日時
             </span>
-            <span className="text-[13px] text-foreground">
-              {formatDateTime(task.created_at)}
-            </span>
+            <span className="text-[13px] text-foreground">{formatDateTime(task.created_at)}</span>
           </div>
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-medium text-muted-foreground">
-              説明
-            </span>
+            <span className="text-[13px] font-medium text-muted-foreground">説明</span>
             <p className="whitespace-pre-wrap text-[13px] leading-[1.6] text-foreground">
               {task.description ?? '説明なし'}
             </p>
@@ -114,22 +111,16 @@ export function SPOverviewTab({ task }: { task: Task }) {
     <div className="flex flex-col gap-4">
       {/* Task Information */}
       <Card className="p-4">
-        <h3 className="mb-3 text-[15px] font-semibold text-foreground">
-          タスク情報
-        </h3>
+        <h3 className="mb-3 text-[15px] font-semibold text-foreground">タスク情報</h3>
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
             <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
               ステータス
             </span>
-            <Badge variant={task.status}>
-              {STATUS_CONFIG[task.status].label}
-            </Badge>
+            <Badge variant={task.status}>{STATUS_CONFIG[task.status].label}</Badge>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-muted-foreground">
-              説明
-            </span>
+            <span className="text-xs font-medium text-muted-foreground">説明</span>
             <p className="whitespace-pre-wrap text-xs leading-[1.5] text-foreground">
               {task.description ?? '説明なし'}
             </p>

@@ -2,11 +2,11 @@
 // SSEイベント（リプレイ含む）をExplorationLogViewで一本化表示
 // 非アクティブ探索はAPI経由で永続化イベントを取得
 
-import type { ExplorationSession, ExplorationEvent } from '@cognac/shared'
+import type { ExplorationEvent, ExplorationSession } from '@cognac/shared'
 import { useExplorationEvents } from '@/hooks/use-explorations'
 import { EXPLORATION_ACTIVE_STATUSES } from '@/lib/exploration-status-config'
-import { cn } from '@/lib/utils'
 import { formatNumber } from '@/lib/format'
+import { cn } from '@/lib/utils'
 
 interface LogLine {
   label: string
@@ -59,13 +59,25 @@ function formatExplorationEvent(event: ExplorationEvent): LogLine {
         color: 'text-emerald-600',
       }
     case 'report_created':
-      return { label: '[report]', detail: `Report created — ${event.issueCount} issues`, color: 'text-blue-600' }
+      return {
+        label: '[report]',
+        detail: `Report created — ${event.issueCount} issues`,
+        color: 'text-blue-600',
+      }
     case 'taskify_started':
       return { label: '[taskify]', detail: `Job #${event.jobId} started`, color: 'text-blue-600' }
     case 'taskify_completed':
-      return { label: '[taskify]', detail: `Job #${event.jobId} completed — ${event.taskIds.length} tasks`, color: 'text-green-600' }
+      return {
+        label: '[taskify]',
+        detail: `Job #${event.jobId} completed — ${event.taskIds.length} tasks`,
+        color: 'text-green-600',
+      }
     case 'taskify_failed':
-      return { label: '[taskify]', detail: `Job #${event.jobId} failed: ${event.message}`, color: 'text-red-600' }
+      return {
+        label: '[taskify]',
+        detail: `Job #${event.jobId} failed: ${event.message}`,
+        color: 'text-red-600',
+      }
     case 'retry':
       return {
         label: '[retry]',
@@ -73,7 +85,11 @@ function formatExplorationEvent(event: ExplorationEvent): LogLine {
         color: 'text-amber-600',
       }
     case 'paused':
-      return { label: '[paused]', detail: `${event.phase}: ${event.reason}`, color: 'text-orange-600' }
+      return {
+        label: '[paused]',
+        detail: `${event.phase}: ${event.reason}`,
+        color: 'text-orange-600',
+      }
     case 'error':
       return {
         label: '[error]',
@@ -99,9 +115,7 @@ function ExplorationLogView({ events }: { events: ExplorationEvent[] }) {
             <span className={cn('shrink-0 font-mono text-xs font-semibold', line.color)}>
               {line.label}
             </span>
-            <span className="min-w-0 flex-1 font-mono text-xs text-foreground">
-              {line.detail}
-            </span>
+            <span className="min-w-0 flex-1 font-mono text-xs text-foreground">{line.detail}</span>
           </div>
         )
       })}
@@ -134,7 +148,9 @@ function ExplorationLogsBody({
     <>
       {isActive && (
         <div className={`flex items-center gap-2 ${compact ? 'pb-2' : ''}`}>
-          <div className={`h-2 w-2 rounded-full ${connected ? 'bg-green-500' : 'bg-muted-foreground'}`} />
+          <div
+            className={`h-2 w-2 rounded-full ${connected ? 'bg-green-500' : 'bg-muted-foreground'}`}
+          />
           {compact && (
             <span className="text-xs text-muted-foreground">
               {connected ? 'リアルタイム接続中' : '接続待ち'}
@@ -147,7 +163,11 @@ function ExplorationLogsBody({
         <ExplorationLogView events={events} />
       ) : (
         <div className="py-8 text-center text-sm text-muted-foreground">
-          {isLoading ? 'ログを読み込み中...' : isActive ? 'イベントを待ってるよ...' : '実行ログがまだないよ'}
+          {isLoading
+            ? 'ログを読み込み中...'
+            : isActive
+              ? 'イベントを待ってるよ...'
+              : '実行ログがまだないよ'}
         </div>
       )}
     </>
@@ -159,11 +179,7 @@ export function PCLogsTab({ exploration, events, connected }: LogsTabProps) {
     <div className="flex h-full flex-col gap-4">
       <div className="min-h-0 flex-1 overflow-hidden rounded-lg border bg-card">
         <div className="flex h-full flex-col overflow-y-auto px-4 py-3">
-          <ExplorationLogsBody
-            exploration={exploration}
-            events={events}
-            connected={connected}
-          />
+          <ExplorationLogsBody exploration={exploration} events={events} connected={connected} />
         </div>
       </div>
     </div>

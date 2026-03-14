@@ -3,38 +3,37 @@
 // PC: サイドバー + メインコンテンツ / SP: SPDetailHeader + ボディ
 // タスク詳細（task-page.tsx）と同じパターン
 
-import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import type { ExplorationEvent, ExplorationSession } from '@cognac/shared'
 import { useQueryClient } from '@tanstack/react-query'
-import {
-  AlertCircle,
-  EllipsisVertical,
-  Loader,
-  RefreshCw,
-  Trash2,
-} from 'lucide-react'
-import type { ExplorationSession, ExplorationEvent } from '@cognac/shared'
-import { useToast } from '@/components/toast'
-import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { AlertCircle, EllipsisVertical, Loader, RefreshCw, Trash2, XCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { type ExplorationTab, ExplorationTabs } from '@/components/exploration-tabs'
 import { Sidebar } from '@/components/sidebar'
 import { SPDetailHeader } from '@/components/sp-detail-header'
-import { ExplorationTabs, type ExplorationTab } from '@/components/exploration-tabs'
-import { ExplorationStatusBadge } from '@/components/exploration-status-badge'
+import { useToast } from '@/components/toast'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu'
+import { useExplorationSSE } from '@/hooks/use-exploration-sse'
+import {
+  useCancelExploration,
+  useDeleteExploration,
+  useExploration,
+  useRetryExploration,
+} from '@/hooks/use-explorations'
 import { NAV_MAP } from '@/lib/constants'
 import {
-  EXPLORATION_STATUS_CONFIG,
   EXPLORATION_ACTIVE_STATUSES,
+  EXPLORATION_CANCELABLE_STATUSES,
   EXPLORATION_DELETABLE_STATUSES,
   EXPLORATION_RETRYABLE_STATUSES,
+  EXPLORATION_STATUS_CONFIG,
 } from '@/lib/exploration-status-config'
-import { useDeleteExploration, useExploration, useRetryExploration } from '@/hooks/use-explorations'
-import { useExplorationSSE } from '@/hooks/use-exploration-sse'
-import { PCOverviewTab, SPOverviewTab } from '@/pages/exploration-detail/overview-tab'
 import { PCDiscussionTab, SPDiscussionTab } from '@/pages/exploration-detail/discussion-tab'
 import { PCLogsTab, SPLogsTab } from '@/pages/exploration-detail/logs-tab'
+import { PCOverviewTab, SPOverviewTab } from '@/pages/exploration-detail/overview-tab'
 import { PCReportTab, SPReportTab } from '@/pages/exploration-detail/report-tab'
 
 // --- タブボディ ---
@@ -94,10 +93,13 @@ function PCExplorationDetail({
   onNavigate,
   onDelete,
   onRetry,
+  onCancel,
   canDelete,
   canRetry,
+  canCancel,
   isDeleting,
   isRetrying,
+  isCancelling,
   events,
   connected,
 }: {
@@ -107,10 +109,13 @@ function PCExplorationDetail({
   onNavigate: (path: string) => void
   onDelete: () => void
   onRetry: () => void
+  onCancel: () => void
   canDelete: boolean
   canRetry: boolean
+  canCancel: boolean
   isDeleting: boolean
   isRetrying: boolean
+  isCancelling: boolean
   events: ExplorationEvent[]
   connected: boolean
 }) {
@@ -153,16 +158,29 @@ function PCExplorationDetail({
             </div>
 
             <div className="flex items-center gap-2">
-              {canRetry && (
-                <Button variant="outline" size="sm" onClick={onRetry} disabled={isRetrying}>
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  リトライ
+              {canCancel ? (
+                <Button variant="destructive" size="sm" onClick={onCancel} disabled={isCancelling}>
+                  キャンセル
                 </Button>
-              )}
-              {canDelete && (
-                <Button variant="destructive" size="sm" onClick={onDelete} disabled={isDeleting}>
-                  削除
-                </Button>
+              ) : (
+                <>
+                  {canRetry && (
+                    <Button variant="outline" size="sm" onClick={onRetry} disabled={isRetrying}>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      リトライ
+                    </Button>
+                  )}
+                  {canDelete && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={onDelete}
+                      disabled={isDeleting}
+                    >
+                      削除
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -171,7 +189,12 @@ function PCExplorationDetail({
         <ExplorationTabs activeTab={activeTab} onTabChange={onTabChange} variant="pc" />
 
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <PCTabBody activeTab={activeTab} exploration={exploration} events={events} connected={connected} />
+          <PCTabBody
+            activeTab={activeTab}
+            exploration={exploration}
+            events={events}
+            connected={connected}
+          />
         </div>
       </main>
     </div>
@@ -187,10 +210,13 @@ function SPExplorationDetail({
   onNavigate,
   onDelete,
   onRetry,
+  onCancel,
   canDelete,
   canRetry,
+  canCancel,
   isDeleting,
   isRetrying,
+  isCancelling,
   events,
   connected,
 }: {
@@ -200,10 +226,13 @@ function SPExplorationDetail({
   onNavigate: (path: string) => void
   onDelete: () => void
   onRetry: () => void
+  onCancel: () => void
   canDelete: boolean
   canRetry: boolean
+  canCancel: boolean
   isDeleting: boolean
   isRetrying: boolean
+  isCancelling: boolean
   events: ExplorationEvent[]
   connected: boolean
 }) {
@@ -217,13 +246,10 @@ function SPExplorationDetail({
         subtitle={`探索 #${exploration.id} · ${config.label}`}
         onBack={() => onNavigate('/explorations')}
         actions={
-          (canDelete || canRetry) ? (
+          canDelete || canRetry || canCancel ? (
             <DropdownMenu
               trigger={
-                <button
-                  type="button"
-                  className="rounded-lg p-1.5 text-muted-foreground"
-                >
+                <button type="button" className="rounded-lg p-1.5 text-muted-foreground">
                   <EllipsisVertical className="h-5 w-5" />
                 </button>
               }
@@ -231,6 +257,19 @@ function SPExplorationDetail({
               onOpenChange={setMenuOpen}
               align="right"
             >
+              {canCancel && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    setMenuOpen(false)
+                    onCancel()
+                  }}
+                  variant="destructive"
+                  icon={XCircle}
+                  disabled={isCancelling}
+                >
+                  キャンセル
+                </DropdownMenuItem>
+              )}
               {canRetry && (
                 <DropdownMenuItem
                   onClick={() => {
@@ -260,16 +299,17 @@ function SPExplorationDetail({
           ) : undefined
         }
       >
-        <ExplorationTabs
-          activeTab={activeTab}
-          onTabChange={onTabChange}
-          variant="sp"
-        />
+        <ExplorationTabs activeTab={activeTab} onTabChange={onTabChange} variant="sp" />
       </SPDetailHeader>
 
       <main className="flex flex-1 flex-col overflow-hidden p-4">
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <SPTabBody activeTab={activeTab} exploration={exploration} events={events} connected={connected} />
+          <SPTabBody
+            activeTab={activeTab}
+            exploration={exploration}
+            events={events}
+            connected={connected}
+          />
         </div>
       </main>
     </div>
@@ -286,13 +326,16 @@ export function ExplorationDetailPage() {
   const qc = useQueryClient()
   const [activeTab, setActiveTab] = useState<ExplorationTab>('概要')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
 
   const { data: exploration, isLoading, isError } = useExploration(explorationId)
   const deleteMutation = useDeleteExploration()
   const retryMutation = useRetryExploration()
+  const cancelMutation = useCancelExploration()
 
   // SSE: アクティブ状態（discussing/executing/reviewing）のときだけ接続
-  const isActive = exploration?.status != null && EXPLORATION_ACTIVE_STATUSES.has(exploration.status)
+  const isActive =
+    exploration?.status != null && EXPLORATION_ACTIVE_STATUSES.has(exploration.status)
   const { events, connected } = useExplorationSSE(isActive ? explorationId : null)
 
   // SSEイベント → queryキャッシュinvalidation
@@ -321,10 +364,14 @@ export function ExplorationDetailPage() {
       qc.invalidateQueries({ queryKey: ['explorations', explorationId, 'logs'] })
       qc.invalidateQueries({ queryKey: ['explorations'], exact: true })
     }
-    if (last.type === 'taskify_started' || last.type === 'taskify_completed' || last.type === 'taskify_failed') {
+    if (
+      last.type === 'taskify_started' ||
+      last.type === 'taskify_completed' ||
+      last.type === 'taskify_failed'
+    ) {
       qc.invalidateQueries({ queryKey: ['explorations', explorationId] })
     }
-  }, [events.length, exploration, explorationId, qc])
+  }, [events.length, exploration, explorationId, qc, events])
 
   if (isLoading) {
     return (
@@ -338,9 +385,7 @@ export function ExplorationDetailPage() {
     return (
       <div className="flex h-dvh flex-col items-center justify-center gap-3 bg-background">
         <AlertCircle className="h-8 w-8 text-destructive" />
-        <p className="text-sm text-muted-foreground">
-          探索セッションが見つかりませんでした
-        </p>
+        <p className="text-sm text-muted-foreground">探索セッションが見つかりませんでした</p>
         <Button variant="outline" size="sm" onClick={() => navigate('/explorations')}>
           一覧に戻る
         </Button>
@@ -351,10 +396,9 @@ export function ExplorationDetailPage() {
   const hasActiveTaskify =
     exploration.latestTaskifyJob?.status === 'pending' ||
     exploration.latestTaskifyJob?.status === 'running'
-  const canDelete =
-    EXPLORATION_DELETABLE_STATUSES.has(exploration.status) &&
-    !hasActiveTaskify
+  const canDelete = EXPLORATION_DELETABLE_STATUSES.has(exploration.status) && !hasActiveTaskify
   const canRetry = EXPLORATION_RETRYABLE_STATUSES.has(exploration.status)
+  const canCancel = EXPLORATION_CANCELABLE_STATUSES.has(exploration.status)
 
   const handleDelete = () => setDeleteDialogOpen(true)
   const handleConfirmDelete = () => {
@@ -376,6 +420,17 @@ export function ExplorationDetailPage() {
     })
   }
 
+  const handleCancel = () => setCancelDialogOpen(true)
+  const handleConfirmCancel = () => {
+    cancelMutation.mutate(explorationId, {
+      onSuccess: () => {
+        toast('探索をキャンセルしました', 'success')
+        setCancelDialogOpen(false)
+      },
+      onError: (err) => toast(err.message, 'error'),
+    })
+  }
+
   return (
     <>
       <div className="hidden md:block">
@@ -386,10 +441,13 @@ export function ExplorationDetailPage() {
           onNavigate={navigate}
           onDelete={handleDelete}
           onRetry={handleRetry}
+          onCancel={handleCancel}
           canDelete={canDelete}
           canRetry={canRetry}
+          canCancel={canCancel}
           isDeleting={deleteMutation.isPending}
           isRetrying={retryMutation.isPending}
+          isCancelling={cancelMutation.isPending}
           events={events}
           connected={connected}
         />
@@ -402,10 +460,13 @@ export function ExplorationDetailPage() {
           onNavigate={navigate}
           onDelete={handleDelete}
           onRetry={handleRetry}
+          onCancel={handleCancel}
           canDelete={canDelete}
           canRetry={canRetry}
+          canCancel={canCancel}
           isDeleting={deleteMutation.isPending}
           isRetrying={retryMutation.isPending}
+          isCancelling={cancelMutation.isPending}
           events={events}
           connected={connected}
         />
@@ -420,6 +481,17 @@ export function ExplorationDetailPage() {
         confirmLabel="削除する"
         variant="destructive"
         isLoading={deleteMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={cancelDialogOpen}
+        onConfirm={handleConfirmCancel}
+        onCancel={() => setCancelDialogOpen(false)}
+        title="探索の実行をキャンセル"
+        description={`「${exploration.title}」の実行をキャンセルしますか？`}
+        confirmLabel="キャンセルする"
+        variant="destructive"
+        isLoading={cancelMutation.isPending}
       />
     </>
   )

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { SPTaskCard } from './sp-task-card'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ChevronUp, ChevronDown } from 'lucide-react'
+import { SPTaskCard } from './sp-task-card'
 
 const meta = {
   title: 'Components/SPTaskCard',

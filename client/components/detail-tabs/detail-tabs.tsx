@@ -15,12 +15,7 @@ interface DetailTabsProps {
   className?: string
 }
 
-export function DetailTabs({
-  activeTab,
-  onTabChange,
-  variant = 'pc',
-  className,
-}: DetailTabsProps) {
+export function DetailTabs({ activeTab, onTabChange, variant = 'pc', className }: DetailTabsProps) {
   if (variant === 'sp') {
     return (
       <div className={cn('flex gap-1', className)}>

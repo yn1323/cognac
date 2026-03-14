@@ -1,4 +1,3 @@
-import type Database from 'better-sqlite3'
 import type {
   CognacConfig,
   ExplorationImage,
@@ -6,11 +5,12 @@ import type {
   ExplorationSession,
   PersonaSelection,
 } from '@cognac/shared'
-import { createProvider } from './providers/index.js'
-import { extractJson } from './json-parser.js'
-import { getRepoStructure } from './context-cache.js'
-import * as personaQueries from '../db/queries/exploration-personas.js'
+import type Database from 'better-sqlite3'
 import * as logQueries from '../db/queries/exploration-logs.js'
+import * as personaQueries from '../db/queries/exploration-personas.js'
+import { getRepoStructure } from './context-cache.js'
+import { extractJson } from './json-parser.js'
+import { createProvider } from './providers/index.js'
 
 function buildSystemPrompt(config: CognacConfig): string {
   return `あなたは探索チームのリーダーだ。
@@ -27,6 +27,9 @@ function buildSystemPrompt(config: CognacConfig): string {
   - 職人気質: 技術的な美しさにこだわる完璧主義者
   - 現実主義者: 「で、納期いつ？」とスケジュール感を気にする
   各メンバーのキャラが被らないように、チーム全体でバランスを取って。
+- emoji: そのキャラの性格・雰囲気・バイブスが伝わる絵文字を1つ選んで。
+  ⚠️ 役割を直接表す絵文字（🔧💻🛡️🧪📊）は避けること。
+  性格が伝わるものを選んで。例: ムードメーカー→🎉、冷めたベテラン→🧊、好奇心旺盛→🐿️、慎重派→🧐、ミニマリスト→🍃
 
 Playwright MCP を使う可能性がある場合は、UI検証や再現観点に強いメンバーを含めて。
 
@@ -37,8 +40,8 @@ Playwright MCP を使う可能性がある場合は、UI検証や再現観点に
 \`\`\`json
 {
   "personas": [
-    { "id": "ux-researcher", "name": "UXリサーチャー", "focus": "画面挙動とユーザー体験の確認", "tone": "ムードメーカー。「おっ、これ面白いね！」と気になるUIをどんどん拾う。ただし再現性の話になると急に真剣になる" },
-    { "id": "qa-engineer", "name": "QAエンジニア", "focus": "再現条件・環境差分・エッジケース", "tone": "ツッコミ役。「それ他の環境でも再現する？」と容赦なく突っ込む" }
+    { "id": "ux-researcher", "name": "UXリサーチャー", "focus": "画面挙動とユーザー体験の確認", "tone": "ムードメーカー。「おっ、これ面白いね！」と気になるUIをどんどん拾う。ただし再現性の話になると急に真剣になる", "emoji": "✨" },
+    { "id": "qa-engineer", "name": "QAエンジニア", "focus": "再現条件・環境差分・エッジケース", "tone": "ツッコミ役。「それ他の環境でも再現する？」と容赦なく突っ込む", "emoji": "🧐" }
   ],
   "estimatedRounds": 2
 }
@@ -78,12 +81,14 @@ function getFallbackPersonas(): PersonaSelection {
         name: 'プロダクトアナリスト',
         focus: '依頼内容の整理と論点分解',
         tone: '論点を構造化して進行する司会役',
+        emoji: '🎯',
       },
       {
         id: 'qa-engineer',
         name: 'QAエンジニア',
         focus: '再現確認、観測ポイント、抜け漏れ検知',
         tone: '慎重派で、再現条件の穴を見つける',
+        emoji: '🔍',
       },
     ],
     estimatedRounds: 2,
@@ -108,7 +113,12 @@ export async function executeExplorationPhasePersona(
   const systemPrompt = buildSystemPrompt(config)
   const userPrompt = buildUserPrompt(exploration, repoStructure, images)
 
-  let response = { result: '', sessionId: '', usage: { inputTokens: 0, outputTokens: 0 }, durationMs: 0 }
+  let response = {
+    result: '',
+    sessionId: '',
+    usage: { inputTokens: 0, outputTokens: 0 },
+    durationMs: 0,
+  }
   let personaSelection: PersonaSelection | null = null
 
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -134,6 +144,7 @@ export async function executeExplorationPhasePersona(
       name: persona.name,
       focus: persona.focus,
       tone: persona.tone,
+      emoji: persona.emoji || '',
     })),
   )
 

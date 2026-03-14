@@ -10,7 +10,7 @@ export class EventBus<T> {
     if (!this.subscribers.has(taskId)) {
       this.subscribers.set(taskId, new Set())
     }
-    this.subscribers.get(taskId)!.add(fn)
+    this.subscribers.get(taskId)?.add(fn)
 
     return () => {
       const subs = this.subscribers.get(taskId)

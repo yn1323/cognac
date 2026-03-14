@@ -1,4 +1,3 @@
-import type Database from 'better-sqlite3'
 import type {
   CognacConfig,
   DiscussionRound,
@@ -8,16 +7,20 @@ import type {
   ExplorationPersona,
   ExplorationSession,
 } from '@cognac/shared'
-import { createProvider } from './providers/index.js'
-import { extractJson } from './json-parser.js'
-import { getRepoStructure } from './context-cache.js'
-import { groupDiscussionsByRound } from './discussion-utils.js'
+import type Database from 'better-sqlite3'
 import * as discussionQueries from '../db/queries/exploration-discussions.js'
 import * as logQueries from '../db/queries/exploration-logs.js'
+import { getRepoStructure } from './context-cache.js'
+import { groupDiscussionsByRound } from './discussion-utils.js'
+import { extractJson } from './json-parser.js'
+import { createProvider } from './providers/index.js'
 
 function formatPersonas(personas: ExplorationPersona[]): string {
   return personas
-    .map((persona) => `- **${persona.name}** (${persona.persona_id}): ${persona.focus}。スタイル: ${persona.tone}`)
+    .map(
+      (persona) =>
+        `- **${persona.name}** (${persona.persona_id}): ${persona.focus}。スタイル: ${persona.tone}`,
+    )
     .join('\n')
 }
 
@@ -108,7 +111,8 @@ ${repoStructure}
   }
 
   if (isLastRound) {
-    prompt += '\n\n**注意: これが最終ラウンドだ。shouldContinueはfalseにして、結論を短くまとめるメッセージで締めてくれ。**'
+    prompt +=
+      '\n\n**注意: これが最終ラウンドだ。shouldContinueはfalseにして、結論を短くまとめるメッセージで締めてくれ。**'
   }
 
   return prompt
@@ -144,8 +148,20 @@ export async function executeExplorationPhaseDiscussion(
   for (let round = 1; round <= maxRounds; round++) {
     const isLastRound = round === maxRounds
     onEvent?.({ type: 'discussion_round_start', round })
-    const userPrompt = buildRoundPrompt(exploration, images, round, repoStructure, allDiscussions, isLastRound)
-    let response = { result: '', sessionId: '', usage: { inputTokens: 0, outputTokens: 0 }, durationMs: 0 }
+    const userPrompt = buildRoundPrompt(
+      exploration,
+      images,
+      round,
+      repoStructure,
+      allDiscussions,
+      isLastRound,
+    )
+    let response = {
+      result: '',
+      sessionId: '',
+      usage: { inputTokens: 0, outputTokens: 0 },
+      durationMs: 0,
+    }
     let discussionRound: DiscussionRound | null = null
 
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -181,8 +197,8 @@ export async function executeExplorationPhaseDiscussion(
         persona_name: personaNameMap.get(message.personaId) ?? message.personaId,
         content: message.content,
         key_points: null,
-        should_continue: discussionRound!.shouldContinue,
-        continue_reason: discussionRound!.reason ?? null,
+        should_continue: discussionRound?.shouldContinue,
+        continue_reason: discussionRound?.reason ?? null,
       })),
     )
     allDiscussions.push(...discussions)

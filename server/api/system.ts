@@ -1,7 +1,7 @@
-import { Hono } from 'hono'
 import type Database from 'better-sqlite3'
-import type { ActiveExecution } from '../runner/execution-coordinator.js'
+import { Hono } from 'hono'
 import { initializeSchema } from '../db/schema.js'
+import type { ActiveExecution } from '../runner/execution-coordinator.js'
 
 export type RunnerState = 'running' | 'paused' | 'idle'
 
@@ -32,9 +32,7 @@ export function systemRouter(statusProvider: SystemStatusProvider, db: Database.
   // データベース再初期化（全テーブルを作り直して最新スキーマに戻す）
   app.delete('/database', (c) => {
     const tables = db
-      .prepare(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
-      )
+      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
       .all() as { name: string }[]
 
     db.pragma('foreign_keys = OFF')

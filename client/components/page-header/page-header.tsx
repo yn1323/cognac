@@ -15,20 +15,10 @@ export function PageHeader({ title, subtitle, children, className }: PageHeaderP
   return (
     <div className={cn('flex items-center justify-between', className)}>
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold leading-[1.3] text-foreground">
-          {title}
-        </h1>
-        {subtitle && (
-          <p className="text-sm leading-[1.4] text-muted-foreground">
-            {subtitle}
-          </p>
-        )}
+        <h1 className="text-2xl font-semibold leading-[1.3] text-foreground">{title}</h1>
+        {subtitle && <p className="text-sm leading-[1.4] text-muted-foreground">{subtitle}</p>}
       </div>
-      {children && (
-        <div className="flex items-center gap-3">
-          {children}
-        </div>
-      )}
+      {children && <div className="flex items-center gap-3">{children}</div>}
     </div>
   )
 }

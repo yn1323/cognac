@@ -1,9 +1,9 @@
 // SPBottomNav のストーリー
 
 import type { Meta, StoryObj } from '@storybook/react'
-import { SPBottomNav, SPNavItem } from './sp-bottom-nav'
-import { Home, ListTodo, Settings } from 'lucide-react'
 import { fn } from '@storybook/test'
+import { Home, ListTodo, Settings } from 'lucide-react'
+import { SPBottomNav, SPNavItem } from './sp-bottom-nav'
 
 const meta = {
   title: 'Components/SP/SPBottomNav',

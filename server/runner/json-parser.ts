@@ -45,7 +45,5 @@ export function extractJson<T>(text: string): T {
     }
   }
 
-  throw new Error(
-    `JSONの抽出に失敗。入力テキストの先頭200文字: ${text.slice(0, 200)}`,
-  )
+  throw new Error(`JSONの抽出に失敗。入力テキストの先頭200文字: ${text.slice(0, 200)}`)
 }

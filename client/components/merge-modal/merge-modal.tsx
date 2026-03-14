@@ -1,11 +1,11 @@
 // マージモーダル
 // デザイン design.pen Node=6MUix 準拠
 
-import { useState, useEffect, useMemo } from 'react'
-import { GitMerge, ArrowDown, ChevronDown } from 'lucide-react'
 import type { GitBranch } from '@cognac/shared'
+import { ArrowDown, ChevronDown, GitMerge } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { useScrollLock, useEscapeClose } from '@/hooks/use-scroll-lock'
+import { useEscapeClose, useScrollLock } from '@/hooks/use-scroll-lock'
 
 interface MergeModalProps {
   open: boolean
@@ -26,7 +26,8 @@ export function MergeModal({ open, onClose, branches, currentBranch, onMerge }: 
   // モーダルが開かれたときにデフォルト値をセット
   useEffect(() => {
     if (!open || localBranches.length === 0) return
-    const defaultFrom = localBranches.find((b) => b.name !== currentBranch)?.name ?? localBranches[0].name
+    const defaultFrom =
+      localBranches.find((b) => b.name !== currentBranch)?.name ?? localBranches[0].name
     setFromBranch(defaultFrom)
     setToBranch(currentBranch || localBranches[0].name)
   }, [open, localBranches, currentBranch])
@@ -51,9 +52,7 @@ export function MergeModal({ open, onClose, branches, currentBranch, onMerge }: 
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#eff6ff]">
               <GitMerge className="h-5 w-5 text-[#2563eb]" />
             </div>
-            <h2 className="text-lg font-semibold text-foreground">
-              ブランチをマージ
-            </h2>
+            <h2 className="text-lg font-semibold text-foreground">ブランチをマージ</h2>
           </div>
           <p className="text-sm leading-[1.43] text-muted-foreground">
             マージ元ブランチの変更をマージ先ブランチに統合します。マージコミットが作成されます（--no-ff）。
@@ -64,9 +63,7 @@ export function MergeModal({ open, onClose, branches, currentBranch, onMerge }: 
         <div className="flex flex-col gap-4 px-6">
           {/* マージ元 */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-muted-foreground">
-              マージ元ブランチ
-            </label>
+            <label className="text-sm font-medium text-muted-foreground">マージ元ブランチ</label>
             <div className="relative">
               <select
                 value={fromBranch}
@@ -93,9 +90,7 @@ export function MergeModal({ open, onClose, branches, currentBranch, onMerge }: 
 
           {/* マージ先 */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-muted-foreground">
-              マージ先ブランチ
-            </label>
+            <label className="text-sm font-medium text-muted-foreground">マージ先ブランチ</label>
             <div className="relative">
               <select
                 value={toBranch}

@@ -2,18 +2,20 @@
 // PC: サイドバー + メインコンテンツ / SP: ヘッダー + ボディ + ボトムナビ
 // デザイン design.pen PC=SGKRj, SP=Oroa8 に準拠
 
-import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Plus, X, ChevronUp, ChevronDown } from 'lucide-react'
 import type { CiStep, CliProvider, CommitMessageLanguage } from '@cognac/shared'
-import { Sidebar } from '@/components/sidebar'
-import { NAV_MAP } from '@/lib/constants'
+import { ChevronDown, ChevronUp, Plus, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AppBottomNav } from '@/components/app-bottom-nav'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { Sidebar } from '@/components/sidebar'
+import { SPHeader } from '@/components/sp-header'
+import { useToast } from '@/components/toast'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Input } from '@/components/ui/input'
 import { useDeleteDatabase, useSettings, useUpdateSettings } from '@/hooks/use-system'
+import { NAV_MAP } from '@/lib/constants'
 
 // --- CIコマンドエディター ---
 
@@ -155,9 +157,7 @@ function PCSettings({
       <main className="flex flex-1 flex-col gap-8 overflow-y-auto p-8">
         {/* ヘッダー */}
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold leading-[1.3] text-foreground">
-            設定
-          </h1>
+          <h1 className="text-2xl font-semibold leading-[1.3] text-foreground">設定</h1>
           <p className="text-sm leading-[1.4] text-muted-foreground">
             Cognac の動作設定を管理します
           </p>
@@ -167,9 +167,7 @@ function PCSettings({
         <Card>
           <CardHeader className="p-6">
             <CardTitle className="text-base">基本設定</CardTitle>
-            <p className="text-[13px] text-muted-foreground">
-              プロジェクト基本設定
-            </p>
+            <p className="text-[13px] text-muted-foreground">プロジェクト基本設定</p>
           </CardHeader>
           <CardContent className="flex flex-col gap-5 p-6 pt-0">
             <div>
@@ -244,7 +242,7 @@ function PCSettings({
           <CardHeader className="p-6">
             <CardTitle className="text-base">CI設定</CardTitle>
             <p className="text-[13px] text-muted-foreground">
-              タスク完了時に実行するCIコマンドを設定します
+              タスク・探索完了時に実行するCIコマンドを設定します
             </p>
           </CardHeader>
           <CardContent className="flex flex-col gap-5 p-6 pt-0">
@@ -255,12 +253,8 @@ function PCSettings({
         {/* Danger Zone セクション */}
         <Card>
           <CardHeader className="p-6">
-            <CardTitle className="text-base text-destructive">
-              Danger Zone
-            </CardTitle>
-            <p className="text-[13px] text-muted-foreground">
-              取り消しできない操作
-            </p>
+            <CardTitle className="text-base text-destructive">Danger Zone</CardTitle>
+            <p className="text-[13px] text-muted-foreground">取り消しできない操作</p>
           </CardHeader>
           <CardContent className="flex flex-col gap-5 p-6 pt-0">
             <div className="flex items-center justify-between gap-4">
@@ -272,11 +266,7 @@ function PCSettings({
                   SQLiteデータベースファイルを完全に削除します。すべてのタスク・ログが失われます。
                 </span>
               </div>
-              <Button
-                variant="destructive"
-                className="shrink-0"
-                onClick={onDeleteDatabase}
-              >
+              <Button variant="destructive" className="shrink-0" onClick={onDeleteDatabase}>
                 データベース削除
               </Button>
             </div>
@@ -311,23 +301,17 @@ function SPSettings({
   onSave,
   isSaving,
 }: SettingsPanelProps) {
-  const navigate = useNavigate()
-
   return (
     <div className="flex h-dvh flex-col bg-background">
       {/* ヘッダー */}
-      <header className="border-b bg-background px-4 py-3">
-        <h1 className="text-lg font-semibold text-foreground">設定</h1>
-      </header>
+      <SPHeader />
 
       <main className="flex flex-1 flex-col gap-5 overflow-y-auto p-4 pb-20">
         {/* 基本設定セクション */}
         <Card>
           <CardHeader className="p-4">
             <CardTitle className="text-[15px]">基本設定</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              プロジェクト基本設定
-            </p>
+            <p className="text-xs text-muted-foreground">プロジェクト基本設定</p>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 px-4 pb-4 pt-0">
             <div>
@@ -401,9 +385,7 @@ function SPSettings({
         <Card>
           <CardHeader className="p-4">
             <CardTitle className="text-[15px]">CI設定</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              タスク完了時に実行するCIコマンド
-            </p>
+            <p className="text-xs text-muted-foreground">タスク・探索完了時に実行するCIコマンド</p>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 px-4 pb-4 pt-0">
             <CiCommandsEditor steps={ciSteps} onChange={setCiSteps} />
@@ -413,19 +395,13 @@ function SPSettings({
         {/* Danger Zone セクション */}
         <Card>
           <CardHeader className="p-4">
-            <CardTitle className="text-[15px] text-destructive">
-              Danger Zone
-            </CardTitle>
-            <p className="text-xs text-muted-foreground">
-              取り消しできない操作
-            </p>
+            <CardTitle className="text-[15px] text-destructive">Danger Zone</CardTitle>
+            <p className="text-xs text-muted-foreground">取り消しできない操作</p>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 px-4 pb-4 pt-0">
             <div className="flex items-center justify-between gap-3">
               <div className="flex flex-col gap-1">
-                <span className="text-[13px] font-medium text-foreground">
-                  データベースを削除
-                </span>
+                <span className="text-[13px] font-medium text-foreground">データベースを削除</span>
                 <span className="text-[11px] text-muted-foreground">
                   SQLiteデータベースファイルを完全に削除します。すべてのタスク・ログが失われます。
                 </span>
@@ -468,6 +444,7 @@ export function SettingsPage() {
   const deleteDatabase = useDeleteDatabase()
   const { data: settings } = useSettings()
   const updateSettings = useUpdateSettings()
+  const { toast } = useToast()
 
   // サーバーから初期値をロード（初回のみ）
   const initialized = useRef(false)
@@ -484,21 +461,33 @@ export function SettingsPage() {
 
   const handleSave = () => {
     const maxRetriesNum = parseInt(maxRetries, 10)
-    if (Number.isNaN(maxRetriesNum) || maxRetriesNum < 0) return
+    if (Number.isNaN(maxRetriesNum) || maxRetriesNum < 0) {
+      toast('入力値を確認してください', 'warning')
+      return
+    }
     const commitLogLimitNum = parseInt(commitLogLimit, 10)
-    if (Number.isNaN(commitLogLimitNum) || commitLogLimitNum < 1) return
+    if (Number.isNaN(commitLogLimitNum) || commitLogLimitNum < 1) {
+      toast('入力値を確認してください', 'warning')
+      return
+    }
 
-    updateSettings.mutate({
-      provider,
-      ci: {
-        maxRetries: maxRetriesNum,
-        steps: ciSteps.filter((s) => s.name.trim() && s.command.trim()),
+    updateSettings.mutate(
+      {
+        provider,
+        ci: {
+          maxRetries: maxRetriesNum,
+          steps: ciSteps.filter((s) => s.name.trim() && s.command.trim()),
+        },
+        git: {
+          commitLogLimit: commitLogLimitNum,
+          commitMessageLanguage,
+        },
       },
-      git: {
-        commitLogLimit: commitLogLimitNum,
-        commitMessageLanguage,
+      {
+        onSuccess: () => toast('設定を保存しました', 'success'),
+        onError: () => toast('保存に失敗しました', 'error'),
       },
-    })
+    )
   }
 
   const handleDeleteDatabase = () => {

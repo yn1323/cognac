@@ -2,17 +2,25 @@
 // 色・ラベル・アイコンを一元管理する
 // カラートークンは index.css の CSS変数を参照（ダークモード自動対応）
 
-import type { TaskStatus, Phase } from '@cognac/shared'
+import type { Phase, TaskStatus } from '@cognac/shared'
 import type { LucideIcon } from 'lucide-react'
 import {
+  CheckCircle,
+  Eye,
+  GripVertical,
   Loader,
   MessageCircle,
-  GripVertical,
-  CheckCircle,
-  XCircle,
-  Eye,
   PauseCircle,
+  XCircle,
 } from 'lucide-react'
+
+// StatusBadgeが参照するベース型
+export type StatusConfigEntry = {
+  label: string
+  color: string
+  dotColor: string
+  bgColor: string
+}
 
 // 削除可能なステータス
 export const DELETABLE_STATUSES = new Set<TaskStatus>(['pending', 'completed', 'paused', 'stopped'])

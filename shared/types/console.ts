@@ -55,7 +55,13 @@ export interface UpdateConsoleCommandInput {
 
 export type ConsoleStreamEvent =
   | { type: 'run_started'; runId: number; commandId: number; pid: number | null; timestamp: string }
-  | { type: 'run_status_changed'; runId: number; commandId: number; status: ConsoleRunStatus; timestamp: string }
+  | {
+      type: 'run_status_changed'
+      runId: number
+      commandId: number
+      status: ConsoleRunStatus
+      timestamp: string
+    }
   | {
       type: 'run_output'
       runId: number
@@ -72,4 +78,10 @@ export type ConsoleStreamEvent =
       exitCode: number | null
       timestamp: string
     }
-  | { type: 'run_log_truncated'; runId: number; commandId: number; message: string; timestamp: string }
+  | {
+      type: 'run_log_truncated'
+      runId: number
+      commandId: number
+      message: string
+      timestamp: string
+    }

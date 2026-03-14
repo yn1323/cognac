@@ -2,8 +2,8 @@
 // タスク一覧で表示するカード。タップで詳細ページへ遷移する
 // デザインの Task Card コンポーネントに準拠
 
-import { Link } from 'react-router-dom'
 import type { Task } from '@cognac/shared'
+import { Link } from 'react-router-dom'
 import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { formatRelativeTime } from '@/lib/format'
@@ -41,18 +41,14 @@ export function TaskCard({ task, onRetry }: TaskCardProps) {
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           {/* 1行目: バッジ + フェーズ */}
           <div className="flex items-center gap-2">
-            <StatusBadge status={task.status} />
+            <StatusBadge status={task.status} configMap={STATUS_CONFIG} />
             {phaseText && (
-              <span className="text-xs leading-[1.3] text-muted-foreground">
-                {phaseText}
-              </span>
+              <span className="text-xs leading-[1.3] text-muted-foreground">{phaseText}</span>
             )}
           </div>
 
           {/* タイトル */}
-          <span className="text-sm font-medium leading-[1.4] text-foreground">
-            {task.title}
-          </span>
+          <span className="text-sm font-medium leading-[1.4] text-foreground">{task.title}</span>
 
           {/* 説明 */}
           {task.description && (

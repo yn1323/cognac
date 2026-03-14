@@ -5,10 +5,7 @@ import { deleteRunLog, ensureConsoleLogRoot } from './log-store.js'
 const DEFAULT_RETENTION_MS = 24 * 60 * 60 * 1000
 const DEFAULT_INTERVAL_MS = 60 * 60 * 1000
 
-export function runConsoleStartupRecovery(
-  db: Database.Database,
-  cwd: string,
-): number {
+export function runConsoleStartupRecovery(db: Database.Database, cwd: string): number {
   ensureConsoleLogRoot(cwd)
   return consoleRunQueries.markActiveRunsKilledOnBoot(db, new Date().toISOString())
 }
@@ -23,11 +20,16 @@ export async function cleanupExpiredConsoleRuns(
 
   if (expiredRuns.length === 0) return 0
 
-  await Promise.all(expiredRuns.map(async (run) => {
-    await deleteRunLog(run.log_file_path)
-  }))
+  await Promise.all(
+    expiredRuns.map(async (run) => {
+      await deleteRunLog(run.log_file_path)
+    }),
+  )
 
-  return consoleRunQueries.deleteRuns(db, expiredRuns.map((run) => run.id))
+  return consoleRunQueries.deleteRuns(
+    db,
+    expiredRuns.map((run) => run.id),
+  )
 }
 
 export function startConsoleCleanupScheduler(

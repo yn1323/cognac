@@ -2,19 +2,19 @@
 // PC: オーバーレイ + センターモーダル / SP: フルスクリーンシート
 // タスクモーダル（task-modal.tsx）と同じパターン
 
-import { useState, useEffect, useCallback } from 'react'
-import { useScrollLock, useEscapeClose } from '@/hooks/use-scroll-lock'
-import { useSearchParams, useNavigate } from 'react-router-dom'
-import { X, Upload, Camera, Compass } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { DropZone } from '@/components/ui/drop-zone'
-import { ImagePreviewList } from '@/components/ui/image-preview-list'
-import { Textarea } from '@/components/ui/textarea'
+import { Camera, Compass, Upload, X } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { MobileModalFooter } from '@/components/mobile-modal-footer'
 import { useToast } from '@/components/toast'
-import { validateTitle } from '@/lib/validation'
+import { Button } from '@/components/ui/button'
+import { DropZone } from '@/components/ui/drop-zone'
+import { ImagePreviewList } from '@/components/ui/image-preview-list'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { useCreateExploration } from '@/hooks/use-explorations'
+import { useEscapeClose, useScrollLock } from '@/hooks/use-scroll-lock'
+import { validateTitle } from '@/lib/validation'
 
 interface FormProps {
   title: string
@@ -66,9 +66,7 @@ function PCExplorationModal({
             <X className="h-5 w-5" />
           </button>
           <h2 className="text-xl font-semibold text-foreground">新規探索</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            AIに調査・検証を依頼します
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">AIに調査・検証を依頼します</p>
         </div>
 
         {/* フォーム */}
@@ -146,19 +144,12 @@ function SPExplorationModal({
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <h2 className="text-lg font-semibold text-foreground">新規探索</h2>
-        <button
-          type="button"
-          onClick={handleClose}
-          className="rounded-lg p-1 text-foreground"
-        >
+        <button type="button" onClick={handleClose} className="rounded-lg p-1 text-foreground">
           <X className="h-5 w-5" />
         </button>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-1 flex-col gap-5 overflow-y-auto p-4"
-      >
+      <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-5 overflow-y-auto p-4">
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">
             タイトル <span className="text-destructive">*</span>

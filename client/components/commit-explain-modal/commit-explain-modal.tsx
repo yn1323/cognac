@@ -3,7 +3,7 @@
 
 import { AlertCircle, Bot, Loader2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useScrollLock, useEscapeClose } from '@/hooks/use-scroll-lock'
+import { useEscapeClose, useScrollLock } from '@/hooks/use-scroll-lock'
 
 interface CommitExplainModalProps {
   open: boolean
@@ -48,9 +48,7 @@ export function CommitExplainModal({
               <Bot className="h-5 w-5 text-[#2563eb]" />
             </div>
             <div className="flex min-w-0 flex-col gap-0.5">
-              <h2 className="text-lg font-semibold text-foreground">
-                AI コミット解説
-              </h2>
+              <h2 className="text-lg font-semibold text-foreground">AI コミット解説</h2>
               <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
                 <span className="shrink-0 font-medium text-[#1d4ed8]">{commitHash}</span>
                 <span className="truncate">{commitMessage}</span>
@@ -71,16 +69,12 @@ export function CommitExplainModal({
           {isLoading ? (
             <div className="flex flex-col items-center gap-3 py-8">
               <Loader2 className="h-6 w-6 animate-spin text-[#2563eb]" />
-              <span className="text-sm text-muted-foreground">
-                AIが変更内容を解析中...
-              </span>
+              <span className="text-sm text-muted-foreground">AIが変更内容を解析中...</span>
             </div>
           ) : isError ? (
             <div className="flex flex-col items-center gap-3 py-8">
               <AlertCircle className="h-6 w-6 text-[#e7000b]" />
-              <span className="text-sm text-muted-foreground">
-                解説の生成に失敗しました
-              </span>
+              <span className="text-sm text-muted-foreground">解説の生成に失敗しました</span>
             </div>
           ) : (
             <div className="rounded-md border border-[#e5e5e5] bg-[#fafafa] p-4">

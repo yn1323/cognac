@@ -2,64 +2,53 @@
 // PC: サイドバー + メインコンテンツ(2カラム) / SP: ヘッダー + ボディ + ボトムナビ
 // デザイン design.pen PC=TySUT, SP=A0mek に準拠
 
-import { useState, useMemo, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import type { GitBranch as GitBranchType, GitCommit, GitFile } from '@cognac/shared'
 import {
+  ArrowDown,
+  ArrowUp,
+  Check,
+  ChevronDown,
   GitBranch,
   GitBranchPlus,
   GitMerge,
+  Loader2,
   RefreshCw,
   Upload,
-  Loader2,
-  Check,
-  Trash2,
-  Bot,
-  ChevronDown,
-  ArrowUp,
-  ArrowDown,
 } from 'lucide-react'
-import type { GitFile, GitCommit, GitBranch as GitBranchType } from '@cognac/shared'
-import { Sidebar } from '@/components/sidebar'
-import { PageHeader } from '@/components/page-header'
-import { SPHeader } from '@/components/sp-header'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AppBottomNav } from '@/components/app-bottom-nav'
-import { Button } from '@/components/ui/button'
-import { GitFileRow } from '@/components/git-file-row'
+import { CommitExplainModal } from '@/components/commit-explain-modal'
 import { GitCommitRow } from '@/components/git-commit-row'
 import { GitDiffView } from '@/components/git-diff-view'
-import { AiCommitProgress } from '@/components/ai-commit-progress'
 import { MergeModal } from '@/components/merge-modal'
 import { NewBranchModal } from '@/components/new-branch-modal'
-import { CommitExplainModal } from '@/components/commit-explain-modal'
-import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { PageHeader } from '@/components/page-header'
+import { Sidebar } from '@/components/sidebar'
+import { SPHeader } from '@/components/sp-header'
 import { useToast } from '@/components/toast'
-import { useSettings } from '@/hooks/use-system'
-import { NAV_MAP } from '@/lib/constants'
+import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
-  useGitStatus,
-  useGitLog,
-  useGitBranches,
-  useGitRemoteStatus,
-  useDiscardAll,
   useAiCommit,
   useCheckout,
-  usePush,
-  useGitFetch,
-  useMerge,
   useCreateBranch,
+  useDiscardAll,
   useExplainCommit,
   useExplainWorking,
+  useGitBranches,
+  useGitFetch,
   useGitFileDiff,
+  useGitLog,
+  useGitRemoteStatus,
+  useGitStatus,
+  useMerge,
+  usePush,
 } from '@/hooks/use-git'
-// AIコミット実行中に表示するプレースホルダーログ
-const COMMIT_IN_PROGRESS_LOG = [
-  { text: 'AIコミットを実行中...', bold: true },
-  { text: '' },
-  { text: '$ git add -A' },
-  { text: '$ git diff --staged' },
-  { text: 'analyzing changes...' },
-  { text: 'generating commit message...' },
-]
+import { useScrollLock } from '@/hooks/use-scroll-lock'
+import { useSettings } from '@/hooks/use-system'
+import { NAV_MAP } from '@/lib/constants'
+import { ChangedFilesPanel } from './changed-files-panel'
 
 // --- ブランチセレクター ---
 
@@ -71,7 +60,13 @@ interface BranchSelectorProps {
   className?: string
 }
 
-function BranchSelector({ branches, currentBranch, onCheckout, disabled, className }: BranchSelectorProps) {
+function BranchSelector({
+  branches,
+  currentBranch,
+  onCheckout,
+  disabled,
+  className,
+}: BranchSelectorProps) {
   const [open, setOpen] = useState(false)
   const localBranches = useMemo(() => branches.filter((b) => !b.remote), [branches])
   const remoteBranches = useMemo(() => branches.filter((b) => b.remote), [branches])
@@ -94,9 +89,7 @@ function BranchSelector({ branches, currentBranch, onCheckout, disabled, classNa
           {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div className="absolute z-50 mt-1 min-w-[200px] rounded-md border border-[#e5e5e5] bg-white shadow-lg">
-            <div className="px-3 py-2 text-xs font-semibold text-muted-foreground">
-              ローカル
-            </div>
+            <div className="px-3 py-2 text-xs font-semibold text-muted-foreground">ローカル</div>
             {localBranches.map((b) => (
               <button
                 key={b.name}
@@ -107,7 +100,11 @@ function BranchSelector({ branches, currentBranch, onCheckout, disabled, classNa
                 }}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-neutral-50"
               >
-                <span className={b.name === currentBranch ? 'font-semibold text-[#1d4ed8]' : 'text-foreground'}>
+                <span
+                  className={
+                    b.name === currentBranch ? 'font-semibold text-[#1d4ed8]' : 'text-foreground'
+                  }
+                >
                   {b.name}
                 </span>
               </button>
@@ -209,7 +206,7 @@ function PCGitPage({
   onCheckout,
   onPush,
   onFetch,
-  isPushing,
+  isPushing: _isPushing,
   isFetching,
   pushPhase,
   onExplainCommit,
@@ -234,10 +231,7 @@ function PCGitPage({
       {/* メインコンテンツ */}
       <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-8">
         {/* ページヘッダー */}
-        <PageHeader
-          title="Git"
-          subtitle="ブランチ管理、変更の確認、コミット操作"
-        >
+        <PageHeader title="Git" subtitle="ブランチ管理、変更の確認、コミット操作">
           <Button variant="outline" size="sm" onClick={onFetch} disabled={isFetching}>
             <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
             Fetch
@@ -285,68 +279,17 @@ function PCGitPage({
         <div className="flex flex-1 gap-6">
           {/* 左カラム: 変更ファイル */}
           <div className="flex flex-1 flex-col gap-4">
-            <div className="flex flex-col overflow-hidden rounded-lg border border-[#e5e5e5] bg-[#fafafa] shadow-[0_1px_1.75px_#0000000d]">
-              {/* AIコミット中はヘッダーなしでログのみ表示 */}
-              {isCommitting ? (
-                <AiCommitProgress logLines={COMMIT_IN_PROGRESS_LOG} />
-              ) : (
-                <>
-                  {/* ヘッダー */}
-                  <div className="flex items-center justify-between border-b border-[#e5e5e5] px-4 py-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-foreground">変更ファイル</span>
-                      <span className="text-sm text-muted-foreground">({files.length})</span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-auto px-2 py-1 text-xs text-[#e7000b]"
-                      onClick={onToggleDiscardDialog}
-                      disabled={files.length === 0}
-                    >
-                      <Trash2 className="h-4 w-4 text-[#e7000b]" />
-                      全て破棄
-                    </Button>
-                  </div>
-
-                  {/* ファイルリスト */}
-                  <div className="flex flex-col">
-                    {files.map((file, i) => (
-                      <GitFileRow
-                        key={file.path}
-                        status={file.status}
-                        path={file.path}
-                        isLast={i === files.length - 1}
-                        selected={file.path === selectedFilePath}
-                        onClick={() => onFileSelect(file.path)}
-                      />
-                    ))}
-                  </div>
-
-                  {/* AIコミット・解説ボタン */}
-                  <div className="flex gap-2 p-4">
-                    <Button
-                      variant="primary"
-                      className="flex-1"
-                      onClick={onStartCommit}
-                      disabled={files.length === 0 || pushPhase !== 'idle'}
-                    >
-                      <Bot className="h-4 w-4" />
-                      AI コミット
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={onExplainWorking}
-                      disabled={files.length === 0 || isExplainWorkingLoading}
-                    >
-                      <Bot className="h-4 w-4" />
-                      AI 解説
-                    </Button>
-                  </div>
-                </>
-              )}
-            </div>
+            <ChangedFilesPanel
+              isCommitting={isCommitting}
+              files={files}
+              selectedFilePath={selectedFilePath}
+              onFileSelect={onFileSelect}
+              onStartCommit={onStartCommit}
+              onExplainWorking={onExplainWorking}
+              isExplainWorkingLoading={isExplainWorkingLoading}
+              onToggleDiscardDialog={onToggleDiscardDialog}
+              commitDisabled={pushPhase !== 'idle'}
+            />
           </div>
 
           {/* 右カラム: ファイルdiff or コミット履歴 */}
@@ -385,7 +328,7 @@ function PCGitPage({
 // --- SP版 ---
 
 function SPGitPage({
-  onNavigate,
+  onNavigate: _onNavigate,
   isCommitting,
   files,
   commits,
@@ -400,7 +343,7 @@ function SPGitPage({
   onCheckout,
   onPush,
   onFetch,
-  isPushing,
+  isPushing: _isPushing,
   isFetching,
   pushPhase,
   onExplainCommit,
@@ -411,21 +354,34 @@ function SPGitPage({
   fileDiff,
   isFileDiffLoading,
 }: GitPageViewProps) {
+  useScrollLock(!!selectedFilePath)
+
   return (
-    <div className="flex min-h-screen flex-col bg-[#fafafa]">
+    <div className="flex h-dvh flex-col bg-background">
       {/* SPヘッダー */}
       <SPHeader />
 
       {/* ボディ */}
-      <main className="flex flex-col gap-4 p-4 pb-20">
+      <main className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 pb-20">
         {/* タイトル行 */}
-        <div className="flex items-center justify-between">
+        <div className="flex shrink-0 items-center justify-between">
           <h1 className="text-xl font-semibold text-foreground">Git</h1>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={onFetch} disabled={isFetching}>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={onFetch}
+              disabled={isFetching}
+            >
               <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
             </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={onToggleNewBranchModal}>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={onToggleNewBranchModal}
+            >
               <GitBranchPlus className="h-4 w-4" />
             </Button>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={onToggleMergeModal}>
@@ -450,7 +406,7 @@ function SPGitPage({
         </div>
 
         {/* ブランチ行 */}
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <div className="relative flex-1">
             <BranchSelector
               branches={branches}
@@ -464,74 +420,28 @@ function SPGitPage({
         </div>
 
         {/* 変更ファイルカード */}
-        <div className="flex flex-col overflow-hidden rounded-lg border border-[#e5e5e5] bg-[#fafafa] shadow-[0_1px_1.75px_#0000000d]">
-          {/* AIコミット中はヘッダーなしでログのみ表示 */}
-          {isCommitting ? (
-            <AiCommitProgress logLines={COMMIT_IN_PROGRESS_LOG} />
-          ) : (
-            <>
-              {/* ヘッダー */}
-              <div className="flex items-center justify-between border-b border-[#e5e5e5] px-4 py-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-foreground">変更ファイル</span>
-                  <span className="text-sm text-muted-foreground">({files.length})</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-auto px-2 py-1 text-xs text-[#e7000b]"
-                  onClick={onToggleDiscardDialog}
-                  disabled={files.length === 0}
-                >
-                  <Trash2 className="h-4 w-4 text-[#e7000b]" />
-                  全て破棄
-                </Button>
-              </div>
-
-              {/* ファイルリスト */}
-              <div className="flex flex-col">
-                {files.map((file, i) => (
-                  <GitFileRow
-                    key={file.path}
-                    status={file.status}
-                    path={file.path}
-                    isLast={i === files.length - 1}
-                    selected={file.path === selectedFilePath}
-                    onClick={() => onFileSelect(file.path)}
-                  />
-                ))}
-              </div>
-
-              {/* AIコミット・解説ボタン */}
-              <div className="flex gap-2 p-4">
-                <Button
-                  variant="primary"
-                  className="flex-1"
-                  onClick={onStartCommit}
-                  disabled={files.length === 0 || pushPhase !== 'idle'}
-                >
-                  <Bot className="h-4 w-4" />
-                  AI コミット
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={onExplainWorking}
-                  disabled={files.length === 0 || isExplainWorkingLoading}
-                >
-                  <Bot className="h-4 w-4" />
-                  AI 解説
-                </Button>
-              </div>
-            </>
-          )}
+        <div className="shrink-0">
+          <ChangedFilesPanel
+            isCommitting={isCommitting}
+            files={files}
+            selectedFilePath={selectedFilePath}
+            onFileSelect={onFileSelect}
+            onStartCommit={onStartCommit}
+            onExplainWorking={onExplainWorking}
+            isExplainWorkingLoading={isExplainWorkingLoading}
+            onToggleDiscardDialog={onToggleDiscardDialog}
+            commitDisabled={pushPhase !== 'idle'}
+          />
         </div>
 
         {/* SP版: ファイルdiffモーダル */}
         {selectedFilePath && (
           <>
             {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-            <div className="fixed inset-0 z-40 bg-black/50" onClick={() => onFileSelect(selectedFilePath)} />
+            <div
+              className="fixed inset-0 z-40 bg-black/50"
+              onClick={() => onFileSelect(selectedFilePath)}
+            />
             <div className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-xl bg-background">
               <GitDiffView
                 path={selectedFilePath}
@@ -544,7 +454,7 @@ function SPGitPage({
         )}
 
         {/* コミット履歴 */}
-        <div className="flex flex-col rounded-lg border border-[#e5e5e5] bg-[#fafafa]">
+        <div className="flex shrink-0 flex-col rounded-lg border border-[#e5e5e5] bg-[#fafafa]">
           <div className="flex items-center justify-between border-b border-[#e5e5e5] px-4 py-3">
             <span className="text-sm font-semibold text-foreground">コミット履歴</span>
           </div>
@@ -576,9 +486,7 @@ export function GitPage() {
   const [showDiscardDialog, setShowDiscardDialog] = useState(false)
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null)
   const [explainTarget, setExplainTarget] = useState<
-    | { type: 'commit'; hash: string; message: string }
-    | { type: 'working' }
-    | null
+    { type: 'commit'; hash: string; message: string } | { type: 'working' } | null
   >(null)
   const [pushPhase, setPushPhase] = useState<'idle' | 'pushing' | 'success'>('idle')
   const pushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -630,17 +538,19 @@ export function GitPage() {
   const behind = remoteStatus?.behind ?? 0
 
   const handleNavigate = (path: string) => navigate(path)
-  const handleStartCommit = () => commitMutation.mutate(undefined, {
-    onSuccess: () => toast('コミットしました', 'success'),
-    onError: () => toast('コミットに失敗しました', 'error'),
-  })
+  const handleStartCommit = () =>
+    commitMutation.mutate(undefined, {
+      onSuccess: () => toast('コミットしました', 'success'),
+      onError: () => toast('コミットに失敗しました', 'error'),
+    })
   const handleToggleMergeModal = () => setShowMergeModal((v) => !v)
   const handleToggleNewBranchModal = () => setShowNewBranchModal((v) => !v)
   const handleToggleDiscardDialog = () => setShowDiscardDialog((v) => !v)
-  const handleCheckout = (branch: string) => checkoutMutation.mutate(branch, {
-    onSuccess: () => toast('ブランチを切り替えました', 'success'),
-    onError: () => toast('ブランチの切り替えに失敗しました', 'error'),
-  })
+  const handleCheckout = (branch: string) =>
+    checkoutMutation.mutate(branch, {
+      onSuccess: () => toast('ブランチを切り替えました', 'success'),
+      onError: () => toast('ブランチの切り替えに失敗しました', 'error'),
+    })
   const handlePush = () => {
     setPushPhase('pushing')
     pushMutation.mutate(undefined, {
@@ -655,10 +565,11 @@ export function GitPage() {
       },
     })
   }
-  const handleFetch = () => fetchMutation.mutate(undefined, {
-    onSuccess: () => toast('Fetchしました', 'success'),
-    onError: () => toast('Fetchに失敗しました', 'error'),
-  })
+  const handleFetch = () =>
+    fetchMutation.mutate(undefined, {
+      onSuccess: () => toast('Fetchしました', 'success'),
+      onError: () => toast('Fetchに失敗しました', 'error'),
+    })
 
   const handleDiscard = () => {
     discardMutation.mutate(undefined, {
@@ -671,15 +582,18 @@ export function GitPage() {
   }
 
   const handleMerge = (from: string, into: string) => {
-    mergeMutation.mutate({ from, into }, {
-      onSuccess: () => {
-        toast('マージしました', 'success')
-        setShowMergeModal(false)
+    mergeMutation.mutate(
+      { from, into },
+      {
+        onSuccess: () => {
+          toast('マージしました', 'success')
+          setShowMergeModal(false)
+        },
+        onError: () => {
+          toast('マージに失敗しました', 'error')
+        },
       },
-      onError: () => {
-        toast('マージに失敗しました', 'error')
-      },
-    })
+    )
   }
 
   const handleExplainCommit = (hash: string, message: string) => {
@@ -695,15 +609,18 @@ export function GitPage() {
   }
 
   const handleCreateBranch = (name: string, base?: string) => {
-    createBranchMutation.mutate({ name, base }, {
-      onSuccess: () => {
-        toast('ブランチを作成しました', 'success')
-        setShowNewBranchModal(false)
+    createBranchMutation.mutate(
+      { name, base },
+      {
+        onSuccess: () => {
+          toast('ブランチを作成しました', 'success')
+          setShowNewBranchModal(false)
+        },
+        onError: () => {
+          toast('ブランチの作成に失敗しました', 'error')
+        },
       },
-      onError: () => {
-        toast('ブランチの作成に失敗しました', 'error')
-      },
-    })
+    )
   }
 
   const viewProps: GitPageViewProps = {
@@ -761,16 +678,30 @@ export function GitPage() {
       />
       <CommitExplainModal
         open={explainTarget !== null}
-        onClose={() => { setExplainTarget(null); explainMutation.reset(); explainWorkingMutation.reset() }}
+        onClose={() => {
+          setExplainTarget(null)
+          explainMutation.reset()
+          explainWorkingMutation.reset()
+        }}
         commitHash={explainTarget?.type === 'commit' ? explainTarget.hash : ''}
-        commitMessage={explainTarget?.type === 'commit' ? explainTarget.message : '未コミットの変更'}
+        commitMessage={
+          explainTarget?.type === 'commit' ? explainTarget.message : '未コミットの変更'
+        }
         explanation={
           explainTarget?.type === 'commit'
             ? (explainMutation.data?.explanation ?? null)
             : (explainWorkingMutation.data?.explanation ?? null)
         }
-        isLoading={explainTarget?.type === 'commit' ? explainMutation.isPending : explainWorkingMutation.isPending}
-        isError={explainTarget?.type === 'commit' ? explainMutation.isError : explainWorkingMutation.isError}
+        isLoading={
+          explainTarget?.type === 'commit'
+            ? explainMutation.isPending
+            : explainWorkingMutation.isPending
+        }
+        isError={
+          explainTarget?.type === 'commit'
+            ? explainMutation.isError
+            : explainWorkingMutation.isError
+        }
       />
       <ConfirmDialog
         open={showDiscardDialog}

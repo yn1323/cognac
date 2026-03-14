@@ -154,7 +154,7 @@ export class CodexStreamParser {
         const change = item.changes?.[0]
         if (!change) return null
         // kind: "add" | "update" | "delete" → toolName: "Write" | "Edit"
-        const toolName = change.kind === 'add' ? 'Write' as const : 'Edit' as const
+        const toolName = change.kind === 'add' ? ('Write' as const) : ('Edit' as const)
         return {
           type: 'file_changed',
           path: change.path,

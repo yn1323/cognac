@@ -1,7 +1,6 @@
+import { randomUUID } from 'node:crypto'
 import { copyFile, mkdir } from 'node:fs/promises'
 import { extname, resolve } from 'node:path'
-import { randomUUID } from 'node:crypto'
-import type Database from 'better-sqlite3'
 import type {
   CognacConfig,
   ExplorationArtifact,
@@ -10,13 +9,14 @@ import type {
   ExplorationTaskifyJob,
   ExplorationTaskifyResult,
 } from '@cognac/shared'
-import { createProvider } from './providers/index.js'
-import { extractJson } from './json-parser.js'
+import type Database from 'better-sqlite3'
 import * as artifactQueries from '../db/queries/exploration-artifacts.js'
 import * as logQueries from '../db/queries/exploration-logs.js'
-import * as taskQueries from '../db/queries/tasks.js'
 import * as taskImageQueries from '../db/queries/task-images.js'
+import * as taskQueries from '../db/queries/tasks.js'
 import { getCognacRoot, resolveCognacPath } from './exploration-paths.js'
+import { extractJson } from './json-parser.js'
+import { createProvider } from './providers/index.js'
 
 function buildSystemPrompt(): string {
   return `あなたは探索レポートを実装タスクへ変換する担当だ。
@@ -50,8 +50,9 @@ function buildUserPrompt(
   reportArtifact: ExplorationArtifact | undefined,
   findings: ExplorationArtifact[],
   images: ExplorationImage[],
+  userInstruction?: string | null,
 ): string {
-  return `## 探索依頼
+  let prompt = `## 探索依頼
 **タイトル**: ${exploration.title}
 
 ## 最終レポート
@@ -64,6 +65,12 @@ ${findings.map((artifact) => `- ${artifact.title}: ${artifact.content_text ?? ''
 ${images.map((image) => `- id=${image.id} path=${image.file_path}`).join('\n') || 'なし'}
 
 基本は1タスクにまとめて。技術領域がまったく異なる場合のみ分割して。priority は 0〜3 で返して。`
+
+  if (userInstruction) {
+    prompt += `\n\n## ユーザーからの補足指示\n${userInstruction}`
+  }
+
+  return prompt
 }
 
 function getFallbackTaskifyResult(exploration: ExplorationSession): ExplorationTaskifyResult {
@@ -93,7 +100,13 @@ export async function executeExplorationPhaseTaskify(
 ): Promise<{ taskIds: number[]; resultJson: string }> {
   const provider = createProvider(config.provider)
   const systemPrompt = buildSystemPrompt()
-  const prompt = buildUserPrompt(exploration, reportArtifact, findings, images)
+  const prompt = buildUserPrompt(
+    exploration,
+    reportArtifact,
+    findings,
+    images,
+    job.user_instruction,
+  )
 
   const response = await provider.execPrint({ prompt, systemPrompt, signal }, config)
 

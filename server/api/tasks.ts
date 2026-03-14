@@ -1,26 +1,33 @@
-import { mkdir, writeFile, unlink } from 'node:fs/promises'
-import { resolve, extname } from 'node:path'
 import { randomUUID } from 'node:crypto'
+import { mkdir, unlink, writeFile } from 'node:fs/promises'
+import { extname, resolve } from 'node:path'
+import type Database from 'better-sqlite3'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import type Database from 'better-sqlite3'
-import * as taskQueries from '../db/queries/tasks.js'
-import * as taskImageQueries from '../db/queries/task-images.js'
-import * as logQueries from '../db/queries/execution-logs.js'
-import * as taskEventQueries from '../db/queries/task-events.js'
-import * as personaQueries from '../db/queries/personas.js'
 import * as discussionQueries from '../db/queries/discussions.js'
+import * as logQueries from '../db/queries/execution-logs.js'
+import * as personaQueries from '../db/queries/personas.js'
 import * as planQueries from '../db/queries/plans.js'
+import * as taskEventQueries from '../db/queries/task-events.js'
+import * as taskImageQueries from '../db/queries/task-images.js'
+import * as taskQueries from '../db/queries/tasks.js'
 
 // バリデーションスキーマ
 const createTaskSchema = z.object({
-  title: z.string().min(2, 'タイトルは2文字以上で入力してね').max(200, 'タイトルは200文字以内にしてね'),
+  title: z
+    .string()
+    .min(2, 'タイトルは2文字以上で入力してね')
+    .max(200, 'タイトルは200文字以内にしてね'),
   description: z.string().optional(),
   priority: z.number().int().min(0).max(3).optional(),
 })
 
 const updateTaskSchema = z.object({
-  title: z.string().min(2, 'タイトルは2文字以上で入力してね').max(200, 'タイトルは200文字以内にしてね').optional(),
+  title: z
+    .string()
+    .min(2, 'タイトルは2文字以上で入力してね')
+    .max(200, 'タイトルは200文字以内にしてね')
+    .optional(),
   description: z.string().optional(),
   priority: z.number().int().optional(),
   queue_order: z.number().int().optional(),
@@ -29,12 +36,7 @@ const updateTaskSchema = z.object({
 // 画像アップロードの制限
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 const MAX_FILES = 5
-const ALLOWED_MIME_TYPES = [
-  'image/png',
-  'image/jpeg',
-  'image/gif',
-  'image/webp',
-]
+const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
 
 // 実行中タスクのキャンセルインターフェース
 export interface TaskCanceller {

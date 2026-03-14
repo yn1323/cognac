@@ -2,8 +2,8 @@
 // 空・少量・大量イベントのパターン
 
 import type { Meta, StoryObj } from '@storybook/react'
-import { LogView } from './log-view'
 import { MOCK_EVENTS } from '../__mocks__/event-data'
+import { LogView } from './log-view'
 
 const meta = {
   title: 'Components/LogView',

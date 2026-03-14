@@ -5,8 +5,8 @@
  * Claude / Codex 両プロバイダーで共有するヘルパーを集約。
  */
 
-import { type ChildProcess } from 'node:child_process'
-import { createReadStream, writeFileSync, unlinkSync, mkdirSync } from 'node:fs'
+import type { ChildProcess } from 'node:child_process'
+import { createReadStream, mkdirSync, unlinkSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { ProcessTimeoutError, TaskCancelledError } from './types.js'
 
@@ -31,9 +31,7 @@ export function writeTmpFiles(prompt: string, systemPrompt?: string): TmpFiles {
   mkdirSync(TMP_DIR, { recursive: true })
   const now = Date.now()
   const promptFile = path.join(TMP_DIR, `prompt-${now}.md`)
-  const systemFile = systemPrompt
-    ? path.join(TMP_DIR, `system-${now}.md`)
-    : null
+  const systemFile = systemPrompt ? path.join(TMP_DIR, `system-${now}.md`) : null
 
   writeFileSync(promptFile, prompt, 'utf8')
   if (systemFile && systemPrompt) {
@@ -43,9 +41,17 @@ export function writeTmpFiles(prompt: string, systemPrompt?: string): TmpFiles {
 }
 
 export function cleanupTmpFiles({ promptFile, systemFile }: TmpFiles): void {
-  try { unlinkSync(promptFile) } catch { /* ok */ }
+  try {
+    unlinkSync(promptFile)
+  } catch {
+    /* ok */
+  }
   if (systemFile) {
-    try { unlinkSync(systemFile) } catch { /* ok */ }
+    try {
+      unlinkSync(systemFile)
+    } catch {
+      /* ok */
+    }
   }
 }
 
@@ -88,6 +94,7 @@ export function setupProcess(
 ): SpawnHelpers {
   // stdin にプロンプトファイルを流し込む
   const promptStream = createReadStream(promptFile, 'utf8')
+  // biome-ignore lint/style/noNonNullAssertion: stdio: ['pipe','pipe','pipe'] で必ず存在する
   promptStream.pipe(child.stdin!).on('error', (err: NodeJS.ErrnoException) => {
     // EPIPE はプロセスが先に閉じた場合に発生する。無視して OK
     if (err.code !== 'EPIPE') reject(err)
@@ -126,7 +133,9 @@ export function setupProcess(
 
   return {
     resetTimeout,
-    clearTimer: () => { if (timeoutTimer) clearTimeout(timeoutTimer) },
+    clearTimer: () => {
+      if (timeoutTimer) clearTimeout(timeoutTimer)
+    },
     getStderr: () => stderrBuf,
   }
 }

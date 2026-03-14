@@ -1,17 +1,17 @@
 // Snackbar通知システム
 // デザインシステム: OeZYr(Default), po45K(Success), 0jXla(Error), T2tUR(Warning)
 
+import { CircleCheck, CircleX, Info, TriangleAlert, X } from 'lucide-react'
 import {
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useReducer,
-  type ReactNode,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { CircleCheck, CircleX, Info, TriangleAlert, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // --- 型定義 ---
@@ -43,6 +43,14 @@ const ICON_MAP = {
   warning: { icon: TriangleAlert, className: 'text-[#d97706]' },
 } as const
 
+// variant別の自動消去時間（ミリ秒）
+const DURATION_MAP: Record<ToastVariant, number> = {
+  default: 2000,
+  success: 1000,
+  error: 4000,
+  warning: 4000,
+} as const
+
 // --- Reducer ---
 
 function toastReducer(state: Toast[], action: ToastAction): Toast[] {
@@ -50,9 +58,7 @@ function toastReducer(state: Toast[], action: ToastAction): Toast[] {
     case 'ADD':
       return [...state, action.toast]
     case 'DISMISS':
-      return state.map((t) =>
-        t.id === action.id ? { ...t, dismissing: true } : t,
-      )
+      return state.map((t) => (t.id === action.id ? { ...t, dismissing: true } : t))
     case 'REMOVE':
       return state.filter((t) => t.id !== action.id)
   }
@@ -64,39 +70,33 @@ const ToastContext = createContext<ToastContextValue | null>(null)
 
 // --- ToastItem ---
 
-function ToastItem({
-  toast: t,
-  onDismiss,
-}: {
-  toast: Toast
-  onDismiss: (id: string) => void
-}) {
+function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: (id: string) => void }) {
   const { icon: Icon, className: iconClass } = ICON_MAP[t.variant]
 
   // 各トースト個別の自動消去タイマー（他のトースト追加でリセットされない）
   useEffect(() => {
     if (t.dismissing) return
-    const timer = setTimeout(() => onDismiss(t.id), 3000)
+    const timer = setTimeout(() => onDismiss(t.id), DURATION_MAP[t.variant])
     return () => clearTimeout(timer)
-  }, [t.id, t.dismissing, onDismiss])
+  }, [t.id, t.dismissing, t.variant, onDismiss])
 
   return (
     <div
       className={cn(
-        'flex w-100 items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-[0_4px_12px_-2px_#00000014]',
+        'flex w-100 items-center gap-3 rounded-lg border border-border bg-card px-4 py-1.5 shadow-[0_4px_12px_-2px_#00000014]',
         'max-md:w-auto max-md:left-4 max-md:right-4',
         t.dismissing
           ? 'animate-[toast-fade-out_200ms_ease-in_forwards]'
           : 'animate-[toast-slide-in_300ms_ease-out]',
       )}
     >
-      <div className="flex h-5 w-5 shrink-0 items-center justify-center">
+      <div className="flex h-4 w-4 shrink-0 items-center justify-center">
         <Icon className={cn('h-4 w-4', iconClass)} />
       </div>
       <p className="min-w-0 flex-1 text-sm text-foreground">{t.message}</p>
       <button
         type="button"
-        className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center"
+        className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center"
         onClick={() => onDismiss(t.id)}
       >
         <X className="h-4 w-4 text-muted-foreground" />
@@ -107,13 +107,7 @@ function ToastItem({
 
 // --- Toaster (Portal) ---
 
-function Toaster({
-  toasts,
-  onDismiss,
-}: {
-  toasts: Toast[]
-  onDismiss: (id: string) => void
-}) {
+function Toaster({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: string) => void }) {
   if (toasts.length === 0) return null
 
   return createPortal(
@@ -138,16 +132,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setTimeout(() => dispatch({ type: 'REMOVE', id }), 200)
   }, [])
 
-  const toast = useCallback(
-    (message: string, variant: ToastVariant = 'default') => {
-      const id = `toast-${++toastCounter}`
-      dispatch({
-        type: 'ADD',
-        toast: { id, message, variant, dismissing: false },
-      })
-    },
-    [],
-  )
+  const toast = useCallback((message: string, variant: ToastVariant = 'default') => {
+    const id = `toast-${++toastCounter}`
+    dispatch({
+      type: 'ADD',
+      toast: { id, message, variant, dismissing: false },
+    })
+  }, [])
 
   const contextValue = useMemo(() => ({ toast }), [toast])
 

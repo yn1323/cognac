@@ -1,8 +1,8 @@
 // ExplorationModal のストーリー
 // PC/SPの表示に加えて、作成時の主要状態も確認する
 
-import type { Meta, StoryObj } from '@storybook/react'
 import type { ExplorationSession } from '@cognac/shared'
+import type { Meta, StoryObj } from '@storybook/react'
 import { expect, userEvent, waitFor, within } from '@storybook/test'
 import { MemoryRouter } from 'react-router-dom'
 import {
@@ -57,9 +57,7 @@ async function submitExploration(canvasElement: HTMLElement) {
   const descriptionInput = getVisibleElement(
     canvas.getAllByPlaceholderText('調査したい内容を具体的に記述してください...'),
   )
-  const submitButton = getVisibleElement(
-    canvas.getAllByRole('button', { name: '探索開始' }),
-  )
+  const submitButton = getVisibleElement(canvas.getAllByRole('button', { name: '探索開始' }))
 
   await userEvent.clear(titleInput)
   await userEvent.type(titleInput, '表示崩れの原因調査')
@@ -160,9 +158,7 @@ export const Submitting: Story = {
   ],
   play: async ({ canvasElement }) => {
     const { canvas, submitButton } = await submitExploration(canvasElement)
-    const cancelButton = getVisibleElement(
-      canvas.getAllByRole('button', { name: 'キャンセル' }),
-    )
+    const cancelButton = getVisibleElement(canvas.getAllByRole('button', { name: 'キャンセル' }))
 
     await waitFor(() => {
       expect(submitButton).toBeDisabled()

@@ -6,17 +6,28 @@
 // ユーザー入力が直接シェルに渡ることはないため安全。
 
 import { execSync, spawnSync } from 'node:child_process'
-import type { GitFile, GitFileStatus, GitBranch, GitCommit, GitRemoteStatus, CommitResult } from '@cognac/shared'
+import type {
+  CommitResult,
+  GitBranch,
+  GitCommit,
+  GitFile,
+  GitFileStatus,
+  GitRemoteStatus,
+} from '@cognac/shared'
 
 // gitコマンドを実行するヘルパー（cwd必須）
 // NOTE: argsはCognac内部のハードコード値 or バリデーション済みの値のみ使用するためexecSyncで安全
 function git(args: string, cwd: string): string {
-  return execSync(`git -c core.quotepath=false ${args}`, { cwd, encoding: 'utf8', timeout: 30000 }).trimEnd()
+  return execSync(`git -c core.quotepath=false ${args}`, {
+    cwd,
+    encoding: 'utf8',
+    timeout: 30000,
+  }).trimEnd()
 }
 
 // ブランチ名のバリデーション（コマンドインジェクション防止）
 export function validateBranchName(name: string): boolean {
-  return /^[a-zA-Z0-9][a-zA-Z0-9\/_.\-]*$/.test(name)
+  return /^[a-zA-Z0-9][a-zA-Z0-9/_.-]*$/.test(name)
 }
 
 // git status --porcelain をパースして GitFile[] を返す
@@ -191,7 +202,9 @@ export function merge(cwd: string, from: string): { hash: string; message: strin
     // コンフリクト時は abort して throw
     try {
       git('merge --abort', cwd)
-    } catch { /* abort失敗は無視 */ }
+    } catch {
+      /* abort失敗は無視 */
+    }
     const errMsg = err instanceof Error ? err.message : String(err)
     if (errMsg.includes('CONFLICT') || errMsg.includes('Automatic merge failed')) {
       throw new Error('マージコンフリクトが発生しました。手動で解決してください。')
@@ -253,13 +266,18 @@ export function getCommitDiff(cwd: string, hash: string): string {
 // コミットを実行してCommitResultを返す
 export function commitWithMessage(cwd: string, message: string): CommitResult {
   // spawnSyncで引数配列として渡し、シェル解釈を回避（Win/Mac両対応）
-  const commitResult = spawnSync('git', [
-    '-c', 'i18n.commitEncoding=utf-8',
-    'commit',
-    '--author=Claude <noreply@anthropic.com>',
-    '-m',
-    message,
-  ], { cwd, encoding: 'utf8', timeout: 30000 })
+  const commitResult = spawnSync(
+    'git',
+    [
+      '-c',
+      'i18n.commitEncoding=utf-8',
+      'commit',
+      '--author=Claude <noreply@anthropic.com>',
+      '-m',
+      message,
+    ],
+    { cwd, encoding: 'utf8', timeout: 30000 },
+  )
   if (commitResult.status !== 0) {
     throw new Error(commitResult.stderr || 'git commit failed')
   }
@@ -274,6 +292,8 @@ export function commitWithMessage(cwd: string, message: string): CommitResult {
       filesChanged = Number.parseInt(match[1], 10)
       insertions = Number.parseInt(match[2] ?? '0', 10)
     }
-  } catch { /* 最初のコミットの場合は無視 */ }
+  } catch {
+    /* 最初のコミットの場合は無視 */
+  }
   return { hash, message, filesChanged, insertions }
 }

@@ -1,9 +1,9 @@
 // DB接続管理
 // ファイルパスを受け取ってDBを開く
 
-import Database from 'better-sqlite3'
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
+import Database from 'better-sqlite3'
 import { initializeSchema } from './schema.js'
 
 /**

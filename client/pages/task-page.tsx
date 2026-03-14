@@ -2,8 +2,8 @@
 // タブ切り替えで Overview / Discussion / Plan / Logs / CI を表示
 // PC: サイドバー + メインコンテンツ / SP: SPDetailHeader + ボディ
 
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import type { Task, TaskEvent } from '@cognac/shared'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   AlertCircle,
   EllipsisVertical,
@@ -13,29 +13,31 @@ import {
   Trash2,
   XCircle,
 } from 'lucide-react'
-import type { Task, TaskEvent } from '@cognac/shared'
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { DetailTabs, type Tab } from '@/components/detail-tabs'
 import { EditTaskModal } from '@/components/edit-task-modal'
-import { useToast } from '@/components/toast'
-import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Sidebar } from '@/components/sidebar'
 import { SPDetailHeader } from '@/components/sp-detail-header'
-import { DetailTabs, type Tab } from '@/components/detail-tabs'
+import { useToast } from '@/components/toast'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu'
-import { useQueryClient } from '@tanstack/react-query'
-import { useTask, useDeleteTask, useCancelTask, useRetryTask } from '@/hooks/use-tasks'
-import { ACTIVE_STATUSES, DELETABLE_STATUSES, RETRYABLE_STATUSES, STATUS_CONFIG } from '@/lib/status-config'
-import { useTaskSSE } from '@/hooks/use-sse'
+import { useTaskSSE } from '@/hooks/use-task-sse'
+import { useCancelTask, useDeleteTask, useRetryTask, useTask } from '@/hooks/use-tasks'
 import { NAV_MAP } from '@/lib/constants'
-import { PCOverviewTab, SPOverviewTab } from '@/pages/task-detail/overview-tab'
 import {
-  PCDiscussionTab,
-  SPDiscussionTab,
-} from '@/pages/task-detail/discussion-tab'
-import { PCPlanTab, SPPlanTab } from '@/pages/task-detail/plan-tab'
-import { PCLogsTab, SPLogsTab } from '@/pages/task-detail/logs-tab'
+  ACTIVE_STATUSES,
+  DELETABLE_STATUSES,
+  RETRYABLE_STATUSES,
+  STATUS_CONFIG,
+} from '@/lib/status-config'
 import { PCCITab, SPCITab } from '@/pages/task-detail/ci-tab'
+import { PCDiscussionTab, SPDiscussionTab } from '@/pages/task-detail/discussion-tab'
+import { PCLogsTab, SPLogsTab } from '@/pages/task-detail/logs-tab'
+import { PCOverviewTab, SPOverviewTab } from '@/pages/task-detail/overview-tab'
+import { PCPlanTab, SPPlanTab } from '@/pages/task-detail/plan-tab'
 
 // --- アクション用props ---
 
@@ -144,9 +146,7 @@ function PCTaskDetail({
                 {task.title}
               </h1>
               <div className="flex items-center gap-3">
-                <Badge variant={task.status}>
-                  {STATUS_CONFIG[task.status].label}
-                </Badge>
+                <Badge variant={task.status}>{STATUS_CONFIG[task.status].label}</Badge>
               </div>
             </div>
 
@@ -163,7 +163,7 @@ function PCTaskDetail({
                 </Button>
               ) : (
                 <>
-                  {(RETRYABLE_STATUSES.has(task.status)) && (
+                  {RETRYABLE_STATUSES.has(task.status) && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -174,11 +174,7 @@ function PCTaskDetail({
                       リトライ
                     </Button>
                   )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={actions.onEditOpen}
-                  >
+                  <Button variant="outline" size="sm" onClick={actions.onEditOpen}>
                     編集
                   </Button>
                   <Button
@@ -196,15 +192,16 @@ function PCTaskDetail({
         </div>
 
         {/* タブバー */}
-        <DetailTabs
-          activeTab={activeTab}
-          onTabChange={onTabChange}
-          variant="pc"
-        />
+        <DetailTabs activeTab={activeTab} onTabChange={onTabChange} variant="pc" />
 
         {/* タブボディ */}
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <PCTabBody activeTab={activeTab} task={task} sseEvents={sseEvents} sseConnected={sseConnected} />
+          <PCTabBody
+            activeTab={activeTab}
+            task={task}
+            sseEvents={sseEvents}
+            sseConnected={sseConnected}
+          />
         </div>
       </main>
     </div>
@@ -242,10 +239,7 @@ function SPTaskDetail({
         actions={
           <DropdownMenu
             trigger={
-              <button
-                type="button"
-                className="rounded-lg p-1.5 text-muted-foreground"
-              >
+              <button type="button" className="rounded-lg p-1.5 text-muted-foreground">
                 <EllipsisVertical className="h-5 w-5" />
               </button>
             }
@@ -266,7 +260,7 @@ function SPTaskDetail({
               </DropdownMenuItem>
             ) : (
               <>
-                {(RETRYABLE_STATUSES.has(task.status)) && (
+                {RETRYABLE_STATUSES.has(task.status) && (
                   <DropdownMenuItem
                     onClick={() => {
                       setMenuOpen(false)
@@ -303,17 +297,18 @@ function SPTaskDetail({
           </DropdownMenu>
         }
       >
-        <DetailTabs
-          activeTab={activeTab}
-          onTabChange={onTabChange}
-          variant="sp"
-        />
+        <DetailTabs activeTab={activeTab} onTabChange={onTabChange} variant="sp" />
       </SPDetailHeader>
 
       {/* ボディ */}
       <main className="flex flex-1 flex-col overflow-hidden p-4">
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <SPTabBody activeTab={activeTab} task={task} sseEvents={sseEvents} sseConnected={sseConnected} />
+          <SPTabBody
+            activeTab={activeTab}
+            task={task}
+            sseEvents={sseEvents}
+            sseConnected={sseConnected}
+          />
         </div>
       </main>
     </div>
@@ -342,7 +337,9 @@ export function TaskPage() {
   // SSE接続: タスクが実行中のときは全タブで接続（リアルタイム更新に使う）
   // Hooksルールに従い、早期returnの前に配置（taskがない場合はnullを渡す）
   const shouldConnectSSE = task != null && ACTIVE_STATUSES.has(task.status)
-  const { events: sseEvents, connected: sseConnected } = useTaskSSE(shouldConnectSSE ? task.id : null)
+  const { events: sseEvents, connected: sseConnected } = useTaskSSE(
+    shouldConnectSSE ? task.id : null,
+  )
 
   // SSEイベントに応じてReact Queryキャッシュを無効化
   useEffect(() => {
@@ -360,7 +357,7 @@ export function TaskPage() {
     if (latest.type === 'phase_end') {
       qc.invalidateQueries({ queryKey: ['tasks', task.id, 'logs'] })
     }
-  }, [sseEvents.length, task, qc])
+  }, [sseEvents.length, task, qc, sseEvents])
 
   if (isLoading) {
     return (
@@ -374,9 +371,7 @@ export function TaskPage() {
     return (
       <div className="flex h-dvh flex-col items-center justify-center gap-3 bg-background">
         <AlertCircle className="h-8 w-8 text-destructive" />
-        <p className="text-sm text-muted-foreground">
-          タスクの取得に失敗しました
-        </p>
+        <p className="text-sm text-muted-foreground">タスクの取得に失敗しました</p>
         <Button variant="outline" size="sm" onClick={() => navigate('/')}>
           ダッシュボードに戻る
         </Button>
@@ -466,11 +461,7 @@ export function TaskPage() {
       </div>
 
       {/* 編集モーダル（PC/SP共通で1つだけレンダリング） */}
-      <EditTaskModal
-        task={task}
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-      />
+      <EditTaskModal task={task} open={editOpen} onClose={() => setEditOpen(false)} />
 
       {/* 削除確認ダイアログ */}
       <ConfirmDialog
