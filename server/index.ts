@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { ExplorationEvent, TaskEvent } from '@cognac/shared'
 import { serveStatic } from '@hono/node-server/serve-static'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from './db/types.js'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { consoleRouter } from './api/console.js'
@@ -16,7 +16,7 @@ import type { ConsoleManager } from './console/console-manager.js'
 import type { EventBus } from './sse/event-bus.js'
 
 export interface CreateAppOptions {
-  db: Database.Database
+  db: CognacDb
   taskEventBus: EventBus<TaskEvent>
   explorationEventBus: EventBus<ExplorationEvent>
   taskRunner: RunnerStatus & ConfigSource & ConfigAccessor & TaskCanceller

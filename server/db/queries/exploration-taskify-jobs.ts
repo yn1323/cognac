@@ -1,8 +1,8 @@
 import type { ExplorationTaskifyJob } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../types.js'
 
 export function createExplorationTaskifyJob(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
   userInstruction?: string,
 ): ExplorationTaskifyJob {
@@ -15,7 +15,7 @@ export function createExplorationTaskifyJob(
 }
 
 export function getExplorationTaskifyJob(
-  db: Database.Database,
+  db: CognacDb,
   id: number,
 ): ExplorationTaskifyJob | undefined {
   const stmt = db.prepare(`
@@ -23,11 +23,11 @@ export function getExplorationTaskifyJob(
     FROM exploration_taskify_jobs
     WHERE id = ?
   `)
-  return stmt.get(id) as ExplorationTaskifyJob | undefined
+  return stmt.get(id) as unknown as ExplorationTaskifyJob | undefined
 }
 
 export function getLatestExplorationTaskifyJobBySessionId(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
 ): ExplorationTaskifyJob | undefined {
   const stmt = db.prepare(`
@@ -37,11 +37,11 @@ export function getLatestExplorationTaskifyJobBySessionId(
     ORDER BY id DESC
     LIMIT 1
   `)
-  return stmt.get(explorationSessionId) as ExplorationTaskifyJob | undefined
+  return stmt.get(explorationSessionId) as unknown as ExplorationTaskifyJob | undefined
 }
 
 export function getNextPendingExplorationTaskifyJob(
-  db: Database.Database,
+  db: CognacDb,
 ): ExplorationTaskifyJob | undefined {
   const stmt = db.prepare(`
     SELECT *
@@ -50,11 +50,11 @@ export function getNextPendingExplorationTaskifyJob(
     ORDER BY requested_at ASC, id ASC
     LIMIT 1
   `)
-  return stmt.get() as ExplorationTaskifyJob | undefined
+  return stmt.get() as unknown as ExplorationTaskifyJob | undefined
 }
 
 export function hasActiveExplorationTaskifyJob(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
 ): boolean {
   const stmt = db.prepare(`
@@ -68,7 +68,7 @@ export function hasActiveExplorationTaskifyJob(
 }
 
 export function markExplorationTaskifyJobRunning(
-  db: Database.Database,
+  db: CognacDb,
   id: number,
 ): ExplorationTaskifyJob | undefined {
   const stmt = db.prepare(`
@@ -85,7 +85,7 @@ export function markExplorationTaskifyJobRunning(
 }
 
 export function markExplorationTaskifyJobCompleted(
-  db: Database.Database,
+  db: CognacDb,
   id: number,
   resultJson: string,
 ): ExplorationTaskifyJob | undefined {
@@ -104,7 +104,7 @@ export function markExplorationTaskifyJobCompleted(
 }
 
 export function markExplorationTaskifyJobFailed(
-  db: Database.Database,
+  db: CognacDb,
   id: number,
   errorMessage: string,
 ): ExplorationTaskifyJob | undefined {
@@ -123,12 +123,12 @@ export function markExplorationTaskifyJobFailed(
 }
 
 export function deleteExplorationTaskifyJobsBySessionId(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
 ): number {
   const stmt = db.prepare(`
     DELETE FROM exploration_taskify_jobs
     WHERE exploration_session_id = ?
   `)
-  return stmt.run(explorationSessionId).changes
+  return Number(stmt.run(explorationSessionId).changes)
 }

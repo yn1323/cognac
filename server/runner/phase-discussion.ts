@@ -9,7 +9,7 @@ import type {
   Task,
   TaskEvent,
 } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../db/types.js'
 import * as discussionQueries from '../db/queries/discussions.js'
 import * as logQueries from '../db/queries/execution-logs.js'
 import { getRepoStructure } from './context-cache.js'
@@ -119,7 +119,7 @@ ${repoStructure}
 export async function executePhaseDiscussion(
   task: Task,
   personas: Persona[],
-  db: Database.Database,
+  db: CognacDb,
   config: CognacConfig,
   onEvent?: (event: TaskEvent) => void,
   signal?: AbortSignal,

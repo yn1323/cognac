@@ -7,7 +7,7 @@ import type {
   ExplorationReportResult,
   ExplorationSession,
 } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../db/types.js'
 import * as artifactQueries from '../db/queries/exploration-artifacts.js'
 import * as logQueries from '../db/queries/exploration-logs.js'
 import { formatDiscussions } from './discussion-utils.js'
@@ -89,7 +89,7 @@ export async function executeExplorationPhaseReport(
   summaryArtifact: ExplorationArtifact | undefined,
   findings: ExplorationArtifact[],
   evidenceImages: ExplorationImage[],
-  db: Database.Database,
+  db: CognacDb,
   config: CognacConfig,
   signal?: AbortSignal,
 ): Promise<{

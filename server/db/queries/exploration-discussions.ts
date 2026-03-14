@@ -1,5 +1,6 @@
 import type { ExplorationDiscussion } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../types.js'
+import { transaction } from '../transaction.js'
 
 type RawExplorationDiscussion = Omit<ExplorationDiscussion, 'should_continue'> & {
   should_continue: number
@@ -10,7 +11,7 @@ function toExplorationDiscussion(row: RawExplorationDiscussion): ExplorationDisc
 }
 
 export function createExplorationDiscussionStatements(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
   round: number,
   statements: {
@@ -36,7 +37,7 @@ export function createExplorationDiscussionStatements(
   `)
 
   const results: ExplorationDiscussion[] = []
-  const insertAll = db.transaction(() => {
+  const insertAll = transaction(db, () => {
     for (const statement of statements) {
       const params = {
         exploration_session_id: explorationSessionId,
@@ -69,7 +70,7 @@ export function createExplorationDiscussionStatements(
 }
 
 export function getExplorationDiscussionsBySessionId(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
 ): ExplorationDiscussion[] {
   const stmt = db.prepare(`
@@ -78,16 +79,18 @@ export function getExplorationDiscussionsBySessionId(
     WHERE exploration_session_id = ?
     ORDER BY round ASC, id ASC
   `)
-  return (stmt.all(explorationSessionId) as RawExplorationDiscussion[]).map(toExplorationDiscussion)
+  return (stmt.all(explorationSessionId) as unknown as RawExplorationDiscussion[]).map(
+    toExplorationDiscussion,
+  )
 }
 
 export function deleteExplorationDiscussionsBySessionId(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
 ): number {
   const stmt = db.prepare(`
     DELETE FROM exploration_discussions
     WHERE exploration_session_id = ?
   `)
-  return stmt.run(explorationSessionId).changes
+  return Number(stmt.run(explorationSessionId).changes)
 }

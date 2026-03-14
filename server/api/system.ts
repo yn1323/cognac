@@ -1,5 +1,6 @@
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../db/types.js'
 import { Hono } from 'hono'
+import { transaction } from '../db/transaction.js'
 import { initializeSchema } from '../db/schema.js'
 import type { ActiveExecution } from '../runner/execution-coordinator.js'
 
@@ -16,7 +17,7 @@ export interface SystemStatusProvider {
   getActiveExecution(): ActiveExecution
 }
 
-export function systemRouter(statusProvider: SystemStatusProvider, db: Database.Database) {
+export function systemRouter(statusProvider: SystemStatusProvider, db: CognacDb) {
   const app = new Hono()
 
   // システムステータス
@@ -35,15 +36,15 @@ export function systemRouter(statusProvider: SystemStatusProvider, db: Database.
       .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
       .all() as { name: string }[]
 
-    db.pragma('foreign_keys = OFF')
-    db.transaction(() => {
+    db.exec('PRAGMA foreign_keys = OFF')
+    transaction(db, () => {
       for (const { name } of tables) {
         if (!/^[A-Za-z0-9_]+$/.test(name)) continue
         db.prepare(`DROP TABLE IF EXISTS "${name}"`).run()
       }
     })()
     initializeSchema(db)
-    db.pragma('foreign_keys = ON')
+    db.exec('PRAGMA foreign_keys = ON')
 
     return c.json({ ok: true })
   })

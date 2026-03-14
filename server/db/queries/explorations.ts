@@ -1,5 +1,5 @@
 import type { ExplorationListItem, ExplorationSession, ExplorationStatus } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../types.js'
 
 type UpdateExplorationData = Partial<{
   title: string
@@ -14,7 +14,7 @@ type UpdateExplorationData = Partial<{
 }>
 
 export function createExploration(
-  db: Database.Database,
+  db: CognacDb,
   data: { title: string; request: string },
 ): ExplorationSession {
   const stmt = db.prepare(`
@@ -26,12 +26,12 @@ export function createExploration(
   return getExploration(db, Number(result.lastInsertRowid)) as ExplorationSession
 }
 
-export function getExploration(db: Database.Database, id: number): ExplorationSession | undefined {
+export function getExploration(db: CognacDb, id: number): ExplorationSession | undefined {
   const stmt = db.prepare(`SELECT * FROM exploration_sessions WHERE id = ?`)
-  return stmt.get(id) as ExplorationSession | undefined
+  return stmt.get(id) as unknown as ExplorationSession | undefined
 }
 
-export function listExplorations(db: Database.Database): ExplorationListItem[] {
+export function listExplorations(db: CognacDb): ExplorationListItem[] {
   const stmt = db.prepare(`
     SELECT
       s.*,
@@ -48,7 +48,7 @@ export function listExplorations(db: Database.Database): ExplorationListItem[] {
   `)
 
   return (
-    stmt.all() as Array<
+    stmt.all() as unknown as Array<
       ExplorationSession & {
         hasFinalReport: number
         latestTaskifyStatus: ExplorationListItem['latestTaskifyStatus']
@@ -61,7 +61,7 @@ export function listExplorations(db: Database.Database): ExplorationListItem[] {
 }
 
 export function updateExploration(
-  db: Database.Database,
+  db: CognacDb,
   id: number,
   data: UpdateExplorationData,
 ): ExplorationSession | undefined {
@@ -89,7 +89,7 @@ export function updateExploration(
   return getExploration(db, id)
 }
 
-export function getNextDraftExploration(db: Database.Database): ExplorationSession | undefined {
+export function getNextDraftExploration(db: CognacDb): ExplorationSession | undefined {
   const stmt = db.prepare(`
     SELECT *
     FROM exploration_sessions
@@ -97,17 +97,17 @@ export function getNextDraftExploration(db: Database.Database): ExplorationSessi
     ORDER BY created_at ASC, id ASC
     LIMIT 1
   `)
-  return stmt.get() as ExplorationSession | undefined
+  return stmt.get() as unknown as ExplorationSession | undefined
 }
 
-export function deleteExploration(db: Database.Database, id: number): boolean {
+export function deleteExploration(db: CognacDb, id: number): boolean {
   const stmt = db.prepare(`DELETE FROM exploration_sessions WHERE id = ?`)
   const result = stmt.run(id)
-  return result.changes > 0
+  return Number(result.changes) > 0
 }
 
 export function markExplorationCompleted(
-  db: Database.Database,
+  db: CognacDb,
   id: number,
   finalReportMarkdown: string,
   issueCount: number,
@@ -122,7 +122,7 @@ export function markExplorationCompleted(
 }
 
 export function markExplorationPaused(
-  db: Database.Database,
+  db: CognacDb,
   id: number,
   reason: string,
 ): ExplorationSession | undefined {
@@ -133,7 +133,7 @@ export function markExplorationPaused(
 }
 
 export function markExplorationStopped(
-  db: Database.Database,
+  db: CognacDb,
   id: number,
   reason: string,
 ): ExplorationSession | undefined {

@@ -1,7 +1,8 @@
 // ディスカッションのCRUD操作
 
 import type { Discussion } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../types.js'
+import { transaction } from '../transaction.js'
 
 // SQLiteはbooleanをINTEGER(0/1)で保存するため、読み取り時に変換する
 type RawDiscussion = Omit<Discussion, 'should_continue'> & {
@@ -16,7 +17,7 @@ function toDiscussion(r: RawDiscussion): Discussion {
  * 1ラウンド分のディスカッション発言を一括保存する
  */
 export function createDiscussionStatements(
-  db: Database.Database,
+  db: CognacDb,
   taskId: number,
   round: number,
   statements: {
@@ -43,7 +44,7 @@ export function createDiscussionStatements(
 
   const results: Discussion[] = []
 
-  const insertAll = db.transaction(() => {
+  const insertAll = transaction(db, () => {
     for (const s of statements) {
       const params = {
         task_id: taskId,
@@ -78,29 +79,25 @@ export function createDiscussionStatements(
 /**
  * タスクIDでディスカッション一覧を取得する（ラウンド順）
  */
-export function getDiscussionsByTaskId(db: Database.Database, taskId: number): Discussion[] {
+export function getDiscussionsByTaskId(db: CognacDb, taskId: number): Discussion[] {
   const stmt = db.prepare(`SELECT * FROM discussions WHERE task_id = ? ORDER BY round ASC, id ASC`)
-  return (stmt.all(taskId) as RawDiscussion[]).map(toDiscussion)
+  return (stmt.all(taskId) as unknown as RawDiscussion[]).map(toDiscussion)
 }
 
 /**
  * タスクID + ラウンド番号でディスカッションを取得する
  */
-export function getDiscussionsByRound(
-  db: Database.Database,
-  taskId: number,
-  round: number,
-): Discussion[] {
+export function getDiscussionsByRound(db: CognacDb, taskId: number, round: number): Discussion[] {
   const stmt = db.prepare(
     `SELECT * FROM discussions WHERE task_id = ? AND round = ? ORDER BY id ASC`,
   )
-  return (stmt.all(taskId, round) as RawDiscussion[]).map(toDiscussion)
+  return (stmt.all(taskId, round) as unknown as RawDiscussion[]).map(toDiscussion)
 }
 
 /**
  * タスクIDでディスカッションを全削除する（リトライ時のクリーンアップ用）
  */
-export function deleteDiscussionsByTaskId(db: Database.Database, taskId: number): number {
+export function deleteDiscussionsByTaskId(db: CognacDb, taskId: number): number {
   const stmt = db.prepare('DELETE FROM discussions WHERE task_id = ?')
-  return stmt.run(taskId).changes
+  return Number(stmt.run(taskId).changes)
 }

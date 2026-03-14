@@ -14,7 +14,23 @@ export default defineConfig([
       js: '#!/usr/bin/env node',
     },
     noExternal: [/@cognac\//],
-    external: ['better-sqlite3'],
+    external: ['node:sqlite'],
+    esbuildPlugins: [
+      {
+        name: 'preserve-node-prefix',
+        setup(build) {
+          build.onResolve({ filter: /^node:/ }, (args) => ({
+            path: args.path,
+            external: true,
+          }))
+          // server distから来る "sqlite"（node:落ち）を node:sqlite に戻す
+          build.onResolve({ filter: /^sqlite$/ }, () => ({
+            path: 'node:sqlite',
+            external: true,
+          }))
+        },
+      },
+    ],
     onSuccess: async () => {
       // ビルド済みクライアントを cli/dist/public/ にコピー（パッケージモード用）
       const clientDist = resolve(__dirname, '..', 'client', 'dist')
@@ -36,6 +52,5 @@ export default defineConfig([
     clean: false,
     splitting: false,
     noExternal: [/@cognac\//],
-    external: ['better-sqlite3'],
   },
 ])

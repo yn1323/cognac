@@ -2,7 +2,7 @@
 // execution_logs / exploration_logs の共通SQL操作を抽出
 
 import type { BaseLog } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../types.js'
 
 export interface LogTableConfig {
   tableName: string
@@ -23,7 +23,7 @@ const LOG_COLUMNS = [
 ] as const
 
 export function insertLog<T extends BaseLog>(
-  db: Database.Database,
+  db: CognacDb,
   config: LogTableConfig,
   data: {
     parentId: number
@@ -67,7 +67,7 @@ export function insertLog<T extends BaseLog>(
 }
 
 export function selectLogsByParentId<T extends BaseLog>(
-  db: Database.Database,
+  db: CognacDb,
   config: LogTableConfig,
   parentId: number,
   normalize?: (log: T) => T,
@@ -77,26 +77,26 @@ export function selectLogsByParentId<T extends BaseLog>(
     WHERE ${config.parentColumn} = ?
     ORDER BY created_at ASC, id ASC
   `)
-  const rows = stmt.all(parentId) as T[]
+  const rows = stmt.all(parentId) as unknown as T[]
   return normalize ? rows.map(normalize) : rows
 }
 
 export function selectLogById<T extends BaseLog>(
-  db: Database.Database,
+  db: CognacDb,
   config: LogTableConfig,
   id: number,
   normalize?: (log: T) => T,
 ): T | undefined {
   const stmt = db.prepare(`SELECT * FROM ${config.tableName} WHERE id = ?`)
-  const row = stmt.get(id) as T | undefined
+  const row = stmt.get(id) as unknown as T | undefined
   return row && normalize ? normalize(row) : row
 }
 
 export function deleteLogsByParentId(
-  db: Database.Database,
+  db: CognacDb,
   config: LogTableConfig,
   parentId: number,
 ): number {
   const stmt = db.prepare(`DELETE FROM ${config.tableName} WHERE ${config.parentColumn} = ?`)
-  return stmt.run(parentId).changes
+  return Number(stmt.run(parentId).changes)
 }

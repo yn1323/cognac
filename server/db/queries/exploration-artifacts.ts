@@ -1,8 +1,8 @@
 import type { ExplorationArtifact, ExplorationArtifactKind, ExplorationImage } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../types.js'
 
 export function createExplorationArtifact(
-  db: Database.Database,
+  db: CognacDb,
   data: {
     exploration_session_id: number
     kind: ExplorationArtifactKind
@@ -42,7 +42,7 @@ export function createExplorationArtifact(
 }
 
 export function createExplorationArtifacts(
-  db: Database.Database,
+  db: CognacDb,
   artifacts: Parameters<typeof createExplorationArtifact>[1][],
 ): ExplorationArtifact[] {
   if (artifacts.length === 0) return []
@@ -50,7 +50,7 @@ export function createExplorationArtifacts(
 }
 
 export function listExplorationArtifacts(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
 ): ExplorationArtifact[] {
   const stmt = db.prepare(`
@@ -59,24 +59,21 @@ export function listExplorationArtifacts(
     WHERE exploration_session_id = ?
     ORDER BY created_at ASC, id ASC
   `)
-  return stmt.all(explorationSessionId) as ExplorationArtifact[]
+  return stmt.all(explorationSessionId) as unknown as ExplorationArtifact[]
 }
 
 export function deleteExplorationArtifactsBySessionId(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
 ): number {
   const stmt = db.prepare(`
     DELETE FROM exploration_artifacts
     WHERE exploration_session_id = ?
   `)
-  return stmt.run(explorationSessionId).changes
+  return Number(stmt.run(explorationSessionId).changes)
 }
 
-export function countExplorationFindings(
-  db: Database.Database,
-  explorationSessionId: number,
-): number {
+export function countExplorationFindings(db: CognacDb, explorationSessionId: number): number {
   const stmt = db.prepare(`
     SELECT COUNT(*) AS count
     FROM exploration_artifacts
@@ -87,7 +84,7 @@ export function countExplorationFindings(
 }
 
 export function listExplorationEvidenceImages(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
 ): ExplorationImage[] {
   const stmt = db.prepare(`
@@ -96,5 +93,5 @@ export function listExplorationEvidenceImages(
     WHERE exploration_session_id = ? AND source_type = 'playwright'
     ORDER BY created_at ASC, id ASC
   `)
-  return stmt.all(explorationSessionId) as ExplorationImage[]
+  return stmt.all(explorationSessionId) as unknown as ExplorationImage[]
 }

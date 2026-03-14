@@ -9,7 +9,7 @@ import type {
   ExplorationTaskifyJob,
   ExplorationTaskifyResult,
 } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../db/types.js'
 import * as artifactQueries from '../db/queries/exploration-artifacts.js'
 import * as logQueries from '../db/queries/exploration-logs.js'
 import * as taskImageQueries from '../db/queries/task-images.js'
@@ -93,7 +93,7 @@ export async function executeExplorationPhaseTaskify(
   findings: ExplorationArtifact[],
   reportArtifact: ExplorationArtifact | undefined,
   images: ExplorationImage[],
-  db: Database.Database,
+  db: CognacDb,
   config: CognacConfig,
   cwd: string,
   signal?: AbortSignal,

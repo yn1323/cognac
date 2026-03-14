@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto'
 import { mkdir, rm, unlink, writeFile } from 'node:fs/promises'
 import { extname, resolve } from 'node:path'
 import type { ExplorationEvent, ExplorationStatus } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../db/types.js'
+import { transaction } from '../db/transaction.js'
 import { Hono } from 'hono'
 import { streamSSE } from 'hono/streaming'
 import { z } from 'zod'
@@ -34,7 +35,7 @@ const MAX_FILES = 5
 const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
 
 async function saveExplorationImages(
-  db: Database.Database,
+  db: CognacDb,
   explorationId: number,
   files: File[],
 ): Promise<void> {
@@ -77,8 +78,8 @@ async function saveExplorationImages(
   explorationImageQueries.createExplorationImages(db, savedImages)
 }
 
-function resetExplorationForRetry(db: Database.Database, explorationId: number) {
-  const resetInTransaction = db.transaction(() => {
+function resetExplorationForRetry(db: CognacDb, explorationId: number) {
+  const resetInTransaction = transaction(db, () => {
     explorationPersonaQueries.deleteExplorationPersonasBySessionId(db, explorationId)
     explorationDiscussionQueries.deleteExplorationDiscussionsBySessionId(db, explorationId)
     explorationArtifactQueries.deleteExplorationArtifactsBySessionId(db, explorationId)
@@ -114,7 +115,7 @@ const updateExplorationSchema = z.object({
 })
 
 export function explorationsRouter(
-  db: Database.Database,
+  db: CognacDb,
   eventBus: EventBus<ExplorationEvent>,
   canceller?: ExplorationCanceller,
 ) {

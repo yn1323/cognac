@@ -2,14 +2,14 @@
 // 基本的なやつ全部入り
 
 import type { Task } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../types.js'
 
 /**
  * タスクを作成する
  * デフォルトはpendingステータスで優先度0
  */
 export function createTask(
-  db: Database.Database,
+  db: CognacDb,
   data: { title: string; description?: string; priority?: number },
 ): Task {
   const stmt = db.prepare(`
@@ -31,18 +31,18 @@ export function createTask(
  * タスクを1件取得する
  * なかったらundefined
  */
-export function getTask(db: Database.Database, id: number): Task | undefined {
+export function getTask(db: CognacDb, id: number): Task | undefined {
   const stmt = db.prepare(`SELECT * FROM tasks WHERE id = ?`)
-  return stmt.get(id) as Task | undefined
+  return stmt.get(id) as unknown as Task | undefined
 }
 
 /**
  * タスク一覧を取得する
  * 作成日時の新しい順で返す
  */
-export function listTasks(db: Database.Database): Task[] {
+export function listTasks(db: CognacDb): Task[] {
   const stmt = db.prepare(`SELECT * FROM tasks ORDER BY created_at DESC`)
-  return stmt.all() as Task[]
+  return stmt.all() as unknown as Task[]
 }
 
 /**
@@ -50,7 +50,7 @@ export function listTasks(db: Database.Database): Task[] {
  * 渡されたフィールドだけ更新して、更新後のタスクを返す
  */
 export function updateTask(
-  db: Database.Database,
+  db: CognacDb,
   id: number,
   data: Partial<{
     title: string
@@ -89,31 +89,31 @@ export function updateTask(
  * タスクを削除する
  * 消えたらtrue、なかったらfalse
  */
-export function deleteTask(db: Database.Database, id: number): boolean {
+export function deleteTask(db: CognacDb, id: number): boolean {
   const stmt = db.prepare(`DELETE FROM tasks WHERE id = ?`)
   const result = stmt.run(id)
-  return result.changes > 0
+  return Number(result.changes) > 0
 }
 
 /**
  * 次に処理すべきpendingタスクを取得する
  * queue_orderが小さい順、NULLは後回し、同じならcreated_atが古い順
  */
-export function getNextPendingTask(db: Database.Database): Task | undefined {
+export function getNextPendingTask(db: CognacDb): Task | undefined {
   const stmt = db.prepare(`
     SELECT * FROM tasks
     WHERE status = 'pending'
     ORDER BY queue_order ASC NULLS LAST, created_at ASC
     LIMIT 1
   `)
-  return stmt.get() as Task | undefined
+  return stmt.get() as unknown as Task | undefined
 }
 
 /**
  * 全pendingタスクをstoppedにする
  * シャットダウン時とかに使うやつ
  */
-export function stopPendingTasks(db: Database.Database): void {
+export function stopPendingTasks(db: CognacDb): void {
   const stmt = db.prepare(`
     UPDATE tasks SET status = 'stopped' WHERE status = 'pending'
   `)
@@ -124,12 +124,12 @@ export function stopPendingTasks(db: Database.Database): void {
  * アクティブな全タスクをstoppedにする
  * ユーザーが「全停止」ボタンを押したときに使うやつ
  */
-export function stopAllActiveTasks(db: Database.Database): number {
+export function stopAllActiveTasks(db: CognacDb): number {
   const stmt = db.prepare(`
     UPDATE tasks
     SET status = 'stopped', paused_reason = 'ユーザーによる全停止'
     WHERE status IN ('pending', 'discussing', 'executing', 'reviewing')
   `)
   const result = stmt.run()
-  return result.changes
+  return Number(result.changes)
 }

@@ -1,10 +1,10 @@
 // タスクイベントの個別永続化クエリ
 
 import type { StoredTaskEvent } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../types.js'
 
 export function insertEvent(
-  db: Database.Database,
+  db: CognacDb,
   taskId: number,
   eventType: string,
   eventData: string,
@@ -16,16 +16,16 @@ export function insertEvent(
   )
 }
 
-export function getEventsByTaskId(db: Database.Database, taskId: number): StoredTaskEvent[] {
+export function getEventsByTaskId(db: CognacDb, taskId: number): StoredTaskEvent[] {
   return db
     .prepare(`
     SELECT * FROM task_events
     WHERE task_id = ?
     ORDER BY created_at ASC, id ASC
   `)
-    .all(taskId) as StoredTaskEvent[]
+    .all(taskId) as unknown as StoredTaskEvent[]
 }
 
-export function deleteEventsByTaskId(db: Database.Database, taskId: number): number {
-  return db.prepare('DELETE FROM task_events WHERE task_id = ?').run(taskId).changes
+export function deleteEventsByTaskId(db: CognacDb, taskId: number): number {
+  return Number(db.prepare('DELETE FROM task_events WHERE task_id = ?').run(taskId).changes)
 }

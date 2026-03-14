@@ -10,7 +10,7 @@ import type {
   Task,
   TaskEvent,
 } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../db/types.js'
 import * as logQueries from '../db/queries/execution-logs.js'
 import * as planQueries from '../db/queries/plans.js'
 import * as imageQueries from '../db/queries/task-images.js'
@@ -99,7 +99,7 @@ export async function executePhasePlan(
   task: Task,
   discussions: Discussion[],
   personas: Persona[],
-  db: Database.Database,
+  db: CognacDb,
   config: CognacConfig,
   onEvent?: (event: TaskEvent) => void,
   signal?: AbortSignal,

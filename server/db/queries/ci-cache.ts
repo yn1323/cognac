@@ -2,13 +2,13 @@
 // CIステップの検出結果をハッシュで管理するやつ
 
 import type { CiStep } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../types.js'
 
 /**
  * キャッシュされたCIステップを取得する
  * config_hashが一致するものがあればパースして返す、なければnull
  */
-export function getCachedSteps(db: Database.Database, configHash: string): CiStep[] | null {
+export function getCachedSteps(db: CognacDb, configHash: string): CiStep[] | null {
   const stmt = db.prepare(`
     SELECT steps FROM ci_cache WHERE config_hash = ?
   `)
@@ -17,14 +17,14 @@ export function getCachedSteps(db: Database.Database, configHash: string): CiSte
   if (!row) return null
 
   // JSON文字列をパースして返す
-  return JSON.parse(row.steps) as CiStep[]
+  return JSON.parse(row.steps) as unknown as CiStep[]
 }
 
 /**
  * CIステップをキャッシュに保存する
  * 同じconfig_hashがあったら上書きする（UPSERT）
  */
-export function saveCachedSteps(db: Database.Database, steps: CiStep[], configHash: string): void {
+export function saveCachedSteps(db: CognacDb, steps: CiStep[], configHash: string): void {
   const stmt = db.prepare(`
     INSERT INTO ci_cache (steps, config_hash, detected_at)
     VALUES (@steps, @config_hash, datetime('now'))

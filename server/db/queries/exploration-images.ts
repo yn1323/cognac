@@ -1,8 +1,9 @@
 import type { ExplorationImage, ExplorationImageSourceType } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../types.js'
+import { transaction } from '../transaction.js'
 
 export function createExplorationImages(
-  db: Database.Database,
+  db: CognacDb,
   images: {
     exploration_session_id: number
     source_type: ExplorationImageSourceType
@@ -23,7 +24,7 @@ export function createExplorationImages(
   `)
 
   const results: ExplorationImage[] = []
-  const insertAll = db.transaction(() => {
+  const insertAll = transaction(db, () => {
     for (const image of images) {
       const result = stmt.run({
         ...image,
@@ -45,7 +46,7 @@ export function createExplorationImages(
 }
 
 export function listExplorationImages(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
 ): ExplorationImage[] {
   const stmt = db.prepare(`
@@ -54,11 +55,11 @@ export function listExplorationImages(
     WHERE exploration_session_id = ?
     ORDER BY created_at ASC, id ASC
   `)
-  return stmt.all(explorationSessionId) as ExplorationImage[]
+  return stmt.all(explorationSessionId) as unknown as ExplorationImage[]
 }
 
 export function listExplorationImagesBySourceType(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
   sourceType: ExplorationImageSourceType,
 ): ExplorationImage[] {
@@ -69,11 +70,11 @@ export function listExplorationImagesBySourceType(
       AND source_type = ?
     ORDER BY created_at ASC, id ASC
   `)
-  return stmt.all(explorationSessionId, sourceType) as ExplorationImage[]
+  return stmt.all(explorationSessionId, sourceType) as unknown as ExplorationImage[]
 }
 
 export function getExplorationImagesByIds(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
   imageIds: number[],
 ): ExplorationImage[] {
@@ -86,11 +87,11 @@ export function getExplorationImagesByIds(
       AND id IN (${placeholders})
     ORDER BY id ASC
   `)
-  return stmt.all(explorationSessionId, ...imageIds) as ExplorationImage[]
+  return stmt.all(explorationSessionId, ...imageIds) as unknown as ExplorationImage[]
 }
 
 export function getExplorationImage(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
   imageId: number,
 ): ExplorationImage | undefined {
@@ -100,11 +101,11 @@ export function getExplorationImage(
     WHERE id = ? AND exploration_session_id = ?
     LIMIT 1
   `)
-  return stmt.get(imageId, explorationSessionId) as ExplorationImage | undefined
+  return stmt.get(imageId, explorationSessionId) as unknown as ExplorationImage | undefined
 }
 
 export function findExplorationImageBySessionAndPath(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
   filePath: string,
 ): ExplorationImage | undefined {
@@ -114,11 +115,11 @@ export function findExplorationImageBySessionAndPath(
     WHERE exploration_session_id = ? AND file_path = ?
     LIMIT 1
   `)
-  return stmt.get(explorationSessionId, filePath) as ExplorationImage | undefined
+  return stmt.get(explorationSessionId, filePath) as unknown as ExplorationImage | undefined
 }
 
 export function deleteExplorationImagesBySourceType(
-  db: Database.Database,
+  db: CognacDb,
   explorationSessionId: number,
   sourceType: ExplorationImageSourceType,
 ): number {
@@ -127,5 +128,5 @@ export function deleteExplorationImagesBySourceType(
     WHERE exploration_session_id = ?
       AND source_type = ?
   `)
-  return stmt.run(explorationSessionId, sourceType).changes
+  return Number(stmt.run(explorationSessionId, sourceType).changes)
 }

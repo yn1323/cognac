@@ -3,25 +3,22 @@ import type {
   CreateConsoleCommandInput,
   UpdateConsoleCommandInput,
 } from '@cognac/shared'
-import type Database from 'better-sqlite3'
+import type { CognacDb } from '../types.js'
 
-export function listCommands(db: Database.Database): ConsoleCommand[] {
+export function listCommands(db: CognacDb): ConsoleCommand[] {
   const stmt = db.prepare(`
     SELECT * FROM console_commands
     ORDER BY created_at DESC, id DESC
   `)
-  return stmt.all() as ConsoleCommand[]
+  return stmt.all() as unknown as ConsoleCommand[]
 }
 
-export function getCommand(db: Database.Database, id: number): ConsoleCommand | undefined {
+export function getCommand(db: CognacDb, id: number): ConsoleCommand | undefined {
   const stmt = db.prepare(`SELECT * FROM console_commands WHERE id = ?`)
-  return stmt.get(id) as ConsoleCommand | undefined
+  return stmt.get(id) as unknown as ConsoleCommand | undefined
 }
 
-export function createCommand(
-  db: Database.Database,
-  input: CreateConsoleCommandInput,
-): ConsoleCommand {
+export function createCommand(db: CognacDb, input: CreateConsoleCommandInput): ConsoleCommand {
   const stmt = db.prepare(`
     INSERT INTO console_commands (name, command, note)
     VALUES (@name, @command, @note)
@@ -35,7 +32,7 @@ export function createCommand(
 }
 
 export function updateCommand(
-  db: Database.Database,
+  db: CognacDb,
   id: number,
   patch: UpdateConsoleCommandInput,
 ): ConsoleCommand | undefined {
@@ -59,7 +56,7 @@ export function updateCommand(
   return getCommand(db, id)
 }
 
-export function touchCommand(db: Database.Database, id: number): void {
+export function touchCommand(db: CognacDb, id: number): void {
   db.prepare(`
     UPDATE console_commands
     SET updated_at = datetime('now')
@@ -67,8 +64,8 @@ export function touchCommand(db: Database.Database, id: number): void {
   `).run(id)
 }
 
-export function deleteCommand(db: Database.Database, id: number): boolean {
+export function deleteCommand(db: CognacDb, id: number): boolean {
   const stmt = db.prepare(`DELETE FROM console_commands WHERE id = ?`)
   const result = stmt.run(id)
-  return result.changes > 0
+  return Number(result.changes) > 0
 }

@@ -1,7 +1,8 @@
 // データベーススキーマ定義
 // テーブルとインデックスの作成をまとめてるやつ
 
-import type Database from 'better-sqlite3'
+import { transaction } from './transaction.js'
+import type { CognacDb } from './types.js'
 
 // タスクテーブル
 const CREATE_TASKS = `
@@ -311,20 +312,20 @@ const TABLE_STATEMENTS = [
  * スキーマ初期化
  * WALモードと外部キー制約を有効にして、全テーブル＆インデックスを作る
  */
-export function initializeSchema(db: Database.Database): void {
+export function initializeSchema(db: CognacDb): void {
   // WALモードで高速化するぞ
-  db.pragma('journal_mode = WAL')
+  db.exec('PRAGMA journal_mode = WAL')
 
   // 外部キー制約を有効にしないと意味ないからね
-  db.pragma('foreign_keys = ON')
+  db.exec('PRAGMA foreign_keys = ON')
 
   // テーブル作成はトランザクションでまとめてやる
-  const migrate = db.transaction(() => {
-    for (const stmt of TABLE_STATEMENTS) {
-      db.prepare(stmt).run()
+  const migrate = transaction(db, () => {
+    for (const sql of TABLE_STATEMENTS) {
+      db.prepare(sql).run()
     }
-    for (const stmt of CREATE_INDEXES) {
-      db.prepare(stmt).run()
+    for (const sql of CREATE_INDEXES) {
+      db.prepare(sql).run()
     }
   })
 
