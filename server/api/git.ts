@@ -473,9 +473,6 @@ ${langRule}
     const bodyMatch = result.match(/---BODY---\s*([\s\S]*)$/)
 
     if (titleMatch) {
-      console.log(
-        `[generatePrContent] 生成完了: title=${titleMatch[1].trim().length}文字, body=${bodyMatch ? bodyMatch[1].trim().length : 0}文字`,
-      )
       return {
         title: titleMatch[1].trim(),
         body: bodyMatch ? bodyMatch[1].trim() : '',
@@ -483,14 +480,10 @@ ${langRule}
     }
 
     // パース失敗時のフォールバック: 全文をtitleに
-    console.warn(
-      '[generatePrContent] セパレータ未検出、フォールバック実行。AIレスポンス:',
-      result.substring(0, 100),
-    )
     return { title: result.substring(0, 70), body: '' }
   } catch (err) {
     console.error('[generatePrContent] CLI失敗:', err)
-    throw new Error('AI生成に失敗しました。再度お試しください。', { cause: err })
+    throw new Error('AI生成に失敗しました。再度お試しください。')
   }
 }
 

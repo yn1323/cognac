@@ -6,6 +6,8 @@ import { ChevronDown, GitPullRequest, Loader2, Sparkles } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useToast } from '@/components/toast'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { useCreatePullRequest, useGeneratePrContent, useGhStatus } from '@/hooks/use-git'
 import { useEscapeClose, useScrollLock } from '@/hooks/use-scroll-lock'
 
@@ -175,6 +177,33 @@ export function PrModal({ open, onClose, branches, currentBranch }: PrModalProps
           ) : (
             // PR作成フォーム
             <>
+              {/* タイトル */}
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-muted-foreground">タイトル</label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRegenerate}
+                    disabled={generateMutation.isPending}
+                    className="h-7 gap-1 text-xs text-muted-foreground"
+                  >
+                    {generateMutation.isPending ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3 w-3" />
+                    )}
+                    AI生成
+                  </Button>
+                </div>
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={generateMutation.isPending ? 'AI生成中...' : 'PRタイトルを入力'}
+                  disabled={generateMutation.isPending}
+                />
+              </div>
+
               {/* ベースブランチ */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-muted-foreground">ベースブランチ</label>
@@ -194,80 +223,22 @@ export function PrModal({ open, onClose, branches, currentBranch }: PrModalProps
                 </div>
               </div>
 
-              {/* ヘッドブランチ */}
+              {/* ヘッドブランチ（readonly） */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-muted-foreground">ヘッドブランチ</label>
-                <div className="rounded-md border border-[#e5e5e5] bg-[#f5f5f5] px-3 py-2 text-sm text-foreground">
-                  {currentBranch}
-                </div>
+                <Input value={currentBranch} disabled />
               </div>
 
-              {/* AI生成コンテンツ */}
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-muted-foreground">
-                    PR内容（AI生成）
-                  </label>
-                  {generateMutation.data && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleRegenerate}
-                      disabled={generateMutation.isPending}
-                      className="h-7 gap-1 text-xs text-muted-foreground"
-                    >
-                      {generateMutation.isPending ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <Sparkles className="h-3 w-3" />
-                      )}
-                      再生成
-                    </Button>
-                  )}
-                </div>
-
-                {generateMutation.isPending ? (
-                  // 生成中
-                  <div className="flex flex-col gap-2 rounded-md border border-[#e5e5e5] bg-[#f9f9f9] p-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      AIがPR内容を生成中...
-                    </div>
-                    <div className="space-y-2">
-                      <div className="h-4 w-3/4 animate-pulse rounded bg-[#e5e5e5]" />
-                      <div className="h-4 w-1/2 animate-pulse rounded bg-[#e5e5e5]" />
-                      <div className="h-4 w-2/3 animate-pulse rounded bg-[#e5e5e5]" />
-                    </div>
-                  </div>
-                ) : generateMutation.isError ? (
-                  // エラー
-                  <div className="flex flex-col gap-3 rounded-md border border-red-200 bg-red-50 p-4">
-                    <p className="text-sm text-red-600">
-                      {generateMutation.error instanceof Error
-                        ? generateMutation.error.message
-                        : 'PR内容の生成に失敗しました'}
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleRegenerate}
-                      className="w-fit gap-1 text-xs"
-                    >
-                      <Sparkles className="h-3 w-3" />
-                      再生成
-                    </Button>
-                  </div>
-                ) : title ? (
-                  // 生成結果プレビュー
-                  <div className="flex flex-col gap-2 rounded-md border border-[#e5e5e5] bg-[#f9f9f9] p-4">
-                    <div className="text-sm font-medium text-foreground">{title}</div>
-                    {body && (
-                      <div className="whitespace-pre-wrap text-xs text-muted-foreground">
-                        {body}
-                      </div>
-                    )}
-                  </div>
-                ) : null}
+              {/* 説明 */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-muted-foreground">説明（任意）</label>
+                <Textarea
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  placeholder={generateMutation.isPending ? 'AI生成中...' : 'PRの説明を入力'}
+                  disabled={generateMutation.isPending}
+                  rows={4}
+                />
               </div>
             </>
           )}
@@ -282,7 +253,7 @@ export function PrModal({ open, onClose, branches, currentBranch }: PrModalProps
             <Button
               variant="primary"
               onClick={handleSubmit}
-              disabled={!title.trim() || createPrMutation.isPending || generateMutation.isPending}
+              disabled={!title.trim() || createPrMutation.isPending}
             >
               {createPrMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
