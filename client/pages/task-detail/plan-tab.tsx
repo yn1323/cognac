@@ -70,7 +70,7 @@ export function PCPlanTab({ task }: { task: Task }) {
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="overflow-x-auto p-6">
           <MarkdownRenderer content={plan.plan_markdown} variant="full" />
         </div>
       </Card>
@@ -128,8 +128,10 @@ export function SPPlanTab({ task }: { task: Task }) {
       </div>
 
       {/* プランカード */}
-      <Card className="overflow-hidden p-3.5">
-        <MarkdownRenderer content={plan.plan_markdown} variant="full" className="text-[13px]" />
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto p-3.5">
+          <MarkdownRenderer content={plan.plan_markdown} variant="full" className="text-[13px]" />
+        </div>
       </Card>
 
       {/* 実行プロンプト */}
