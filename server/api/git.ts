@@ -8,14 +8,18 @@ import {
   checkout,
   commitWithMessage,
   createBranch,
+  createPullRequest,
   deleteBranch,
   discardAll,
   fetchAll,
   getBranches,
   getCommitDiff,
   getCurrentBranch,
+  getDiffBetween,
   getFileDiff,
+  getGhStatus,
   getLog,
+  getLogBetween,
   getRecentLogOneline,
   getRemoteStatus,
   getStagedDiff,
@@ -45,6 +49,18 @@ const explainSchema = z.object({
 const mergeSchema = z.object({
   from: z.string().min(1, 'マージ元ブランチを指定してください'),
   into: z.string().min(1, 'マージ先ブランチを指定してください'),
+})
+
+const pullRequestSchema = z.object({
+  title: z.string().min(1, 'タイトルを入力してください'),
+  base: z.string().min(1, 'ベースブランチを指定してください'),
+  head: z.string().min(1, 'ヘッドブランチを指定してください'),
+  body: z.string().optional(),
+})
+
+const generatePrContentSchema = z.object({
+  base: z.string().min(1),
+  head: z.string().min(1),
 })
 
 export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
@@ -324,6 +340,58 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
     }
   })
 
+  // --- PR作成 ---
+
+  // GET /gh-status — GitHub CLIのインストール・認証状態
+  app.get('/gh-status', (c) => {
+    try {
+      const status = getGhStatus(cwd)
+      return c.json(status)
+    } catch (err) {
+      return c.json({ error: 'GitHub CLIのステータス取得に失敗しました', detail: String(err) }, 500)
+    }
+  })
+
+  // POST /pull-request — PR作成
+  app.post('/pull-request', async (c) => {
+    const body = await c.req.json()
+    const parsed = pullRequestSchema.safeParse(body)
+    if (!parsed.success) {
+      return c.json({ error: 'バリデーションエラー', details: parsed.error.issues }, 400)
+    }
+    try {
+      const result = createPullRequest(cwd, parsed.data)
+      return c.json(result)
+    } catch (err) {
+      return c.json(
+        { error: err instanceof Error ? err.message : 'PR作成に失敗しました', detail: String(err) },
+        400,
+      )
+    }
+  })
+
+  // POST /generate-pr-content — AIでPRタイトル・説明を生成
+  app.post('/generate-pr-content', async (c) => {
+    const body = await c.req.json()
+    const parsed = generatePrContentSchema.safeParse(body)
+    if (!parsed.success) {
+      return c.json({ error: 'バリデーションエラー', details: parsed.error.issues }, 400)
+    }
+    try {
+      const { base, head } = parsed.data
+      const result = await generatePrContent(cwd, base, head, getConfig)
+      return c.json(result)
+    } catch (err) {
+      return c.json(
+        {
+          error: err instanceof Error ? err.message : 'PR内容の生成に失敗しました',
+          detail: String(err),
+        },
+        500,
+      )
+    }
+  })
+
   return app
 }
 
@@ -354,6 +422,68 @@ ${diff.substring(0, 8000)}
   } catch (err) {
     console.error('[generateCommitExplanation] CLI 失敗:', err)
     return 'コミットの解説を生成できませんでした。'
+  }
+}
+
+// AIでPRのタイトル・説明文を生成する
+async function generatePrContent(
+  cwd: string,
+  base: string,
+  head: string,
+  getConfig: () => CognacConfig,
+): Promise<{ title: string; body: string }> {
+  const config = getConfig()
+  const log = getLogBetween(cwd, base, head)
+  const { stat, diff } = getDiffBetween(cwd, base, head)
+  const truncatedDiff = diff.substring(0, 12000)
+
+  const langRule =
+    config.git.commitMessageLanguage === 'ja'
+      ? '- 日本語でタイトルと説明を書いてください'
+      : '- Write the title and body in English'
+
+  const prompt = `以下のGitの変更内容からPull Requestのタイトルと説明文を生成してください。
+
+## コミット履歴:
+${log || '(コミットなし)'}
+
+## 変更統計:
+${stat || '(差分なし)'}
+
+## 変更内容 (diff):
+${truncatedDiff || '(差分なし)'}
+
+## ルール:
+- 出力は以下のフォーマットで返してください（このフォーマット以外の文字を出力しないこと）:
+---TITLE---
+PRタイトル（1行、feat:/fix:等のprefixなし、簡潔に）
+---BODY---
+PR説明文（Markdown形式、変更概要を箇条書きで）
+${langRule}
+- タイトルは70文字以内に収めてください
+- 説明文は変更の概要と目的を含めてください`
+
+  try {
+    const provider = createProvider(config.provider)
+    const response = await provider.execPrint({ prompt }, config)
+    const result = response.result.trim()
+
+    // セパレータ方式でパース
+    const titleMatch = result.match(/---TITLE---\s*([\s\S]*?)\s*---BODY---/)
+    const bodyMatch = result.match(/---BODY---\s*([\s\S]*)$/)
+
+    if (titleMatch) {
+      return {
+        title: titleMatch[1].trim(),
+        body: bodyMatch ? bodyMatch[1].trim() : '',
+      }
+    }
+
+    // パース失敗時のフォールバック: 全文をtitleに
+    return { title: result.substring(0, 70), body: '' }
+  } catch (err) {
+    console.error('[generatePrContent] CLI失敗:', err)
+    throw new Error('AI生成に失敗しました。再度お試しください。')
   }
 }
 

@@ -20,6 +20,8 @@ import type {
   ExplorationPersona,
   ExplorationSession,
   ExplorationTaskifyJob,
+  GeneratePrContentResponse,
+  GhStatus,
   GitBranchesResponse,
   GitCommitResponse,
   GitExplainResponse,
@@ -31,6 +33,7 @@ import type {
   GitStatusResponse,
   Persona,
   Plan,
+  PullRequestResponse,
   SettingsPayload,
   Task,
   TaskEvent,
@@ -221,5 +224,16 @@ export const api = {
     explainWorking: () => fetchJson<GitExplainResponse>('/git/explain-working', { method: 'POST' }),
     fileDiff: (path: string) =>
       fetchJson<GitFileDiffResponse>(`/git/file-diff?path=${encodeURIComponent(path)}`),
+    ghStatus: () => fetchJson<GhStatus>('/git/gh-status'),
+    createPullRequest: (data: { title: string; base: string; head: string; body?: string }) =>
+      fetchJson<PullRequestResponse>('/git/pull-request', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    generatePrContent: (data: { base: string; head: string }) =>
+      fetchJson<GeneratePrContentResponse>('/git/generate-pr-content', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
   },
 }

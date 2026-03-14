@@ -8,11 +8,14 @@
 import { execSync, spawnSync } from 'node:child_process'
 import type {
   CommitResult,
+  GhStatus,
   GitBranch,
   GitCommit,
   GitFile,
   GitFileStatus,
   GitRemoteStatus,
+  PullRequestRequest,
+  PullRequestResponse,
 } from '@cognac/shared'
 
 // gitコマンドを実行するヘルパー（cwd必須）
@@ -296,4 +299,99 @@ export function commitWithMessage(cwd: string, message: string): CommitResult {
     /* 最初のコミットの場合は無視 */
   }
   return { hash, message, filesChanged, insertions }
+}
+
+// リモートにブランチが存在するか確認する
+export function checkRemoteBranch(cwd: string, branch: string): boolean {
+  const result = spawnSync('git', ['ls-remote', '--heads', 'origin', branch], {
+    cwd,
+    encoding: 'utf8',
+    timeout: 30000,
+  })
+  return (result.stdout ?? '').trim().length > 0
+}
+
+// GitHub CLI (gh) のインストール・認証状態を取得する
+export function getGhStatus(cwd: string): GhStatus {
+  const versionResult = spawnSync('gh', ['--version'], { cwd, encoding: 'utf8', timeout: 10000 })
+  if (versionResult.status !== 0) {
+    return { installed: false, authenticated: false }
+  }
+  // バージョン文字列をパース（例: "gh version 2.xx.x (yyyy-mm-dd)"）
+  const versionMatch = (versionResult.stdout ?? '').match(/gh version (\S+)/)
+  const version = versionMatch?.[1]
+
+  const authResult = spawnSync('gh', ['auth', 'status'], { cwd, encoding: 'utf8', timeout: 10000 })
+  const authenticated = authResult.status === 0
+
+  return { installed: true, authenticated, version }
+}
+
+// ブランチ間のコミットログを取得する（base..head）
+export function getLogBetween(cwd: string, base: string, head: string): string {
+  if (!validateBranchName(base)) throw new Error('不正なベースブランチ名です')
+  if (!validateBranchName(head)) throw new Error('不正なヘッドブランチ名です')
+  try {
+    return git(`log ${base}..${head} --oneline`, cwd)
+  } catch {
+    return ''
+  }
+}
+
+// ブランチ間のdiffを取得する（base...head、3ドット）
+export function getDiffBetween(
+  cwd: string,
+  base: string,
+  head: string,
+): { stat: string; diff: string } {
+  if (!validateBranchName(base)) throw new Error('不正なベースブランチ名です')
+  if (!validateBranchName(head)) throw new Error('不正なヘッドブランチ名です')
+  try {
+    const stat = git(`diff ${base}...${head} --stat`, cwd)
+    const diff = git(`diff ${base}...${head}`, cwd)
+    return { stat, diff }
+  } catch {
+    return { stat: '', diff: '' }
+  }
+}
+
+// GitHub CLI (gh) でPRを作成する
+export function createPullRequest(cwd: string, req: PullRequestRequest): PullRequestResponse {
+  // リモートブランチの存在チェック
+  if (!checkRemoteBranch(cwd, req.head)) {
+    throw new Error('リモートにブランチがありません。先にPushしてください。')
+  }
+
+  const result = spawnSync(
+    'gh',
+    [
+      'pr',
+      'create',
+      '--title',
+      req.title,
+      '--base',
+      req.base,
+      '--head',
+      req.head,
+      '--body',
+      req.body ?? '',
+    ],
+    { cwd, encoding: 'utf8', timeout: 30000 },
+  )
+
+  if (result.status === 0) {
+    const stdout = (result.stdout ?? '').trim()
+    const numberMatch = stdout.match(/\/pull\/(\d+)/)
+    const number = numberMatch ? Number.parseInt(numberMatch[1], 10) : 0
+    return { url: stdout, number, created: true }
+  }
+
+  // 既存PRが存在する場合、stderrにPR URLが含まれる
+  const stderr = result.stderr ?? ''
+  const urlMatch = stderr.match(/(https:\/\/github\.com\/[^\s]+\/pull\/(\d+))/)
+  if (urlMatch) {
+    return { url: urlMatch[1], number: Number.parseInt(urlMatch[2], 10), created: false }
+  }
+
+  throw new Error(stderr.trim() || 'PR作成に失敗しました')
 }

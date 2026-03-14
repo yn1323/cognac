@@ -112,3 +112,31 @@ export interface GitMergeRequest {
   from: string
   into: string
 }
+
+// GitHub CLI ステータス
+export interface GhStatus {
+  installed: boolean
+  authenticated: boolean
+  version?: string
+}
+
+// PR作成リクエスト
+export interface PullRequestRequest {
+  title: string
+  body?: string
+  base: string
+  head: string
+}
+
+// PR作成レスポンス
+export interface PullRequestResponse {
+  url: string
+  number: number
+  created: boolean
+}
+
+// AI PR内容生成レスポンス
+export interface GeneratePrContentResponse {
+  title: string
+  body: string
+}

@@ -11,6 +11,7 @@ import {
   GitBranch,
   GitBranchPlus,
   GitMerge,
+  GitPullRequest,
   Loader2,
   RefreshCw,
   Trash2,
@@ -25,6 +26,7 @@ import { GitDiffView } from '@/components/git-diff-view'
 import { MergeModal } from '@/components/merge-modal'
 import { NewBranchModal } from '@/components/new-branch-modal'
 import { PageHeader } from '@/components/page-header'
+import { PrModal } from '@/components/pr-modal'
 import { Sidebar } from '@/components/sidebar'
 import { SPHeader } from '@/components/sp-header'
 import { useToast } from '@/components/toast'
@@ -208,6 +210,7 @@ interface GitPageViewProps {
   onFileSelect: (path: string) => void
   fileDiff: string | null
   isFileDiffLoading: boolean
+  onTogglePrModal: () => void
 }
 
 // --- PC版 ---
@@ -239,6 +242,7 @@ function PCGitPage({
   onFileSelect,
   fileDiff,
   isFileDiffLoading,
+  onTogglePrModal,
 }: GitPageViewProps) {
   return (
     <div className="flex h-screen bg-[#fafafa]">
@@ -262,6 +266,10 @@ function PCGitPage({
           <Button variant="outline" size="sm" onClick={onToggleMergeModal}>
             <GitMerge className="h-4 w-4" />
             マージ
+          </Button>
+          <Button variant="outline" size="sm" onClick={onTogglePrModal}>
+            <GitPullRequest className="h-4 w-4" />
+            PR作成
           </Button>
           <Button
             variant="primary"
@@ -378,6 +386,7 @@ function SPGitPage({
   onFileSelect,
   fileDiff,
   isFileDiffLoading,
+  onTogglePrModal,
 }: GitPageViewProps) {
   useScrollLock(!!selectedFilePath)
 
@@ -411,6 +420,9 @@ function SPGitPage({
             </Button>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={onToggleMergeModal}>
               <GitMerge className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={onTogglePrModal}>
+              <GitPullRequest className="h-4 w-4" />
             </Button>
             <Button
               variant="primary"
@@ -509,6 +521,7 @@ export function GitPage() {
   const navigate = useNavigate()
   const [showMergeModal, setShowMergeModal] = useState(false)
   const [showNewBranchModal, setShowNewBranchModal] = useState(false)
+  const [showPrModal, setShowPrModal] = useState(false)
   const [showDiscardDialog, setShowDiscardDialog] = useState(false)
   const [deletingBranch, setDeletingBranch] = useState<string | null>(null)
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null)
@@ -573,6 +586,7 @@ export function GitPage() {
     })
   const handleToggleMergeModal = () => setShowMergeModal((v) => !v)
   const handleToggleNewBranchModal = () => setShowNewBranchModal((v) => !v)
+  const handleTogglePrModal = () => setShowPrModal((v) => !v)
   const handleToggleDiscardDialog = () => setShowDiscardDialog((v) => !v)
   const handleCheckout = (branch: string) =>
     checkoutMutation.mutate(branch, {
@@ -696,6 +710,7 @@ export function GitPage() {
     onFileSelect: handleFileSelect,
     fileDiff: fileDiffData?.diff ?? null,
     isFileDiffLoading,
+    onTogglePrModal: handleTogglePrModal,
   }
 
   return (
@@ -749,6 +764,12 @@ export function GitPage() {
             ? explainMutation.isError
             : explainWorkingMutation.isError
         }
+      />
+      <PrModal
+        open={showPrModal}
+        onClose={handleTogglePrModal}
+        branches={branches}
+        currentBranch={currentBranch}
       />
       <ConfirmDialog
         open={showDiscardDialog}
