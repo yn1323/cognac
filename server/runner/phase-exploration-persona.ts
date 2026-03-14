@@ -5,9 +5,9 @@ import type {
   ExplorationSession,
   PersonaSelection,
 } from '@cognac/shared'
-import type { CognacDb } from '../db/types.js'
 import * as logQueries from '../db/queries/exploration-logs.js'
 import * as personaQueries from '../db/queries/exploration-personas.js'
+import type { CognacDb } from '../db/types.js'
 import { getRepoStructure } from './context-cache.js'
 import { extractJson } from './json-parser.js'
 import { createProvider } from './providers/index.js'

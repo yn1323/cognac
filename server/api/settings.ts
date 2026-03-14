@@ -29,6 +29,7 @@ const updateSettingsSchema = z.object({
     steps: z.array(ciStepSchema),
   }),
   git: z.object({
+    defaultBranch: z.string().min(1),
     commitLogLimit: z.number().int().min(1).max(100),
     commitMessageLanguage: z.enum(['ja', 'en']),
   }),
@@ -51,6 +52,7 @@ export function settingsRouter(
         steps: config.ci.steps ?? [],
       },
       git: {
+        defaultBranch: config.git.defaultBranch,
         commitLogLimit: config.git.commitLogLimit,
         commitMessageLanguage: config.git.commitMessageLanguage,
       },

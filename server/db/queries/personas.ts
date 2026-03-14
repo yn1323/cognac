@@ -1,8 +1,8 @@
 // ペルソナのCRUD操作
 
 import type { Persona } from '@cognac/shared'
-import type { CognacDb } from '../types.js'
 import { transaction } from '../transaction.js'
+import type { CognacDb } from '../types.js'
 
 /**
  * ペルソナを一括作成する（トランザクション）

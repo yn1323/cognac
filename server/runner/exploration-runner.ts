@@ -7,7 +7,6 @@ import type {
   ExplorationPhase,
   ExplorationSession,
 } from '@cognac/shared'
-import type { CognacDb } from '../db/types.js'
 import type { RunnerStatus } from '../api/system.js'
 import * as explorationArtifactQueries from '../db/queries/exploration-artifacts.js'
 import * as explorationEventQueries from '../db/queries/exploration-events.js'
@@ -15,6 +14,7 @@ import * as explorationImageQueries from '../db/queries/exploration-images.js'
 import * as explorationLogQueries from '../db/queries/exploration-logs.js'
 import * as explorationTaskifyJobQueries from '../db/queries/exploration-taskify-jobs.js'
 import * as explorationQueries from '../db/queries/explorations.js'
+import type { CognacDb } from '../db/types.js'
 import type { EventBus } from '../sse/event-bus.js'
 import { classifyError } from './error-classifier.js'
 import type { ExecutionCoordinator } from './execution-coordinator.js'

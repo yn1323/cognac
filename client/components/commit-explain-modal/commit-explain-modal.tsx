@@ -2,6 +2,7 @@
 // 既存MergeModalのパターンに準拠
 
 import { AlertCircle, Bot, Loader2, X } from 'lucide-react'
+import { MarkdownRenderer } from '@/components/markdown-renderer'
 import { Button } from '@/components/ui/button'
 import { useEscapeClose, useScrollLock } from '@/hooks/use-scroll-lock'
 
@@ -78,9 +79,7 @@ export function CommitExplainModal({
             </div>
           ) : (
             <div className="rounded-md border border-[#e5e5e5] bg-[#fafafa] p-4">
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-                {explanation}
-              </p>
+              <MarkdownRenderer content={explanation ?? ''} variant="inline" />
             </div>
           )}
         </div>

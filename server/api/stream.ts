@@ -1,8 +1,8 @@
 import type { TaskEvent } from '@cognac/shared'
-import type { CognacDb } from '../db/types.js'
 import { Hono } from 'hono'
 import { streamSSE } from 'hono/streaming'
 import * as taskEventQueries from '../db/queries/task-events.js'
+import type { CognacDb } from '../db/types.js'
 import type { EventBus } from '../sse/event-bus.js'
 
 export function streamRouter(eventBus: EventBus<TaskEvent>, db: CognacDb) {

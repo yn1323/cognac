@@ -213,6 +213,34 @@ export function merge(cwd: string, from: string): { hash: string; message: strin
   }
 }
 
+// コミットをリバートする
+export function revert(cwd: string, hash: string): { hash: string; message: string } {
+  if (!validateCommitHash(hash)) throw new Error('不正なコミットハッシュです')
+  try {
+    // マージコミット判定: rev-listの出力は "hash parent1 parent2..." 形式
+    // 親が2つ以上（= split結果が3以上）ならマージコミット → -m 1 を付与
+    const parts = git(`rev-list --parents -1 ${hash}`, cwd).split(' ')
+    const isMergeCommit = parts.length > 2
+    const mergeFlag = isMergeCommit ? '-m 1 ' : ''
+    git(`revert ${mergeFlag}--no-edit ${hash}`, cwd)
+    const newHash = git('rev-parse --short HEAD', cwd)
+    const message = git('log -1 --format=%s', cwd)
+    return { hash: newHash, message }
+  } catch (err) {
+    // コンフリクト時は abort して throw（abort失敗は無視）
+    try {
+      git('revert --abort', cwd)
+    } catch {
+      /* abort失敗は無視 */
+    }
+    const errMsg = err instanceof Error ? err.message : String(err)
+    if (errMsg.includes('CONFLICT') || errMsg.includes('conflict')) {
+      throw new Error('コンフリクトが発生したためリバートを中断しました。')
+    }
+    throw err
+  }
+}
+
 // 全変更をステージングする（AIコミット用）
 export function stageAll(cwd: string): void {
   git('add -A', cwd)
@@ -254,6 +282,163 @@ export function getFileDiff(cwd: string, filePath: string): string {
   } catch {
     // HEAD が存在しない場合（初回コミット前）
     return git(`diff --cached -- "${filePath}"`, cwd)
+  }
+}
+
+// gh CLIが利用可能か確認する
+export function checkGhInstalled(): void {
+  try {
+    execSync('gh --version', { encoding: 'utf8', timeout: 5000 })
+  } catch {
+    throw new Error(
+      'gh CLIがインストールされていません。https://cli.github.com/ からインストールしてください。',
+    )
+  }
+}
+
+// gh CLIの認証状態を確認する
+export function checkGhAuth(): void {
+  try {
+    execSync('gh auth status', { encoding: 'utf8', timeout: 10000 })
+  } catch {
+    throw new Error('gh CLIの認証が必要です。`gh auth login` を実行してください。')
+  }
+}
+
+// 現在のブランチに紐づく既存のオープンPRを検出する
+export function findExistingPr(
+  cwd: string,
+  headBranch: string,
+): { number: number; url: string } | null {
+  try {
+    const output = execSync(
+      `gh pr list --head ${headBranch} --state open --json number,url --limit 1`,
+      { cwd, encoding: 'utf8', timeout: 10000 },
+    ).trim()
+    const prs = JSON.parse(output) as { number: number; url: string }[]
+    return prs.length > 0 ? prs[0] : null
+  } catch {
+    return null
+  }
+}
+
+// state情報を含むPR検索（Git画面表示用）
+export function findExistingPrWithState(
+  cwd: string,
+  headBranch: string,
+): { number: number; url: string; state: 'open' | 'merged' | 'closed' } | null {
+  try {
+    const output = execSync(
+      `gh pr list --head ${headBranch} --state all --json number,url,state --limit 1`,
+      { cwd, encoding: 'utf8', timeout: 10000 },
+    ).trim()
+    const prs = JSON.parse(output) as { number: number; url: string; state: string }[]
+    if (prs.length === 0) return null
+    return {
+      number: prs[0].number,
+      url: prs[0].url,
+      state: prs[0].state as 'open' | 'merged' | 'closed',
+    }
+  } catch {
+    return null
+  }
+}
+
+// gh CLIでPRを作成する
+export function createGhPr(
+  cwd: string,
+  params: { title: string; body: string; base: string; head: string },
+): { number: number; url: string } {
+  const result = spawnSync(
+    'gh',
+    [
+      'pr',
+      'create',
+      '--title',
+      params.title,
+      '--body',
+      params.body,
+      '--base',
+      params.base,
+      '--head',
+      params.head,
+    ],
+    { cwd, encoding: 'utf8', timeout: 30000 },
+  )
+  if (result.status !== 0) {
+    throw new Error(result.stderr || 'PR作成に失敗しました')
+  }
+  // gh pr create はPRのURLを標準出力に返す（例: https://github.com/owner/repo/pull/42）
+  const url = result.stdout.trim()
+  const match = url.match(/\/pull\/(\d+)\s*$/)
+  if (!match) {
+    throw new Error(`PR URLのパースに失敗: ${url}`)
+  }
+  return { number: Number(match[1]), url }
+}
+
+// gh CLIで既存PRを更新する
+export function updateGhPr(
+  cwd: string,
+  prNumber: number,
+  params: { title: string; body: string },
+): { number: number; url: string } {
+  const result = spawnSync(
+    'gh',
+    ['pr', 'edit', String(prNumber), '--title', params.title, '--body', params.body],
+    { cwd, encoding: 'utf8', timeout: 30000 },
+  )
+  if (result.status !== 0) {
+    throw new Error(result.stderr || 'PR更新に失敗しました')
+  }
+  // gh pr edit は直接JSONを返さないので、URLを取得
+  const urlResult = spawnSync('gh', ['pr', 'view', String(prNumber), '--json', 'number,url'], {
+    cwd,
+    encoding: 'utf8',
+    timeout: 10000,
+  })
+  if (urlResult.status !== 0) {
+    return { number: prNumber, url: '' }
+  }
+  return JSON.parse(urlResult.stdout.trim()) as { number: number; url: string }
+}
+
+// ベースブランチとの差分を取得する（PR内容生成用）
+export function getDiffAgainstBase(cwd: string, baseBranch: string): string {
+  // baseBranch → origin/${baseBranch} → エラー の3段フォールバック
+  try {
+    return git(`diff ${baseBranch}...HEAD`, cwd)
+  } catch {
+    // ローカルにbaseBranchがない場合、リモート参照で再試行
+    try {
+      return git(`diff origin/${baseBranch}...HEAD`, cwd)
+    } catch {
+      throw new Error(
+        `ベースブランチ '${baseBranch}' との差分を取得できません。fetchを実行してください。`,
+      )
+    }
+  }
+}
+
+// ベースブランチとの差分のstat（ファイル一覧サマリー）を取得する
+export function getDiffStatAgainstBase(cwd: string, baseBranch: string): string {
+  try {
+    return git(`diff ${baseBranch}...HEAD --stat`, cwd)
+  } catch {
+    try {
+      return git(`diff origin/${baseBranch}...HEAD --stat`, cwd)
+    } catch {
+      return ''
+    }
+  }
+}
+
+// ベースブランチからの全コミットログを取得する（PR内容生成用）
+export function getLogAgainstBase(cwd: string, baseBranch: string): string {
+  try {
+    return git(`log ${baseBranch}..HEAD --oneline`, cwd)
+  } catch {
+    return ''
   }
 }
 

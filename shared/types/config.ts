@@ -14,6 +14,7 @@ export interface ConfigPatch {
     steps?: CiStep[]
   }
   git: {
+    defaultBranch: string
     commitLogLimit: number
     commitMessageLanguage: CommitMessageLanguage
   }

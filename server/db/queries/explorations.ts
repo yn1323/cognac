@@ -140,5 +140,6 @@ export function markExplorationStopped(
   return updateExploration(db, id, {
     status: 'stopped',
     paused_reason: reason,
+    completed_at: new Date().toISOString(),
   })
 }

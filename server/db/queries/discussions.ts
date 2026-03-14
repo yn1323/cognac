@@ -1,8 +1,8 @@
 // ディスカッションのCRUD操作
 
 import type { Discussion } from '@cognac/shared'
-import type { CognacDb } from '../types.js'
 import { transaction } from '../transaction.js'
+import type { CognacDb } from '../types.js'
 
 // SQLiteはbooleanをINTEGER(0/1)で保存するため、読み取り時に変換する
 type RawDiscussion = Omit<Discussion, 'should_continue'> & {

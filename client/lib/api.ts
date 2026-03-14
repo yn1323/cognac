@@ -26,8 +26,11 @@ import type {
   GitFileDiffResponse,
   GitLogResponse,
   GitMergeResponse,
+  GitPrInfoResponse,
+  GitPullRequestResponse,
   GitPushResponse,
   GitRemoteStatusResponse,
+  GitRevertResponse,
   GitStatusResponse,
   Persona,
   Plan,
@@ -213,6 +216,11 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ from, into }),
       }),
+    revert: (hash: string) =>
+      fetchJson<GitRevertResponse>('/git/revert', {
+        method: 'POST',
+        body: JSON.stringify({ hash }),
+      }),
     explain: (hash: string) =>
       fetchJson<GitExplainResponse>('/git/explain', {
         method: 'POST',
@@ -221,5 +229,11 @@ export const api = {
     explainWorking: () => fetchJson<GitExplainResponse>('/git/explain-working', { method: 'POST' }),
     fileDiff: (path: string) =>
       fetchJson<GitFileDiffResponse>(`/git/file-diff?path=${encodeURIComponent(path)}`),
+    pullRequestInfo: () => fetchJson<GitPrInfoResponse>('/git/pull-request'),
+    pullRequest: (baseBranch: string) =>
+      fetchJson<GitPullRequestResponse>('/git/pull-request', {
+        method: 'POST',
+        body: JSON.stringify({ baseBranch }),
+      }),
   },
 }

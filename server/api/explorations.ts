@@ -2,8 +2,6 @@ import { randomUUID } from 'node:crypto'
 import { mkdir, rm, unlink, writeFile } from 'node:fs/promises'
 import { extname, resolve } from 'node:path'
 import type { ExplorationEvent, ExplorationStatus } from '@cognac/shared'
-import type { CognacDb } from '../db/types.js'
-import { transaction } from '../db/transaction.js'
 import { Hono } from 'hono'
 import { streamSSE } from 'hono/streaming'
 import { z } from 'zod'
@@ -15,6 +13,8 @@ import * as explorationLogQueries from '../db/queries/exploration-logs.js'
 import * as explorationPersonaQueries from '../db/queries/exploration-personas.js'
 import * as explorationTaskifyJobQueries from '../db/queries/exploration-taskify-jobs.js'
 import * as explorationQueries from '../db/queries/explorations.js'
+import { transaction } from '../db/transaction.js'
+import type { CognacDb } from '../db/types.js'
 import {
   getExplorationArtifactDir,
   getExplorationUploadDir,
