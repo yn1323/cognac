@@ -24,6 +24,7 @@ import {
   getFileDiff,
   getLog,
   getLogAgainstBase,
+  getParentBranch,
   getRecentLogOneline,
   getRemoteStatus,
   getStagedDiff,
@@ -315,6 +316,19 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
         return c.json({ error: errMsg }, 409)
       }
       return c.json({ error: 'リバートに失敗しました', detail: String(err) }, 500)
+    }
+  })
+
+  // GET /parent-branch — 親ブランチを推定
+  app.get('/parent-branch', (c) => {
+    const config = getConfig()
+    const defaultBranch = config.git?.defaultBranch || 'main'
+    try {
+      const result = getParentBranch(cwd, defaultBranch)
+      return c.json(result)
+    } catch {
+      // 推定失敗時はdefaultBranchにフォールバック
+      return c.json({ branch: defaultBranch, estimated: false })
     }
   })
 

@@ -50,6 +50,7 @@ import {
   useGitRemoteStatus,
   useGitStatus,
   useMerge,
+  useParentBranch,
   usePush,
   useRevert,
 } from '@/hooks/use-git'
@@ -622,6 +623,7 @@ export function GitPage() {
   const { data: remoteStatus } = useGitRemoteStatus()
   const { data: fileDiffData, isLoading: isFileDiffLoading } = useGitFileDiff(selectedFilePath)
   const { data: prData } = useGitPullRequest()
+  const { data: parentBranchData } = useParentBranch(showPrModal)
 
   const { toast } = useToast()
 
@@ -776,8 +778,8 @@ export function GitPage() {
     setShowPrModal((v) => !v)
   }
 
-  const handleCreatePr = () => {
-    prMutation.mutate(defaultBranch, {
+  const handleCreatePr = (baseBranch: string) => {
+    prMutation.mutate(baseBranch, {
       onSuccess: (data) => {
         if (data.success) {
           toast(data.isUpdate ? 'PRを更新しました' : 'PRを作成しました', 'success')
@@ -853,7 +855,9 @@ export function GitPage() {
         open={showPrModal}
         onClose={handleTogglePrModal}
         currentBranch={currentBranch}
-        baseBranch={defaultBranch}
+        baseBranch={parentBranchData?.branch ?? defaultBranch}
+        branches={branches}
+        defaultBranch={defaultBranch}
         onSubmit={handleCreatePr}
         isPending={prMutation.isPending}
         result={

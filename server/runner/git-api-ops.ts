@@ -461,6 +461,47 @@ export function getCommitDiff(cwd: string, hash: string): string {
   return git(`show ${hash} --format=""`, cwd)
 }
 
+// 現在のブランチの親ブランチを推定する
+// ローカルブランチのみを候補として、merge-base でHEADに最も近いブランチを返す
+export function getParentBranch(
+  cwd: string,
+  defaultBranch: string,
+): { branch: string; estimated: boolean } {
+  const currentBranch = getCurrentBranch(cwd)
+  if (!currentBranch) return { branch: defaultBranch, estimated: false }
+
+  // ローカルブランチ一覧を取得（現在のブランチを除外）
+  const branches = getBranches(cwd)
+    .filter((b) => !b.remote && b.name !== currentBranch)
+    .map((b) => b.name)
+
+  if (branches.length === 0) return { branch: defaultBranch, estimated: false }
+
+  let bestBranch = defaultBranch
+  let bestDistance = Number.MAX_SAFE_INTEGER
+  let found = false
+
+  for (const candidate of branches) {
+    try {
+      // merge-base を取得
+      const mergeBase = git(`merge-base ${candidate} HEAD`, cwd)
+      if (!mergeBase) continue
+      // merge-base から HEAD までのコミット数
+      const countStr = git(`rev-list --count ${mergeBase}..HEAD`, cwd)
+      const distance = Number.parseInt(countStr, 10)
+      if (distance < bestDistance) {
+        bestDistance = distance
+        bestBranch = candidate
+        found = true
+      }
+    } catch {
+      // merge-base 取得失敗は無視して次の候補へ
+    }
+  }
+
+  return { branch: bestBranch, estimated: found }
+}
+
 // コミットを実行してCommitResultを返す
 export function commitWithMessage(cwd: string, message: string): CommitResult {
   // spawnSyncで引数配列として渡し、シェル解釈を回避（Win/Mac両対応）

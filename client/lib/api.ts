@@ -26,6 +26,7 @@ import type {
   GitFileDiffResponse,
   GitLogResponse,
   GitMergeResponse,
+  GitParentBranchResponse,
   GitPrInfoResponse,
   GitPullRequestResponse,
   GitPushResponse,
@@ -231,6 +232,7 @@ export const api = {
     explainWorking: () => fetchJson<GitExplainResponse>('/git/explain-working', { method: 'POST' }),
     fileDiff: (path: string) =>
       fetchJson<GitFileDiffResponse>(`/git/file-diff?path=${encodeURIComponent(path)}`),
+    parentBranch: () => fetchJson<GitParentBranchResponse>('/git/parent-branch'),
     pullRequestInfo: () => fetchJson<GitPrInfoResponse>('/git/pull-request'),
     pullRequest: (baseBranch: string) =>
       fetchJson<GitPullRequestResponse>('/git/pull-request', {

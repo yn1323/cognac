@@ -162,3 +162,9 @@ export interface GitPrInfo {
 export interface GitPrInfoResponse {
   pr: GitPrInfo | null
 }
+
+// 親ブランチ推定レスポンス
+export interface GitParentBranchResponse {
+  branch: string
+  estimated: boolean
+}

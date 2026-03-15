@@ -1,17 +1,20 @@
 // PR作成モーダル
 // 確認→進捗→結果の3フェーズUI
 
-import type { GitPullRequestResponse, PrStepStatus } from '@cognac/shared'
+import type { GitBranch, GitPullRequestResponse, PrStepStatus } from '@cognac/shared'
 import {
   AlertCircle,
+  Check,
   CheckCircle2,
+  ChevronDown,
   Circle,
   ExternalLink,
   GitPullRequest,
   Loader2,
   MinusCircle,
+  Search,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useEscapeClose, useScrollLock } from '@/hooks/use-scroll-lock'
 
@@ -20,7 +23,9 @@ interface PrModalProps {
   onClose: () => void
   currentBranch: string
   baseBranch: string
-  onSubmit: () => void
+  branches: GitBranch[]
+  defaultBranch: string
+  onSubmit: (baseBranch: string) => void
   isPending: boolean
   result: GitPullRequestResponse | null | undefined
   error: Error | null
@@ -48,11 +53,145 @@ const FAKE_STEPS = [
   { id: 'create-pr', label: 'PR作成' },
 ] as const
 
+// ブランチセレクター（PR作成モーダル用）
+function BaseBranchSelector({
+  selectedBranch,
+  onSelect,
+  branches,
+  baseBranch,
+  defaultBranch,
+  currentBranch,
+}: {
+  selectedBranch: string
+  onSelect: (branch: string) => void
+  branches: GitBranch[]
+  baseBranch: string
+  defaultBranch: string
+  currentBranch: string
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [filter, setFilter] = useState('')
+  const containerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // ドロップダウン外クリックで閉じる
+  useEffect(() => {
+    if (!isOpen) return
+    const handleClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [isOpen])
+
+  // 開いた時にフォーカス
+  useEffect(() => {
+    if (isOpen) {
+      setFilter('')
+      inputRef.current?.focus()
+    }
+  }, [isOpen])
+
+  // 推奨ブランチ（重複排除）
+  const recommended = useMemo(() => {
+    const list: string[] = [baseBranch]
+    if (defaultBranch !== baseBranch) list.push(defaultBranch)
+    return list
+  }, [baseBranch, defaultBranch])
+
+  // 全ブランチ一覧（currentBranch除外、リモートonly除外、推奨除外、フィルター適用）
+  const filteredBranches = useMemo(() => {
+    return branches
+      .filter((b) => !b.remote && b.name !== currentBranch && !recommended.includes(b.name))
+      .filter((b) => !filter || b.name.toLowerCase().includes(filter.toLowerCase()))
+      .map((b) => b.name)
+  }, [branches, currentBranch, recommended, filter])
+
+  const handleSelect = (branch: string) => {
+    onSelect(branch)
+    setIsOpen(false)
+  }
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="inline-flex items-center gap-1.5 rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground hover:bg-muted/80"
+      >
+        {selectedBranch}
+        <ChevronDown className="h-3 w-3 text-muted-foreground" />
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 top-full z-10 mt-1 w-64 rounded-md border border-[#e5e5e5] bg-white shadow-lg">
+          {/* 検索インプット */}
+          <div className="border-b border-[#e5e5e5] p-2">
+            <div className="flex items-center gap-2 rounded-md border border-[#e5e5e5] px-2 py-1.5">
+              <Search className="h-3.5 w-3.5 text-muted-foreground" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                placeholder="ブランチを検索..."
+                className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              />
+            </div>
+          </div>
+
+          {/* 推奨セクション */}
+          <div className="px-3 py-1.5">
+            <span className="text-xs text-muted-foreground">推奨</span>
+          </div>
+          {recommended.map((name) => (
+            <button
+              key={`rec-${name}`}
+              type="button"
+              onClick={() => handleSelect(name)}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted cursor-pointer"
+            >
+              <span className="flex-1 truncate">{name}</span>
+              {selectedBranch === name && <Check className="h-4 w-4 text-[#2563eb]" />}
+            </button>
+          ))}
+
+          {/* 区切り線 + 全ブランチ */}
+          {filteredBranches.length > 0 && (
+            <>
+              <div className="border-t border-[#e5e5e5] px-3 py-1.5">
+                <span className="text-xs text-muted-foreground">すべてのブランチ</span>
+              </div>
+              <div className="max-h-40 overflow-y-auto">
+                {filteredBranches.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => handleSelect(name)}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted cursor-pointer"
+                  >
+                    <span className="flex-1 truncate">{name}</span>
+                    {selectedBranch === name && <Check className="h-4 w-4 text-[#2563eb]" />}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function PrModal({
   open,
   onClose,
   currentBranch,
   baseBranch,
+  branches,
+  defaultBranch,
   onSubmit,
   isPending,
   result,
@@ -61,8 +200,17 @@ export function PrModal({
   useScrollLock(open)
   useEscapeClose(open, onClose)
 
+  const [selectedBranch, setSelectedBranch] = useState(baseBranch)
+
   // フェイク進捗用state
   const [fakeStatuses, setFakeStatuses] = useState<Record<string, PrStepStatus>>({})
+
+  // open が true になったとき selectedBranch を baseBranch にリセット
+  useEffect(() => {
+    if (open) {
+      setSelectedBranch(baseBranch)
+    }
+  }, [open, baseBranch])
 
   useEffect(() => {
     if (!isPending) {
@@ -154,9 +302,14 @@ export function PrModal({
                   {currentBranch}
                 </code>{' '}
                 →{' '}
-                <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">
-                  {baseBranch}
-                </code>{' '}
+                <BaseBranchSelector
+                  selectedBranch={selectedBranch}
+                  onSelect={setSelectedBranch}
+                  branches={branches}
+                  baseBranch={baseBranch}
+                  defaultBranch={defaultBranch}
+                  currentBranch={currentBranch}
+                />{' '}
                 へのPRを作成します。
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
@@ -167,7 +320,7 @@ export function PrModal({
               <Button variant="outline" onClick={onClose}>
                 キャンセル
               </Button>
-              <Button variant="primary" onClick={onSubmit}>
+              <Button variant="primary" onClick={() => onSubmit(selectedBranch)}>
                 <GitPullRequest className="h-4 w-4" />
                 PR作成
               </Button>

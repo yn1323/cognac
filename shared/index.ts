@@ -71,6 +71,7 @@ export type {
   GitLogResponse,
   GitMergeRequest,
   GitMergeResponse,
+  GitParentBranchResponse,
   GitPrInfo,
   GitPrInfoResponse,
   GitPullRequestRequest,
