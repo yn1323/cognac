@@ -120,9 +120,6 @@ export function useDeleteBranch() {
     mutationFn: (name: string) => api.git.deleteBranch(name),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['git', 'branches'] })
-      qc.invalidateQueries({ queryKey: ['git', 'status'] })
-      qc.invalidateQueries({ queryKey: ['git', 'log'] })
-      qc.invalidateQueries({ queryKey: ['git', 'remote-status'] })
     },
   })
 }

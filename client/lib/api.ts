@@ -48,9 +48,7 @@ const BASE = '/api'
 async function throwIfNotOk(res: Response): Promise<void> {
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }))
-    const typed = err as { error?: string; detail?: string }
-    const message = typed.error ?? `HTTP ${res.status}`
-    throw new Error(typed.detail ? `${message}: ${typed.detail}` : message)
+    throw new Error((err as { error?: string }).error ?? `HTTP ${res.status}`)
   }
 }
 
