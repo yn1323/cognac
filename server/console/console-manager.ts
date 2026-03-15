@@ -10,9 +10,9 @@ import type {
   CreateConsoleCommandInput,
   UpdateConsoleCommandInput,
 } from '@cognac/shared'
-import type { CognacDb } from '../db/types.js'
 import * as consoleCommandQueries from '../db/queries/console-commands.js'
 import * as consoleRunQueries from '../db/queries/console-runs.js'
+import type { CognacDb } from '../db/types.js'
 import { EventBus } from '../sse/event-bus.js'
 import {
   buildRunLogPath,

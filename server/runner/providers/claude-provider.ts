@@ -16,7 +16,7 @@ import type {
   PrintExecOptions,
   StreamExecOptions,
 } from './types.js'
-import { TaskCancelledError } from './types.js'
+import { CliProviderError, TaskCancelledError } from './types.js'
 
 // Claude Code は CLAUDECODE 環境変数をセットするため、
 // 子プロセスで再度 claude を起動すると「ネストされたセッション」と判定されてしまう。
@@ -133,9 +133,14 @@ export class ClaudeProvider implements CliProviderInterface {
           )
           if (stderr) console.log(`[ClaudeProvider] stderr:\n${stderr}`)
 
-          if (code !== 0 && !result) {
+          if (code !== 0 || parser.isRateLimited()) {
             reject(
-              new Error(`Claude プロセスが exit code ${code} で終了した: ${stderr.slice(0, 500)}`),
+              new CliProviderError({
+                exitCode: code ?? 1,
+                stderr,
+                partialResult: result || undefined,
+                isRateLimit: parser.isRateLimited() || undefined,
+              }),
             )
             return
           }
@@ -214,9 +219,13 @@ export class ClaudeProvider implements CliProviderInterface {
           )
           if (stderr) console.log(`[ClaudeProvider] stderr:\n${stderr}`)
 
-          if (code !== 0 && !stdout.trim()) {
+          if (code !== 0) {
             reject(
-              new Error(`Claude プロセスが exit code ${code} で終了した: ${stderr.slice(0, 500)}`),
+              new CliProviderError({
+                exitCode: code ?? 1,
+                stderr,
+                partialResult: stdout.trim() || undefined,
+              }),
             )
             return
           }

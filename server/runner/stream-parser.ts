@@ -74,6 +74,8 @@ interface ParsedResult {
 export class StreamParser {
   /** result チャンクの中身を保持 */
   private resultData: ParsedResult | null = null
+  /** レートリミットイベントを検知したか */
+  private rateLimitDetected = false
 
   /**
    * 1行分のJSONをパースして AgentStreamEvent を返す。
@@ -101,9 +103,15 @@ export class StreamParser {
 
       case 'user':
       case 'system':
-      case 'rate_limit_event':
-        // user / system / rate_limit_event は表示不要
         return null
+
+      case 'rate_limit_event':
+        this.rateLimitDetected = true
+        return {
+          type: 'error' as const,
+          errorType: 'infra' as const,
+          message: 'レートリミットに到達しました',
+        }
 
       default:
         console.warn(`[StreamParser] 不明なチャンクタイプ: ${type ?? 'undefined'}`)
@@ -114,6 +122,11 @@ export class StreamParser {
   /** result チャンクが来ていたらその内容を返す */
   getResult(): ParsedResult | null {
     return this.resultData
+  }
+
+  /** レートリミットイベントを検知したかどうか */
+  isRateLimited(): boolean {
+    return this.rateLimitDetected
   }
 
   // ── 内部ハンドラ ──

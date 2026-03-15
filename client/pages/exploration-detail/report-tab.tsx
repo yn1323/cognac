@@ -1,108 +1,15 @@
 // 探索詳細ページ — レポートタブ
-// 5ブロック固定表示 + 証跡画像 + AIでタスク化ボタン
-// Pencilデザイン準拠
+// MarkdownRenderer一発表示 + 証跡画像 + AIでタスク化ボタン
 
 import type { ExplorationArtifact, ExplorationSession } from '@cognac/shared'
-import type { LucideIcon } from 'lucide-react'
-import {
-  CircleArrowRight,
-  ImageIcon,
-  Lightbulb,
-  MessageSquare,
-  Search,
-  Sparkles,
-  TriangleAlert,
-} from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { ImageIcon, Sparkles } from 'lucide-react'
+import { useState } from 'react'
+import { MarkdownRenderer } from '@/components/markdown-renderer'
 import { TaskifyModal } from '@/components/taskify-modal'
 import { useToast } from '@/components/toast'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { useExplorationReport, useTaskifyExploration } from '@/hooks/use-explorations'
-
-// --- レポートmarkdownパーサー ---
-
-const REPORT_HEADINGS = [
-  '結論',
-  '調査内容',
-  'ディスカッション要約',
-  '課題',
-  '次アクション',
-] as const
-
-interface ParsedReport {
-  conclusion: string
-  investigation: string
-  discussionSummary: string
-  issues: string
-  nextActions: string
-}
-
-function parseReportMarkdown(markdown: string): ParsedReport {
-  const result: ParsedReport = {
-    conclusion: '',
-    investigation: '',
-    discussionSummary: '',
-    issues: '',
-    nextActions: '',
-  }
-
-  const keys: (keyof ParsedReport)[] = [
-    'conclusion',
-    'investigation',
-    'discussionSummary',
-    'issues',
-    'nextActions',
-  ]
-
-  for (let i = 0; i < REPORT_HEADINGS.length; i++) {
-    const heading = REPORT_HEADINGS[i]
-    const pattern = new RegExp(`^##\\s+${heading}\\s*$`, 'm')
-    const match = markdown.match(pattern)
-    if (!match || match.index === undefined) continue
-
-    const start = match.index + match[0].length
-    // 次の ## heading までの範囲を取得
-    const rest = markdown.slice(start)
-    const nextHeading = rest.match(/^##\s+/m)
-    const content =
-      nextHeading && nextHeading.index !== undefined ? rest.slice(0, nextHeading.index) : rest
-
-    result[keys[i]] = content.trim()
-  }
-
-  return result
-}
-
-// --- レポートブロックコンポーネント ---
-
-function ReportBlock({
-  icon: Icon,
-  iconColor,
-  title,
-  content,
-  size = 'md',
-}: {
-  icon: LucideIcon
-  iconColor: string
-  title: string
-  content: string
-  size?: 'md' | 'sm'
-}) {
-  const padding = size === 'sm' ? 'p-4' : 'p-5'
-  const titleSize = size === 'sm' ? 'text-[13px]' : 'text-sm'
-
-  return (
-    <Card className={`${padding} flex flex-col gap-3`}>
-      <div className="flex items-center gap-2">
-        <Icon className={`h-4 w-4 ${iconColor}`} />
-        <span className={`${titleSize} font-semibold text-foreground`}>{title}</span>
-      </div>
-      <div className="h-px bg-border" />
-      <p className="whitespace-pre-wrap text-[13px] leading-normal text-foreground">{content}</p>
-    </Card>
-  )
-}
 
 // --- 証跡画像セクション ---
 
@@ -157,50 +64,6 @@ function EvidenceSection({
   )
 }
 
-// --- レポートブロック群 ---
-
-function ReportBlocks({ report, size = 'md' }: { report: ParsedReport; size?: 'md' | 'sm' }) {
-  return (
-    <>
-      <ReportBlock
-        icon={Lightbulb}
-        iconColor="text-blue-600"
-        title="結論"
-        content={report.conclusion}
-        size={size}
-      />
-      <ReportBlock
-        icon={Search}
-        iconColor="text-blue-600"
-        title="調査内容"
-        content={report.investigation}
-        size={size}
-      />
-      <ReportBlock
-        icon={MessageSquare}
-        iconColor="text-blue-600"
-        title="ディスカッション要約"
-        content={report.discussionSummary}
-        size={size}
-      />
-      <ReportBlock
-        icon={TriangleAlert}
-        iconColor="text-amber-500"
-        title="課題"
-        content={report.issues}
-        size={size}
-      />
-      <ReportBlock
-        icon={CircleArrowRight}
-        iconColor="text-green-600"
-        title="次アクション"
-        content={report.nextActions}
-        size={size}
-      />
-    </>
-  )
-}
-
 // --- PC版 ---
 
 export function PCReportTab({ exploration }: { exploration: ExplorationSession }) {
@@ -213,11 +76,6 @@ export function PCReportTab({ exploration }: { exploration: ExplorationSession }
   const [taskifyModalOpen, setTaskifyModalOpen] = useState(false)
 
   const hasReport = exploration.status === 'completed' && exploration.final_report_markdown
-
-  const parsed = useMemo(
-    () => (reportData?.markdown ? parseReportMarkdown(reportData.markdown) : null),
-    [reportData?.markdown],
-  )
 
   if (!hasReport) {
     return (
@@ -242,15 +100,15 @@ export function PCReportTab({ exploration }: { exploration: ExplorationSession }
         </Button>
       </div>
 
-      {parsed ? (
-        <ReportBlocks report={parsed} />
-      ) : (
-        <Card className="p-5">
-          <p className="whitespace-pre-wrap text-[13px] leading-normal text-foreground">
-            {reportData?.markdown ?? exploration.final_report_markdown}
-          </p>
-        </Card>
-      )}
+      {/* レポート本体 */}
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto p-5">
+          <MarkdownRenderer
+            content={reportData?.markdown ?? exploration.final_report_markdown ?? ''}
+            variant="full"
+          />
+        </div>
+      </Card>
 
       <EvidenceSection images={reportData?.evidenceImages ?? []} />
 
@@ -288,11 +146,6 @@ export function SPReportTab({ exploration }: { exploration: ExplorationSession }
 
   const hasReport = exploration.status === 'completed' && exploration.final_report_markdown
 
-  const parsed = useMemo(
-    () => (reportData?.markdown ? parseReportMarkdown(reportData.markdown) : null),
-    [reportData?.markdown],
-  )
-
   if (!hasReport) {
     return (
       <div className="py-6 text-center text-xs text-muted-foreground">
@@ -315,15 +168,16 @@ export function SPReportTab({ exploration }: { exploration: ExplorationSession }
         </Button>
       </div>
 
-      {parsed ? (
-        <ReportBlocks report={parsed} size="sm" />
-      ) : (
-        <Card className="p-4">
-          <p className="whitespace-pre-wrap text-[13px] leading-normal text-foreground">
-            {reportData?.markdown ?? exploration.final_report_markdown}
-          </p>
-        </Card>
-      )}
+      {/* レポート本体 */}
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto p-4">
+          <MarkdownRenderer
+            content={reportData?.markdown ?? exploration.final_report_markdown ?? ''}
+            variant="full"
+            className="text-[13px]"
+          />
+        </div>
+      </Card>
 
       <EvidenceSection images={reportData?.evidenceImages ?? []} size="sm" />
 

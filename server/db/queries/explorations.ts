@@ -5,6 +5,7 @@ type UpdateExplorationData = Partial<{
   title: string
   request: string
   status: ExplorationStatus
+  discussion_depth: number
   final_report_markdown: string | null
   issue_count: number
   paused_reason: string | null
@@ -15,14 +16,14 @@ type UpdateExplorationData = Partial<{
 
 export function createExploration(
   db: CognacDb,
-  data: { title: string; request: string },
+  data: { title: string; request: string; discussion_depth?: number },
 ): ExplorationSession {
   const stmt = db.prepare(`
-    INSERT INTO exploration_sessions (title, request)
-    VALUES (@title, @request)
+    INSERT INTO exploration_sessions (title, request, discussion_depth)
+    VALUES (@title, @request, @discussion_depth)
   `)
 
-  const result = stmt.run(data)
+  const result = stmt.run({ ...data, discussion_depth: data.discussion_depth ?? 3 })
   return getExploration(db, Number(result.lastInsertRowid)) as ExplorationSession
 }
 
@@ -140,5 +141,6 @@ export function markExplorationStopped(
   return updateExploration(db, id, {
     status: 'stopped',
     paused_reason: reason,
+    completed_at: new Date().toISOString(),
   })
 }

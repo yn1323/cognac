@@ -5,8 +5,9 @@ import type { Task, TaskImage } from '@cognac/shared'
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
+import { useElapsedTime } from '@/hooks/use-elapsed-time'
 import { useTaskImages } from '@/hooks/use-tasks'
-import { formatDateTime } from '@/lib/format'
+import { formatDateTime, formatElapsedTime } from '@/lib/format'
 import { STATUS_CONFIG } from '@/lib/status-config'
 import { cn } from '@/lib/utils'
 
@@ -71,6 +72,8 @@ function TaskImagesSection({ taskId, size = 'md' }: { taskId: number; size?: 'md
 // --- PC版 ---
 
 export function PCOverviewTab({ task }: { task: Task }) {
+  const elapsedMs = useElapsedTime(task.started_at, task.completed_at)
+
   return (
     <div className="flex flex-col gap-6">
       {/* Task Information カード */}
@@ -89,6 +92,14 @@ export function PCOverviewTab({ task }: { task: Task }) {
             </span>
             <span className="text-[13px] text-foreground">{formatDateTime(task.created_at)}</span>
           </div>
+          {elapsedMs != null && (
+            <div className="flex items-center gap-2">
+              <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
+                所要時間
+              </span>
+              <span className="text-[13px] text-foreground">{formatElapsedTime(elapsedMs)}</span>
+            </div>
+          )}
           <div className="flex flex-col gap-2">
             <span className="text-[13px] font-medium text-muted-foreground">説明</span>
             <p className="whitespace-pre-wrap text-[13px] leading-[1.6] text-foreground">
@@ -107,6 +118,8 @@ export function PCOverviewTab({ task }: { task: Task }) {
 // --- SP版 ---
 
 export function SPOverviewTab({ task }: { task: Task }) {
+  const elapsedMs = useElapsedTime(task.started_at, task.completed_at)
+
   return (
     <div className="flex flex-col gap-4">
       {/* Task Information */}
@@ -119,6 +132,14 @@ export function SPOverviewTab({ task }: { task: Task }) {
             </span>
             <Badge variant={task.status}>{STATUS_CONFIG[task.status].label}</Badge>
           </div>
+          {elapsedMs != null && (
+            <div className="flex items-center gap-2">
+              <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
+                所要時間
+              </span>
+              <span className="text-xs text-foreground">{formatElapsedTime(elapsedMs)}</span>
+            </div>
+          )}
           <div className="flex flex-col gap-1">
             <span className="text-xs font-medium text-muted-foreground">説明</span>
             <p className="whitespace-pre-wrap text-xs leading-[1.5] text-foreground">

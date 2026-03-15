@@ -479,6 +479,7 @@ export function SettingsPage() {
           steps: ciSteps.filter((s) => s.name.trim() && s.command.trim()),
         },
         git: {
+          defaultBranch: settings?.git?.defaultBranch ?? 'main',
           commitLogLimit: commitLogLimitNum,
           commitMessageLanguage,
         },
@@ -492,8 +493,14 @@ export function SettingsPage() {
 
   const handleDeleteDatabase = () => {
     deleteDatabase.mutate(undefined, {
-      onSuccess: () => setShowDbDeleteConfirm(false),
-      onError: () => setShowDbDeleteConfirm(false),
+      onSuccess: () => {
+        setShowDbDeleteConfirm(false)
+        toast('データベースを再初期化しました', 'success')
+      },
+      onError: () => {
+        setShowDbDeleteConfirm(false)
+        toast('再初期化に失敗しました', 'error')
+      },
     })
   }
 

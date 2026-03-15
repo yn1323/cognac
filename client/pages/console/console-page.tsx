@@ -509,9 +509,10 @@ export function ConsolePage() {
   const { data: historicalLog } = useRunLog(viewRunId)
   const { log: sseLog, runExited, clearLog } = useConsoleSSE(activeRunId)
 
-  const logContent = activeRunId
-    ? (historicalLog?.content ?? '') + sseLog
-    : (historicalLog?.content ?? '')
+  const logContent =
+    activeRunId || runExited
+      ? (historicalLog?.content ?? '') + sseLog
+      : (historicalLog?.content ?? '')
 
   // run終了時にコマンド一覧とログを更新
   useEffect(() => {
@@ -520,6 +521,13 @@ export function ConsolePage() {
       queryClient.invalidateQueries({ queryKey: ['console-runs'] })
     }
   }, [runExited, queryClient])
+
+  // historicalLog の refetch が完了したら SSE バッファをクリア
+  useEffect(() => {
+    if (runExited && historicalLog?.content) {
+      clearLog()
+    }
+  }, [runExited, historicalLog?.content, clearLog])
 
   // コマンド選択切り替え時にSSEバッファをリセット
   useEffect(() => {

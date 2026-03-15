@@ -46,6 +46,23 @@ export function useGitFileDiff(path: string | null) {
   })
 }
 
+export function useGitPullRequest() {
+  return useQuery({
+    queryKey: ['git', 'pull-request'],
+    queryFn: () => api.git.pullRequestInfo(),
+    staleTime: 30_000,
+  })
+}
+
+export function useParentBranch(enabled = true) {
+  return useQuery({
+    queryKey: ['git', 'parent-branch'],
+    queryFn: api.git.parentBranch,
+    enabled,
+    staleTime: 30_000,
+  })
+}
+
 // --- Mutation hooks（操作） ---
 
 export function useDiscardAll() {
@@ -80,6 +97,7 @@ export function useCheckout() {
       qc.invalidateQueries({ queryKey: ['git', 'branches'] })
       qc.invalidateQueries({ queryKey: ['git', 'log'] })
       qc.invalidateQueries({ queryKey: ['git', 'remote-status'] })
+      qc.invalidateQueries({ queryKey: ['git', 'pull-request'] })
     },
   })
 }
@@ -147,6 +165,31 @@ export function useMerge() {
       qc.invalidateQueries({ queryKey: ['git', 'status'] })
       qc.invalidateQueries({ queryKey: ['git', 'log'] })
       qc.invalidateQueries({ queryKey: ['git', 'branches'] })
+    },
+  })
+}
+
+export function useRevert() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (hash: string) => api.git.revert(hash),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['git', 'log'] })
+      qc.invalidateQueries({ queryKey: ['git', 'status'] })
+      qc.invalidateQueries({ queryKey: ['git', 'remote-status'] })
+    },
+  })
+}
+
+export function useCreatePullRequest() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (baseBranch: string) => api.git.pullRequest(baseBranch),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['git', 'status'] })
+      qc.invalidateQueries({ queryKey: ['git', 'log'] })
+      qc.invalidateQueries({ queryKey: ['git', 'remote-status'] })
+      qc.invalidateQueries({ queryKey: ['git', 'pull-request'] })
     },
   })
 }

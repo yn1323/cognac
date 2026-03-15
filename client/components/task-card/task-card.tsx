@@ -6,7 +6,8 @@ import type { Task } from '@cognac/shared'
 import { Link } from 'react-router-dom'
 import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
-import { formatRelativeTime } from '@/lib/format'
+import { useElapsedTime } from '@/hooks/use-elapsed-time'
+import { formatDuration, formatRelativeTime } from '@/lib/format'
 import { RETRYABLE_STATUSES, STATUS_CONFIG } from '@/lib/status-config'
 import { cn } from '@/lib/utils'
 
@@ -27,6 +28,7 @@ export function TaskCard({ task, onRetry }: TaskCardProps) {
   const config = STATUS_CONFIG[task.status]
   const phaseText = getPhaseText(task)
   const borderClass = config.borderColor
+  const elapsedMs = useElapsedTime(task.started_at, task.completed_at)
 
   return (
     <Link to={`/tasks/${task.id}`} className="block">
@@ -62,6 +64,11 @@ export function TaskCard({ task, onRetry }: TaskCardProps) {
             <span className="text-xs leading-[1.3] text-muted-foreground">
               {formatRelativeTime(task.started_at ?? task.created_at)}
             </span>
+            {elapsedMs != null && (
+              <span className="text-xs leading-[1.3] text-muted-foreground">
+                · ⏱ {formatDuration(elapsedMs)}
+              </span>
+            )}
 
             {/* リトライ回数 */}
             {task.retry_count > 0 && task.status === 'stopped' && (

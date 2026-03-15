@@ -2,10 +2,11 @@
 // PC: オーバーレイ + センターモーダル / SP: フルスクリーンシート
 // デザイン design.pen PC=wLVYI, SP=qi7HK に準拠
 
-import type { PriorityLabel } from '@cognac/shared'
+import type { DiscussionDepth, PriorityLabel } from '@cognac/shared'
 import { Camera, Loader2, Upload, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { DiscussionDepthRadio } from '@/components/discussion-depth-radio'
 import { MobileModalFooter } from '@/components/mobile-modal-footer'
 import { useToast } from '@/components/toast'
 import { Button } from '@/components/ui/button'
@@ -27,6 +28,8 @@ interface FormProps {
   setDescription: (v: string) => void
   priority: PriorityLabel
   setPriority: (v: PriorityLabel) => void
+  discussionDepth: DiscussionDepth
+  setDiscussionDepth: (v: DiscussionDepth) => void
   files: File[]
   onFilesAdd: (newFiles: File[]) => void
   onFileRemove: (index: number) => void
@@ -45,6 +48,8 @@ function PCTaskModal({
   setDescription,
   priority,
   setPriority,
+  discussionDepth,
+  setDiscussionDepth,
   files,
   onFilesAdd,
   onFileRemove,
@@ -109,6 +114,12 @@ function PCTaskModal({
             <PriorityRadioGroup options={PC_PRIORITIES} value={priority} onChange={setPriority} />
           </div>
 
+          {/* Discussion Depth */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">議論ラウンド数</label>
+            <DiscussionDepthRadio value={discussionDepth} onChange={setDiscussionDepth} />
+          </div>
+
           {/* Images */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">画像（任意）</label>
@@ -152,6 +163,8 @@ function SPTaskModal({
   setDescription,
   priority,
   setPriority,
+  discussionDepth,
+  setDiscussionDepth,
   files,
   onFilesAdd,
   onFileRemove,
@@ -202,6 +215,12 @@ function SPTaskModal({
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">優先度</label>
           <PriorityRadioGroup options={SP_PRIORITIES} value={priority} onChange={setPriority} />
+        </div>
+
+        {/* Discussion Depth */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">議論ラウンド数</label>
+          <DiscussionDepthRadio value={discussionDepth} onChange={setDiscussionDepth} />
         </div>
 
         {/* Images */}
@@ -262,6 +281,7 @@ export function TaskModal() {
   const [titleError, setTitleError] = useState('')
   const [description, setDescription] = useState('')
   const [priority, setPriority] = useState<PriorityLabel>('Normal')
+  const [discussionDepth, setDiscussionDepth] = useState<DiscussionDepth>(3)
   const [files, setFiles] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -276,6 +296,7 @@ export function TaskModal() {
       setTitleError('')
       setDescription('')
       setPriority('Normal')
+      setDiscussionDepth(3)
       setFiles([])
       setIsSubmitting(false)
     }
@@ -314,6 +335,7 @@ export function TaskModal() {
         title,
         description: description || undefined,
         priority: PRIORITY_MAP[priority],
+        discussion_depth: discussionDepth,
       })
 
       // 2. 画像があればアップロード
@@ -338,6 +360,8 @@ export function TaskModal() {
     setDescription,
     priority,
     setPriority,
+    discussionDepth,
+    setDiscussionDepth,
     files,
     onFilesAdd,
     onFileRemove,

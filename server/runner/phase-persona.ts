@@ -2,9 +2,9 @@
 // タスクに最適な専門家チーム（2〜4名）を選出する
 
 import type { CognacConfig, Persona, PersonaSelection, Task, TaskEvent } from '@cognac/shared'
-import type { CognacDb } from '../db/types.js'
 import * as logQueries from '../db/queries/execution-logs.js'
 import * as personaQueries from '../db/queries/personas.js'
+import type { CognacDb } from '../db/types.js'
 import { getRepoStructure, getTaskHistory } from './context-cache.js'
 import { extractJson } from './json-parser.js'
 import { createProvider } from './providers/index.js'

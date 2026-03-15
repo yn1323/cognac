@@ -5,8 +5,8 @@ import { execSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
-import type { CognacDb } from '../db/types.js'
 import * as taskQueries from '../db/queries/tasks.js'
+import type { CognacDb } from '../db/types.js'
 
 const CONTEXT_DIR = path.resolve('.cognac', 'tmp', 'context')
 const REPO_STRUCTURE_FILE = path.join(CONTEXT_DIR, 'repo-structure.md')

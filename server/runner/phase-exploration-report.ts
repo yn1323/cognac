@@ -7,9 +7,9 @@ import type {
   ExplorationReportResult,
   ExplorationSession,
 } from '@cognac/shared'
-import type { CognacDb } from '../db/types.js'
 import * as artifactQueries from '../db/queries/exploration-artifacts.js'
 import * as logQueries from '../db/queries/exploration-logs.js'
+import type { CognacDb } from '../db/types.js'
 import { formatDiscussions } from './discussion-utils.js'
 import { parseExplorationReportResult } from './exploration-output.js'
 import { createProvider } from './providers/index.js'

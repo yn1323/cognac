@@ -2,8 +2,6 @@ import { randomUUID } from 'node:crypto'
 import { mkdir, rm, unlink, writeFile } from 'node:fs/promises'
 import { extname, resolve } from 'node:path'
 import type { ExplorationEvent, ExplorationStatus } from '@cognac/shared'
-import type { CognacDb } from '../db/types.js'
-import { transaction } from '../db/transaction.js'
 import { Hono } from 'hono'
 import { streamSSE } from 'hono/streaming'
 import { z } from 'zod'
@@ -15,6 +13,8 @@ import * as explorationLogQueries from '../db/queries/exploration-logs.js'
 import * as explorationPersonaQueries from '../db/queries/exploration-personas.js'
 import * as explorationTaskifyJobQueries from '../db/queries/exploration-taskify-jobs.js'
 import * as explorationQueries from '../db/queries/explorations.js'
+import { transaction } from '../db/transaction.js'
+import type { CognacDb } from '../db/types.js'
 import {
   getExplorationArtifactDir,
   getExplorationUploadDir,
@@ -28,6 +28,7 @@ const createExplorationSchema = z.object({
     .min(2, 'タイトルは2文字以上で入力してね')
     .max(200, 'タイトルは200文字以内にしてね'),
   request: z.string().min(2, '本文は2文字以上で入力してね'),
+  discussion_depth: z.union([z.literal(3), z.literal(5), z.literal(7)]).optional(),
 })
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024
@@ -112,6 +113,7 @@ const updateExplorationSchema = z.object({
     .max(200, 'タイトルは200文字以内にしてね')
     .optional(),
   request: z.string().min(2, '本文は2文字以上で入力してね').optional(),
+  discussion_depth: z.union([z.literal(3), z.literal(5), z.literal(7)]).optional(),
 })
 
 export function explorationsRouter(
@@ -130,9 +132,11 @@ export function explorationsRouter(
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await c.req.formData()
+      const rawDepth = formData.get('discussion_depth')
       const parsed = createExplorationSchema.safeParse({
         title: formData.get('title'),
         request: formData.get('request'),
+        discussion_depth: rawDepth ? Number(rawDepth) : undefined,
       })
       if (!parsed.success) {
         return c.json({ error: 'バリデーションエラー', details: parsed.error.issues }, 400)
@@ -289,6 +293,33 @@ export function explorationsRouter(
     return c.json({ ok: true })
   })
 
+  // 画像追加アップロード
+  app.post('/:id/images', async (c) => {
+    const id = Number(c.req.param('id'))
+    const exploration = explorationQueries.getExploration(db, id)
+    if (!exploration) return c.json({ error: '探索が見つからない' }, 404)
+
+    const editableStatuses: ExplorationStatus[] = ['pending', 'completed', 'paused', 'stopped']
+    if (!editableStatuses.includes(exploration.status)) {
+      return c.json({ error: '実行中の探索には画像を追加できない' }, 400)
+    }
+
+    const formData = await c.req.formData()
+    const files = formData.getAll('images').filter((v): v is File => v instanceof File)
+    if (files.length === 0) {
+      return c.json({ error: 'ファイルが選択されてない' }, 400)
+    }
+
+    try {
+      await saveExplorationImages(db, id, files)
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : String(error) }, 400)
+    }
+
+    const images = explorationImageQueries.listExplorationImages(db, id)
+    return c.json(images, 201)
+  })
+
   app.delete('/:id/images/:imageId', async (c) => {
     const explorationId = Number(c.req.param('id'))
     const imageId = Number(c.req.param('imageId'))
@@ -310,11 +341,19 @@ export function explorationsRouter(
     const id = Number(c.req.param('id'))
     const exploration = explorationQueries.getExploration(db, id)
     if (!exploration) return c.json({ error: '探索が見つからない' }, 404)
-    const cancelableStatuses: ExplorationStatus[] = ['discussing', 'executing', 'reviewing']
+    const cancelableStatuses: ExplorationStatus[] = [
+      'pending',
+      'discussing',
+      'executing',
+      'reviewing',
+    ]
     if (!cancelableStatuses.includes(exploration.status)) {
       return c.json({ error: 'キャンセルできないステータス' }, 400)
     }
-    canceller?.cancelCurrentExploration(id)
+    // pendingはプロセス未起動なのでキル不要
+    if (exploration.status !== 'pending') {
+      canceller?.cancelCurrentExploration(id)
+    }
     const updated = explorationQueries.updateExploration(db, id, {
       status: 'stopped',
       paused_reason: 'ユーザーによるキャンセル',

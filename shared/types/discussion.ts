@@ -22,3 +22,15 @@ export interface DiscussionRound {
   shouldContinue: boolean
   reason: string
 }
+
+// ディスカッション深度（議論ラウンド数）
+export type DiscussionDepth = 3 | 5 | 7
+
+// ディスカッション深度のラベル定義
+export const DISCUSSION_DEPTH_LABELS: Record<DiscussionDepth, string> = {
+  3: '標準',
+  5: 'じっくり',
+  7: '徹底',
+}
+
+export const DISCUSSION_DEPTH_OPTIONS: DiscussionDepth[] = [3, 5, 7]

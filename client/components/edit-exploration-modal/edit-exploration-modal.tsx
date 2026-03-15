@@ -1,0 +1,412 @@
+// 探索編集モーダル
+// PC: オーバーレイ + センターモーダル / SP: フルスクリーンシート
+// edit-task-modalのパターンを流用
+
+import type { ExplorationImage, ExplorationSession } from '@cognac/shared'
+import { Camera, Loader2, Upload, X } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { MobileModalFooter } from '@/components/mobile-modal-footer'
+import { useToast } from '@/components/toast'
+import { Button } from '@/components/ui/button'
+import { DropZone } from '@/components/ui/drop-zone'
+import { ImagePreviewList } from '@/components/ui/image-preview-list'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  useDeleteExplorationImage,
+  useExplorationImages,
+  useUpdateExploration,
+  useUploadExplorationImages,
+} from '@/hooks/use-explorations'
+import { useEscapeClose, useScrollLock } from '@/hooks/use-scroll-lock'
+import { validateTitle } from '@/lib/validation'
+
+// --- 型定義 ---
+
+interface EditExplorationModalProps {
+  exploration: ExplorationSession
+  open: boolean
+  onClose: () => void
+}
+
+interface FormProps {
+  title: string
+  setTitle: (v: string) => void
+  titleError: string
+  request: string
+  setRequest: (v: string) => void
+  requestError: string
+  existingImages: ExplorationImage[]
+  onDeleteImage: (imageId: number) => void
+  newFiles: File[]
+  onFilesAdd: (files: File[]) => void
+  onNewFileRemove: (index: number) => void
+  onClose: () => void
+  handleSubmit: (e: React.FormEvent) => void
+  isSubmitting: boolean
+}
+
+// --- 既存画像サムネイル ---
+
+function ExistingImageList({
+  images,
+  onDelete,
+}: {
+  images: ExplorationImage[]
+  onDelete: (imageId: number) => void
+}) {
+  if (images.length === 0) return null
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {images.map((img) => (
+        <div key={img.id} className="relative group">
+          <img
+            src={`/${img.file_path}`}
+            alt={img.original_name ?? ''}
+            className="h-16 w-16 rounded-md object-cover border border-border"
+          />
+          <button
+            type="button"
+            onClick={() => onDelete(img.id)}
+            className="absolute -top-1.5 -right-1.5 hidden group-hover:flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// --- PC版 ---
+
+function PCEditModal({
+  title,
+  setTitle,
+  titleError,
+  request,
+  setRequest,
+  requestError,
+  existingImages,
+  onDeleteImage,
+  newFiles,
+  onFilesAdd,
+  onNewFileRemove,
+  onClose,
+  handleSubmit,
+  isSubmitting,
+}: FormProps) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/38 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-140 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 rounded-xl bg-background shadow-2xl duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* ヘッダー */}
+        <div className="relative border-b border-border p-6 pb-5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-5 right-5 cursor-pointer rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <h2 className="text-xl font-semibold text-foreground">探索編集</h2>
+          <p className="mt-1 text-sm text-muted-foreground">探索の内容を編集します</p>
+        </div>
+
+        {/* フォーム */}
+        <form onSubmit={handleSubmit} className="space-y-5 p-6">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">タイトル</label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="例: ログイン画面のUI検証"
+              maxLength={200}
+              disabled={isSubmitting}
+            />
+            {titleError && <p className="text-xs text-destructive">{titleError}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">説明</label>
+            <Textarea
+              value={request}
+              onChange={(e) => setRequest(e.target.value)}
+              placeholder="探索の詳細を入力"
+              className="h-25 resize-none"
+              disabled={isSubmitting}
+            />
+            {requestError && <p className="text-xs text-destructive">{requestError}</p>}
+          </div>
+
+          {/* Images */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">画像</label>
+            <DropZone
+              onFilesAdd={onFilesAdd}
+              icon={Upload}
+              text="ドラッグ&ドロップまたはクリックで画像を追加"
+            />
+            <ExistingImageList images={existingImages} onDelete={onDeleteImage} />
+            <ImagePreviewList files={newFiles} onRemove={onNewFileRemove} />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+              キャンセル
+            </Button>
+            <Button type="submit" variant="primary" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  保存中...
+                </>
+              ) : (
+                '変更を保存'
+              )}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// --- SP版 ---
+
+function SPEditModal({
+  title,
+  setTitle,
+  titleError,
+  request,
+  setRequest,
+  requestError,
+  existingImages,
+  onDeleteImage,
+  newFiles,
+  onFilesAdd,
+  onNewFileRemove,
+  onClose,
+  handleSubmit,
+  isSubmitting,
+}: FormProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <h2 className="text-lg font-semibold text-foreground">探索編集</h2>
+        <button type="button" onClick={onClose} className="rounded-lg p-1 text-foreground">
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-5 overflow-y-auto p-4">
+        <p className="text-[13px] text-muted-foreground">探索の内容を編集します</p>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">タイトル</label>
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="例: ログイン画面のUI検証"
+            maxLength={200}
+            disabled={isSubmitting}
+          />
+          {titleError && <p className="text-xs text-destructive">{titleError}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">説明</label>
+          <Textarea
+            value={request}
+            onChange={(e) => setRequest(e.target.value)}
+            placeholder="探索の詳細を入力"
+            className="h-25 resize-none"
+            disabled={isSubmitting}
+          />
+          {requestError && <p className="text-xs text-destructive">{requestError}</p>}
+        </div>
+
+        {/* Images */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">画像</label>
+          <DropZone
+            onFilesAdd={onFilesAdd}
+            icon={Camera}
+            text="タップして画像を追加"
+            className="border-solid"
+          />
+          <ExistingImageList images={existingImages} onDelete={onDeleteImage} />
+          <ImagePreviewList files={newFiles} onRemove={onNewFileRemove} />
+        </div>
+
+        <MobileModalFooter>
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1 h-auto min-h-10 whitespace-normal px-4 py-2 text-center"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            className="flex-1 h-auto min-h-10 whitespace-normal bg-blue-600 px-4 py-2 text-center text-white hover:bg-blue-700"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              '変更を保存'
+            )}
+          </Button>
+        </MobileModalFooter>
+      </form>
+    </div>
+  )
+}
+
+// --- エクスポート ---
+
+export function EditExplorationModal({ exploration, open, onClose }: EditExplorationModalProps) {
+  const { toast } = useToast()
+  const updateExploration = useUpdateExploration()
+  const { data: existingImages = [] } = useExplorationImages(open ? exploration.id : NaN)
+  const uploadImages = useUploadExplorationImages()
+  const deleteImage = useDeleteExplorationImage()
+
+  const [title, setTitle] = useState('')
+  const [titleError, setTitleError] = useState('')
+  const [request, setRequest] = useState('')
+  const [requestError, setRequestError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [newFiles, setNewFiles] = useState<File[]>([])
+  const [deletedImageIds, setDeletedImageIds] = useState<Set<number>>(new Set())
+
+  // モーダルが開くたびにexplorationの値でリセット
+  useEffect(() => {
+    if (open) {
+      setTitle(exploration.title)
+      setTitleError('')
+      setRequest(exploration.request)
+      setRequestError('')
+      setIsSubmitting(false)
+      setNewFiles([])
+      setDeletedImageIds(new Set())
+    }
+  }, [open, exploration])
+
+  useScrollLock(open)
+  useEscapeClose(open, onClose)
+
+  const visibleExistingImages = useMemo(
+    () => existingImages.filter((img) => !deletedImageIds.has(img.id)),
+    [existingImages, deletedImageIds],
+  )
+
+  if (!open) return null
+
+  const handleTitleChange = (v: string) => {
+    setTitle(v)
+    if (titleError) setTitleError('')
+  }
+
+  const handleRequestChange = (v: string) => {
+    setRequest(v)
+    if (requestError) setRequestError('')
+  }
+
+  // 画像をローカルstateに溜める（Saveまでアップロードしない）
+  const onFilesAdd = (files: File[]) => {
+    setNewFiles((prev) => [...prev, ...files].slice(0, 5))
+  }
+
+  const onNewFileRemove = (index: number) => {
+    setNewFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  // 既存画像を削除マーク（Saveまで実際には削除しない）
+  const onDeleteImage = (imageId: number) => {
+    setDeletedImageIds((prev) => new Set(prev).add(imageId))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    const titleErr = validateTitle(title)
+    if (titleErr) {
+      setTitleError(titleErr)
+      return
+    }
+
+    if (request.trim().length < 2) {
+      setRequestError('説明は2文字以上で入力してね')
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      // 画像アップロード・削除・テキスト更新を並列実行
+      await Promise.all([
+        newFiles.length > 0
+          ? uploadImages.mutateAsync({ explorationId: exploration.id, files: newFiles })
+          : undefined,
+        deletedImageIds.size > 0
+          ? Promise.all(
+              Array.from(deletedImageIds).map((imageId) =>
+                deleteImage.mutateAsync({ explorationId: exploration.id, imageId }),
+              ),
+            )
+          : undefined,
+        updateExploration.mutateAsync({
+          id: exploration.id,
+          data: { title, request },
+        }),
+      ])
+      onClose()
+      toast('探索を更新しました', 'success')
+    } catch (err) {
+      console.error('探索更新に失敗:', err)
+      toast('探索の更新に失敗しました', 'error')
+      setIsSubmitting(false)
+    }
+  }
+
+  const formProps: FormProps = {
+    title,
+    setTitle: handleTitleChange,
+    titleError,
+    request,
+    setRequest: handleRequestChange,
+    requestError,
+    existingImages: visibleExistingImages,
+    onDeleteImage,
+    newFiles,
+    onFilesAdd,
+    onNewFileRemove,
+    onClose,
+    handleSubmit,
+    isSubmitting,
+  }
+
+  return (
+    <>
+      <div className="hidden md:block">
+        <PCEditModal {...formProps} />
+      </div>
+      <div className="md:hidden">
+        <SPEditModal {...formProps} />
+      </div>
+    </>
+  )
+}

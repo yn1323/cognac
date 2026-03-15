@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { mkdir, unlink, writeFile } from 'node:fs/promises'
 import { extname, resolve } from 'node:path'
-import type { CognacDb } from '../db/types.js'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import * as discussionQueries from '../db/queries/discussions.js'
@@ -11,6 +10,7 @@ import * as planQueries from '../db/queries/plans.js'
 import * as taskEventQueries from '../db/queries/task-events.js'
 import * as taskImageQueries from '../db/queries/task-images.js'
 import * as taskQueries from '../db/queries/tasks.js'
+import type { CognacDb } from '../db/types.js'
 
 // バリデーションスキーマ
 const createTaskSchema = z.object({
@@ -20,6 +20,7 @@ const createTaskSchema = z.object({
     .max(200, 'タイトルは200文字以内にしてね'),
   description: z.string().optional(),
   priority: z.number().int().min(0).max(3).optional(),
+  discussion_depth: z.union([z.literal(3), z.literal(5), z.literal(7)]).optional(),
 })
 
 const updateTaskSchema = z.object({
@@ -30,6 +31,7 @@ const updateTaskSchema = z.object({
     .optional(),
   description: z.string().optional(),
   priority: z.number().int().optional(),
+  discussion_depth: z.union([z.literal(3), z.literal(5), z.literal(7)]).optional(),
   queue_order: z.number().int().optional(),
 })
 
@@ -236,11 +238,13 @@ export function tasksRouter(db: CognacDb, canceller?: TaskCanceller) {
     if (!task) {
       return c.json({ error: 'タスクが見つからない' }, 404)
     }
-    if (!['discussing', 'executing', 'reviewing'].includes(task.status)) {
+    if (!['pending', 'discussing', 'executing', 'reviewing'].includes(task.status)) {
       return c.json({ error: 'キャンセルできないステータス' }, 400)
     }
-    // 実行中プロセスを停止
-    canceller?.cancelCurrentTask(id)
+    // pendingはプロセス未起動なのでキル不要
+    if (task.status !== 'pending') {
+      canceller?.cancelCurrentTask(id)
+    }
     const updated = taskQueries.updateTask(db, id, {
       status: 'stopped',
       paused_reason: 'ユーザーによるキャンセル',

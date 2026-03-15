@@ -2,7 +2,7 @@
 // デザインシステム: UgIg0 (Confirm Dialog)
 
 import { Loader2, TriangleAlert } from 'lucide-react'
-import { useCallback, useEffect, useId } from 'react'
+import { type ReactNode, useCallback, useEffect, useId } from 'react'
 import { Button } from '@/components/ui/button'
 import { useScrollLock } from '@/hooks/use-scroll-lock'
 
@@ -11,7 +11,7 @@ interface ConfirmDialogProps {
   onConfirm: () => void
   onCancel: () => void
   title: string
-  description?: string
+  description?: ReactNode
   confirmLabel?: string
   cancelLabel?: string
   variant?: 'default' | 'destructive'
@@ -74,12 +74,12 @@ export function ConfirmDialog({
             </h2>
           </div>
           {description && (
-            <p className="text-sm leading-[1.43] text-muted-foreground">{description}</p>
+            <div className="text-sm leading-[1.43] text-muted-foreground">{description}</div>
           )}
         </div>
 
-        {/* Actions — justify:end, gap:8, padding:[16,24,24,24] */}
-        <div className="flex justify-end gap-2 px-6 pb-6 pt-4">
+        {/* Actions — justify:end, gap:12, padding:[16,24,24,24] */}
+        <div className="flex justify-end gap-3 px-6 pb-6 pt-4">
           <Button variant="outline" onClick={onCancel} disabled={isLoading}>
             {cancelLabel}
           </Button>

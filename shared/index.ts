@@ -23,7 +23,8 @@ export type {
   CreateConsoleCommandInput,
   UpdateConsoleCommandInput,
 } from './types/console.js'
-export type { Discussion, DiscussionRound } from './types/discussion.js'
+export type { Discussion, DiscussionDepth, DiscussionRound } from './types/discussion.js'
+export { DISCUSSION_DEPTH_LABELS, DISCUSSION_DEPTH_OPTIONS } from './types/discussion.js'
 export type {
   AgentStreamEvent,
   CiCache,
@@ -71,10 +72,20 @@ export type {
   GitLogResponse,
   GitMergeRequest,
   GitMergeResponse,
+  GitParentBranchResponse,
+  GitPrInfo,
+  GitPrInfoResponse,
+  GitPullRequestRequest,
+  GitPullRequestResponse,
   GitPushResponse,
   GitRemoteStatus,
   GitRemoteStatusResponse,
+  GitRevertRequest,
+  GitRevertResponse,
   GitStatusResponse,
+  PrResult,
+  PrStep,
+  PrStepStatus,
 } from './types/git.js'
 export type { BaseLog, StoredEvent, StoredExplorationEvent, StoredTaskEvent } from './types/log.js'
 export type { Persona, PersonaSelection } from './types/persona.js'

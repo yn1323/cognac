@@ -10,17 +10,18 @@ import type { CognacDb } from '../types.js'
  */
 export function createTask(
   db: CognacDb,
-  data: { title: string; description?: string; priority?: number },
+  data: { title: string; description?: string; priority?: number; discussion_depth?: number },
 ): Task {
   const stmt = db.prepare(`
-    INSERT INTO tasks (title, description, priority)
-    VALUES (@title, @description, @priority)
+    INSERT INTO tasks (title, description, priority, discussion_depth)
+    VALUES (@title, @description, @priority, @discussion_depth)
   `)
 
   const result = stmt.run({
     title: data.title,
     description: data.description ?? null,
     priority: data.priority ?? 0,
+    discussion_depth: data.discussion_depth ?? 3,
   })
 
   // 作ったばかりのタスクを返す
@@ -57,6 +58,7 @@ export function updateTask(
     description: string
     status: string
     priority: number
+    discussion_depth: number
     queue_order: number
     branch_name: string | null
     retry_count: number
@@ -115,7 +117,7 @@ export function getNextPendingTask(db: CognacDb): Task | undefined {
  */
 export function stopPendingTasks(db: CognacDb): void {
   const stmt = db.prepare(`
-    UPDATE tasks SET status = 'stopped' WHERE status = 'pending'
+    UPDATE tasks SET status = 'stopped', completed_at = datetime('now') WHERE status = 'pending'
   `)
   stmt.run()
 }
@@ -127,7 +129,7 @@ export function stopPendingTasks(db: CognacDb): void {
 export function stopAllActiveTasks(db: CognacDb): number {
   const stmt = db.prepare(`
     UPDATE tasks
-    SET status = 'stopped', paused_reason = 'ユーザーによる全停止'
+    SET status = 'stopped', paused_reason = 'ユーザーによる全停止', completed_at = datetime('now')
     WHERE status IN ('pending', 'discussing', 'executing', 'reviewing')
   `)
   const result = stmt.run()

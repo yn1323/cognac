@@ -49,6 +49,8 @@ export class CodexStreamParser {
   private threadId = ''
   private lastAgentMessage = ''
   private totalUsage = { inputTokens: 0, outputTokens: 0 }
+  /** レートリミットイベントを検知したか */
+  private rateLimitDetected = false
 
   /**
    * 1行分のJSONをパースして AgentStreamEvent を返す。
@@ -80,16 +82,28 @@ export class CodexStreamParser {
         }
         return null
 
-      case 'turn.failed':
+      case 'turn.failed': {
+        const failMessage = event.error?.message ?? 'Codex CLIでターン失敗'
+        if (/rate.limit|429|too many requests/i.test(failMessage)) {
+          this.rateLimitDetected = true
+        }
         return {
           type: 'error',
           errorType: 'infra',
-          message: event.error?.message ?? 'Codex CLIでターン失敗',
+          message: failMessage,
         }
+      }
 
       case 'error':
         console.warn(`[CodexStreamParser] エラーイベント: ${event.message}`)
-        return null
+        if (/rate.limit|429|too many requests/i.test(event.message ?? '')) {
+          this.rateLimitDetected = true
+        }
+        return {
+          type: 'error' as const,
+          errorType: 'infra' as const,
+          message: event.message ?? 'Codex CLIでエラー発生',
+        }
 
       case 'item.started':
         return this.handleItemStarted(event.item)
@@ -109,6 +123,11 @@ export class CodexStreamParser {
       sessionId: this.threadId,
       usage: { ...this.totalUsage },
     }
+  }
+
+  /** レートリミットイベントを検知したかどうか */
+  isRateLimited(): boolean {
+    return this.rateLimitDetected
   }
 
   // ── 内部ハンドラ ──
