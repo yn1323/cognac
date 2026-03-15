@@ -4,6 +4,7 @@
 import type { GitBranch, GitPullRequestResponse, PrStepStatus } from '@cognac/shared'
 import {
   AlertCircle,
+  ArrowDown,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -119,17 +120,17 @@ function BaseBranchSelector({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center gap-1.5 rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground hover:bg-muted/80"
+        className="flex w-full items-center justify-between rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground hover:bg-accent"
       >
         {selectedBranch}
-        <ChevronDown className="h-3 w-3 text-muted-foreground" />
+        <ChevronDown className="ml-auto h-4 w-4 text-muted-foreground" />
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full z-10 mt-1 w-64 rounded-md border border-[#e5e5e5] bg-white shadow-lg">
+        <div className="absolute left-0 top-full z-10 mt-1 w-full rounded-md border border-border bg-popover shadow-lg">
           {/* 検索インプット */}
-          <div className="border-b border-[#e5e5e5] p-2">
-            <div className="flex items-center gap-2 rounded-md border border-[#e5e5e5] px-2 py-1.5">
+          <div className="border-b border-border p-2">
+            <div className="flex items-center gap-2 rounded-md border border-border px-2 py-1.5">
               <Search className="h-3.5 w-3.5 text-muted-foreground" />
               <input
                 ref={inputRef}
@@ -154,14 +155,14 @@ function BaseBranchSelector({
               className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted cursor-pointer"
             >
               <span className="flex-1 truncate">{name}</span>
-              {selectedBranch === name && <Check className="h-4 w-4 text-[#2563eb]" />}
+              {selectedBranch === name && <Check className="h-4 w-4 text-primary" />}
             </button>
           ))}
 
           {/* 区切り線 + 全ブランチ */}
           {filteredBranches.length > 0 && (
             <>
-              <div className="border-t border-[#e5e5e5] px-3 py-1.5">
+              <div className="border-t border-border px-3 py-1.5">
                 <span className="text-xs text-muted-foreground">すべてのブランチ</span>
               </div>
               <div className="max-h-40 overflow-y-auto">
@@ -173,7 +174,7 @@ function BaseBranchSelector({
                     className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted cursor-pointer"
                   >
                     <span className="flex-1 truncate">{name}</span>
-                    {selectedBranch === name && <Check className="h-4 w-4 text-[#2563eb]" />}
+                    {selectedBranch === name && <Check className="h-4 w-4 text-primary" />}
                   </button>
                 ))}
               </div>
@@ -282,12 +283,12 @@ export function PrModal({
       <div
         role="dialog"
         aria-modal="true"
-        className="relative mx-4 w-full max-w-[480px] rounded-lg border border-[#e5e5e5] bg-white shadow-[0_20px_20px_#0000001a,0_10px_10px_#0000000a]"
+        className="relative mx-4 w-full max-w-[480px] rounded-lg border border-border bg-card shadow-[0_20px_20px_#0000001a,0_10px_10px_#0000000a]"
       >
         {/* ヘッダー */}
         <div className="flex items-center gap-3 p-6 pb-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#eff6ff]">
-            <GitPullRequest className="h-5 w-5 text-[#2563eb]" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+            <GitPullRequest className="h-5 w-5 text-primary" />
           </div>
           <h2 className="text-lg font-semibold text-foreground">Pull Request 作成</h2>
         </div>
@@ -295,13 +296,34 @@ export function PrModal({
         {/* フェーズ1: 確認 */}
         {isConfirm && (
           <>
-            <div className="px-6 pb-4">
+            <div className="flex flex-col gap-4 px-6 pb-4">
+              {/* 説明テキスト */}
               <p className="text-sm leading-relaxed text-muted-foreground">
-                現在のブランチ{' '}
-                <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">
+                PRを作成します。未コミットの変更があればAIコミット → Push →
+                PR作成/更新まで全自動で行います。
+              </p>
+
+              {/* ソースブランチ */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-muted-foreground">ソースブランチ</label>
+                <code className="w-full rounded-md border border-input bg-muted px-3 py-2 text-sm font-mono">
                   {currentBranch}
-                </code>{' '}
-                →{' '}
+                </code>
+              </div>
+
+              {/* 矢印 + 要約 */}
+              <div className="flex w-full items-center justify-center gap-2">
+                <ArrowDown className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">
+                  {currentBranch} → {selectedBranch} へPR作成
+                </span>
+              </div>
+
+              {/* マージ先ブランチ */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-muted-foreground">
+                  マージ先ブランチ
+                </label>
                 <BaseBranchSelector
                   selectedBranch={selectedBranch}
                   onSelect={setSelectedBranch}
@@ -309,12 +331,8 @@ export function PrModal({
                   baseBranch={baseBranch}
                   defaultBranch={defaultBranch}
                   currentBranch={currentBranch}
-                />{' '}
-                へのPRを作成します。
-              </p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                未コミットの変更があればAIコミット → Push → PR作成/更新まで全自動で行います。
-              </p>
+                />
+              </div>
             </div>
             <div className="flex justify-end gap-3 px-6 pb-6">
               <Button variant="outline" onClick={onClose}>
@@ -373,7 +391,7 @@ export function PrModal({
                   </div>
 
                   {/* PRカード */}
-                  <div className="rounded-md border border-[#e5e5e5] p-4">
+                  <div className="rounded-md border border-border p-4">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex flex-col gap-1">
                         <span className="text-xs font-medium text-muted-foreground">
@@ -388,7 +406,7 @@ export function PrModal({
                           href={result.pr.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex shrink-0 items-center gap-1 rounded-md border border-[#e5e5e5] px-2 py-1 text-xs text-[#2563eb] hover:bg-[#eff6ff]"
+                          className="flex shrink-0 items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-primary hover:bg-primary/10"
                         >
                           開く
                           <ExternalLink className="h-3 w-3" />
