@@ -23,7 +23,8 @@ export type {
   CreateConsoleCommandInput,
   UpdateConsoleCommandInput,
 } from './types/console.js'
-export type { Discussion, DiscussionRound } from './types/discussion.js'
+export type { Discussion, DiscussionDepth, DiscussionRound } from './types/discussion.js'
+export { DISCUSSION_DEPTH_LABELS, DISCUSSION_DEPTH_OPTIONS } from './types/discussion.js'
 export type {
   AgentStreamEvent,
   CiCache,

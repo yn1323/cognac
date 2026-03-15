@@ -10,17 +10,18 @@ import type { CognacDb } from '../types.js'
  */
 export function createTask(
   db: CognacDb,
-  data: { title: string; description?: string; priority?: number },
+  data: { title: string; description?: string; priority?: number; discussion_depth?: number },
 ): Task {
   const stmt = db.prepare(`
-    INSERT INTO tasks (title, description, priority)
-    VALUES (@title, @description, @priority)
+    INSERT INTO tasks (title, description, priority, discussion_depth)
+    VALUES (@title, @description, @priority, @discussion_depth)
   `)
 
   const result = stmt.run({
     title: data.title,
     description: data.description ?? null,
     priority: data.priority ?? 0,
+    discussion_depth: data.discussion_depth ?? 3,
   })
 
   // 作ったばかりのタスクを返す
@@ -57,6 +58,7 @@ export function updateTask(
     description: string
     status: string
     priority: number
+    discussion_depth: number
     queue_order: number
     branch_name: string | null
     retry_count: number

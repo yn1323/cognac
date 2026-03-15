@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   status TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'discussing', 'executing', 'reviewing', 'completed', 'paused', 'stopped')),
   priority INTEGER NOT NULL DEFAULT 0,
+  discussion_depth INTEGER NOT NULL DEFAULT 3,
   queue_order INTEGER,
   branch_name TEXT,
   retry_count INTEGER NOT NULL DEFAULT 0,
@@ -120,6 +121,7 @@ CREATE TABLE IF NOT EXISTS exploration_sessions (
     CHECK (status IN ('pending', 'discussing', 'executing', 'reviewing', 'completed', 'paused', 'stopped')),
   final_report_markdown TEXT,
   issue_count INTEGER NOT NULL DEFAULT 0,
+  discussion_depth INTEGER NOT NULL DEFAULT 3,
   paused_reason TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),

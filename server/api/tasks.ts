@@ -20,6 +20,7 @@ const createTaskSchema = z.object({
     .max(200, 'タイトルは200文字以内にしてね'),
   description: z.string().optional(),
   priority: z.number().int().min(0).max(3).optional(),
+  discussion_depth: z.union([z.literal(3), z.literal(5), z.literal(7)]).optional(),
 })
 
 const updateTaskSchema = z.object({
@@ -30,6 +31,7 @@ const updateTaskSchema = z.object({
     .optional(),
   description: z.string().optional(),
   priority: z.number().int().optional(),
+  discussion_depth: z.union([z.literal(3), z.literal(5), z.literal(7)]).optional(),
   queue_order: z.number().int().optional(),
 })
 

@@ -19,6 +19,7 @@ const mockExploration: ExplorationSession = {
   request: 'トップ画面の表示速度とボトルネックを調査する',
   status: 'pending',
   final_report_markdown: null,
+  discussion_depth: 3,
   issue_count: 0,
   paused_reason: null,
   created_at: '2026-03-09T09:00:00.000Z',

@@ -15,6 +15,7 @@ export interface Task {
   description: string | null
   status: TaskStatus
   priority: number
+  discussion_depth: number
   queue_order: number | null
   branch_name: string | null
   retry_count: number
@@ -35,6 +36,7 @@ export interface CreateTaskInput {
   title: string
   description?: string
   priority?: number // 0=Low, 1=Normal, 2=High, 3=Urgent
+  discussion_depth?: number
 }
 
 // タスク更新の入力
@@ -42,6 +44,7 @@ export interface UpdateTaskInput {
   title?: string
   description?: string
   priority?: number
+  discussion_depth?: number
   queue_order?: number
 }
 

@@ -28,6 +28,7 @@ const createExplorationSchema = z.object({
     .min(2, 'タイトルは2文字以上で入力してね')
     .max(200, 'タイトルは200文字以内にしてね'),
   request: z.string().min(2, '本文は2文字以上で入力してね'),
+  discussion_depth: z.union([z.literal(3), z.literal(5), z.literal(7)]).optional(),
 })
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024
@@ -112,6 +113,7 @@ const updateExplorationSchema = z.object({
     .max(200, 'タイトルは200文字以内にしてね')
     .optional(),
   request: z.string().min(2, '本文は2文字以上で入力してね').optional(),
+  discussion_depth: z.union([z.literal(3), z.literal(5), z.literal(7)]).optional(),
 })
 
 export function explorationsRouter(
@@ -130,9 +132,11 @@ export function explorationsRouter(
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await c.req.formData()
+      const rawDepth = formData.get('discussion_depth')
       const parsed = createExplorationSchema.safeParse({
         title: formData.get('title'),
         request: formData.get('request'),
+        discussion_depth: rawDepth ? Number(rawDepth) : undefined,
       })
       if (!parsed.success) {
         return c.json({ error: 'バリデーションエラー', details: parsed.error.issues }, 400)
