@@ -502,17 +502,6 @@ export function getParentBranch(
   return { branch: bestBranch, estimated: found }
 }
 
-// execSyncのエラーからgitのstderrメッセージだけ取り出すヘルパー
-export function extractGitError(err: unknown): string {
-  if (err && typeof err === 'object' && 'stderr' in err) {
-    const stderr = (err as { stderr: string | Buffer }).stderr
-    const text = typeof stderr === 'string' ? stderr : (stderr?.toString() ?? '')
-    if (text.trim()) return text.trim()
-  }
-  if (err instanceof Error) return err.message
-  return String(err)
-}
-
 // コミットを実行してCommitResultを返す
 export function commitWithMessage(cwd: string, message: string): CommitResult {
   // spawnSyncで引数配列として渡し、シェル解釈を回避（Win/Mac両対応）
