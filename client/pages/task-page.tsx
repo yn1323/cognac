@@ -29,6 +29,7 @@ import { useCancelTask, useDeleteTask, useRetryTask, useTask } from '@/hooks/use
 import { NAV_MAP } from '@/lib/constants'
 import {
   ACTIVE_STATUSES,
+  CANCELABLE_STATUSES,
   DELETABLE_STATUSES,
   RETRYABLE_STATUSES,
   STATUS_CONFIG,
@@ -152,7 +153,7 @@ function PCTaskDetail({
 
             {/* アクションボタン */}
             <div className="flex items-center gap-2">
-              {ACTIVE_STATUSES.has(task.status) ? (
+              {CANCELABLE_STATUSES.has(task.status) ? (
                 <Button
                   variant="destructive"
                   size="sm"
@@ -247,7 +248,7 @@ function SPTaskDetail({
             onOpenChange={setMenuOpen}
             align="right"
           >
-            {ACTIVE_STATUSES.has(task.status) ? (
+            {CANCELABLE_STATUSES.has(task.status) ? (
               <DropdownMenuItem
                 onClick={() => {
                   setMenuOpen(false)

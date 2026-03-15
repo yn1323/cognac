@@ -150,6 +150,17 @@ export function useExplorationReport(explorationId: number, enabled = true) {
   })
 }
 
+export function useUploadExplorationImages() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ explorationId, files }: { explorationId: number; files: File[] }) =>
+      api.explorations.uploadImages(explorationId, files),
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: ['explorations', vars.explorationId, 'images'] })
+    },
+  })
+}
+
 export function useDeleteExplorationImage() {
   const qc = useQueryClient()
   return useMutation({

@@ -190,6 +190,18 @@ export const api = {
     delete: (id: number) => fetchJson<{ ok: boolean }>(`/explorations/${id}`, { method: 'DELETE' }),
     deleteImage: (id: number, imageId: number) =>
       fetchJson<{ ok: boolean }>(`/explorations/${id}/images/${imageId}`, { method: 'DELETE' }),
+    uploadImages: async (id: number, files: File[]): Promise<ExplorationImage[]> => {
+      const formData = new FormData()
+      for (const file of files) {
+        formData.append('images', file)
+      }
+      const res = await fetch(`${BASE}/explorations/${id}/images`, {
+        method: 'POST',
+        body: formData,
+      })
+      await throwIfNotOk(res)
+      return res.json() as Promise<ExplorationImage[]>
+    },
   },
   git: {
     status: () => fetchJson<GitStatusResponse>('/git/status'),

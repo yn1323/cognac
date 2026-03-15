@@ -31,6 +31,14 @@ export const RETRYABLE_STATUSES = new Set<TaskStatus>(['stopped', 'paused'])
 // アクティブ（実行中）なステータス
 export const ACTIVE_STATUSES = new Set<TaskStatus>(['discussing', 'executing', 'reviewing'])
 
+// キャンセル可能なステータス
+export const CANCELABLE_STATUSES = new Set<TaskStatus>([
+  'pending',
+  'discussing',
+  'executing',
+  'reviewing',
+])
+
 // フェーズの日本語ラベル
 export const PHASE_LABELS: Record<Phase, string> = {
   persona: 'ペルソナ',

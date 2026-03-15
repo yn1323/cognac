@@ -236,11 +236,13 @@ export function tasksRouter(db: CognacDb, canceller?: TaskCanceller) {
     if (!task) {
       return c.json({ error: 'タスクが見つからない' }, 404)
     }
-    if (!['discussing', 'executing', 'reviewing'].includes(task.status)) {
+    if (!['pending', 'discussing', 'executing', 'reviewing'].includes(task.status)) {
       return c.json({ error: 'キャンセルできないステータス' }, 400)
     }
-    // 実行中プロセスを停止
-    canceller?.cancelCurrentTask(id)
+    // pendingはプロセス未起動なのでキル不要
+    if (task.status !== 'pending') {
+      canceller?.cancelCurrentTask(id)
+    }
     const updated = taskQueries.updateTask(db, id, {
       status: 'stopped',
       paused_reason: 'ユーザーによるキャンセル',

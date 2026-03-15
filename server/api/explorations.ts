@@ -289,6 +289,33 @@ export function explorationsRouter(
     return c.json({ ok: true })
   })
 
+  // 画像追加アップロード
+  app.post('/:id/images', async (c) => {
+    const id = Number(c.req.param('id'))
+    const exploration = explorationQueries.getExploration(db, id)
+    if (!exploration) return c.json({ error: '探索が見つからない' }, 404)
+
+    const editableStatuses: ExplorationStatus[] = ['pending', 'completed', 'paused', 'stopped']
+    if (!editableStatuses.includes(exploration.status)) {
+      return c.json({ error: '実行中の探索には画像を追加できない' }, 400)
+    }
+
+    const formData = await c.req.formData()
+    const files = formData.getAll('images').filter((v): v is File => v instanceof File)
+    if (files.length === 0) {
+      return c.json({ error: 'ファイルが選択されてない' }, 400)
+    }
+
+    try {
+      await saveExplorationImages(db, id, files)
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : String(error) }, 400)
+    }
+
+    const images = explorationImageQueries.listExplorationImages(db, id)
+    return c.json(images, 201)
+  })
+
   app.delete('/:id/images/:imageId', async (c) => {
     const explorationId = Number(c.req.param('id'))
     const imageId = Number(c.req.param('imageId'))
@@ -310,11 +337,19 @@ export function explorationsRouter(
     const id = Number(c.req.param('id'))
     const exploration = explorationQueries.getExploration(db, id)
     if (!exploration) return c.json({ error: '探索が見つからない' }, 404)
-    const cancelableStatuses: ExplorationStatus[] = ['discussing', 'executing', 'reviewing']
+    const cancelableStatuses: ExplorationStatus[] = [
+      'pending',
+      'discussing',
+      'executing',
+      'reviewing',
+    ]
     if (!cancelableStatuses.includes(exploration.status)) {
       return c.json({ error: 'キャンセルできないステータス' }, 400)
     }
-    canceller?.cancelCurrentExploration(id)
+    // pendingはプロセス未起動なのでキル不要
+    if (exploration.status !== 'pending') {
+      canceller?.cancelCurrentExploration(id)
+    }
     const updated = explorationQueries.updateExploration(db, id, {
       status: 'stopped',
       paused_reason: 'ユーザーによるキャンセル',

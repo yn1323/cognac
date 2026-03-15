@@ -20,9 +20,18 @@ export const EXPLORATION_RETRYABLE_STATUSES = new Set<ExplorationStatus>(['pause
 
 // キャンセル可能なステータス
 export const EXPLORATION_CANCELABLE_STATUSES = new Set<ExplorationStatus>([
+  'pending',
   'discussing',
   'executing',
   'reviewing',
+])
+
+// 編集可能なステータス（サーバー側と一致）
+export const EXPLORATION_EDITABLE_STATUSES = new Set<ExplorationStatus>([
+  'pending',
+  'completed',
+  'paused',
+  'stopped',
 ])
 
 // アクティブ（実行中）なステータス
