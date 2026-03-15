@@ -2,7 +2,7 @@
 // PC: オーバーレイ + センターモーダル / SP: フルスクリーンシート
 // デザイン design.pen PC=wLVYI, SP=qi7HK に準拠
 
-import type { DiscussionDepth, PriorityLabel } from '@cognac/shared'
+import type { DiscussionDepth } from '@cognac/shared'
 import { Camera, Loader2, Upload, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -13,11 +13,9 @@ import { Button } from '@/components/ui/button'
 import { DropZone } from '@/components/ui/drop-zone'
 import { ImagePreviewList } from '@/components/ui/image-preview-list'
 import { Input } from '@/components/ui/input'
-import { PriorityRadioGroup } from '@/components/ui/priority-radio-group'
 import { Textarea } from '@/components/ui/textarea'
 import { useEscapeClose, useScrollLock } from '@/hooks/use-scroll-lock'
 import { useCreateTask, useUploadTaskImages } from '@/hooks/use-tasks'
-import { PC_PRIORITIES, PRIORITY_MAP, SP_PRIORITIES } from '@/lib/constants'
 import { validateTitle } from '@/lib/validation'
 
 interface FormProps {
@@ -26,8 +24,6 @@ interface FormProps {
   titleError: string
   description: string
   setDescription: (v: string) => void
-  priority: PriorityLabel
-  setPriority: (v: PriorityLabel) => void
   discussionDepth: DiscussionDepth
   setDiscussionDepth: (v: DiscussionDepth) => void
   files: File[]
@@ -46,8 +42,6 @@ function PCTaskModal({
   titleError,
   description,
   setDescription,
-  priority,
-  setPriority,
   discussionDepth,
   setDiscussionDepth,
   files,
@@ -108,12 +102,6 @@ function PCTaskModal({
             />
           </div>
 
-          {/* Priority */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">優先度</label>
-            <PriorityRadioGroup options={PC_PRIORITIES} value={priority} onChange={setPriority} />
-          </div>
-
           {/* Discussion Depth */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">議論ラウンド数</label>
@@ -161,8 +149,6 @@ function SPTaskModal({
   titleError,
   description,
   setDescription,
-  priority,
-  setPriority,
   discussionDepth,
   setDiscussionDepth,
   files,
@@ -209,12 +195,6 @@ function SPTaskModal({
             className="h-25 resize-none"
             disabled={isSubmitting}
           />
-        </div>
-
-        {/* Priority (SP: 3択) */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">優先度</label>
-          <PriorityRadioGroup options={SP_PRIORITIES} value={priority} onChange={setPriority} />
         </div>
 
         {/* Discussion Depth */}
@@ -280,7 +260,6 @@ export function TaskModal() {
   const [title, setTitle] = useState('')
   const [titleError, setTitleError] = useState('')
   const [description, setDescription] = useState('')
-  const [priority, setPriority] = useState<PriorityLabel>('Normal')
   const [discussionDepth, setDiscussionDepth] = useState<DiscussionDepth>(3)
   const [files, setFiles] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -295,7 +274,6 @@ export function TaskModal() {
       setTitle('')
       setTitleError('')
       setDescription('')
-      setPriority('Normal')
       setDiscussionDepth(3)
       setFiles([])
       setIsSubmitting(false)
@@ -334,7 +312,6 @@ export function TaskModal() {
       const task = await createTask.mutateAsync({
         title,
         description: description || undefined,
-        priority: PRIORITY_MAP[priority],
         discussion_depth: discussionDepth,
       })
 
@@ -358,8 +335,6 @@ export function TaskModal() {
     titleError,
     description,
     setDescription,
-    priority,
-    setPriority,
     discussionDepth,
     setDiscussionDepth,
     files,

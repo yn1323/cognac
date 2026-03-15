@@ -2,7 +2,7 @@
 // PC: オーバーレイ + センターモーダル / SP: フルスクリーンシート
 // task-modalのパターンを流用
 
-import type { PriorityLabel, Task, TaskImage } from '@cognac/shared'
+import type { Task, TaskImage } from '@cognac/shared'
 import { Camera, Loader2, Upload, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { MobileModalFooter } from '@/components/mobile-modal-footer'
@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button'
 import { DropZone } from '@/components/ui/drop-zone'
 import { ImagePreviewList } from '@/components/ui/image-preview-list'
 import { Input } from '@/components/ui/input'
-import { PriorityRadioGroup } from '@/components/ui/priority-radio-group'
 import { Textarea } from '@/components/ui/textarea'
 import { useEscapeClose, useScrollLock } from '@/hooks/use-scroll-lock'
 import {
@@ -20,7 +19,6 @@ import {
   useUpdateTask,
   useUploadTaskImages,
 } from '@/hooks/use-tasks'
-import { PC_PRIORITIES, PRIORITY_MAP, PRIORITY_REVERSE, SP_PRIORITIES } from '@/lib/constants'
 import { validateTitle } from '@/lib/validation'
 
 // --- 型定義 ---
@@ -37,8 +35,6 @@ interface FormProps {
   titleError: string
   description: string
   setDescription: (v: string) => void
-  priority: PriorityLabel
-  setPriority: (v: PriorityLabel) => void
   existingImages: TaskImage[]
   onDeleteImage: (imageId: number) => void
   newFiles: File[]
@@ -90,8 +86,6 @@ function PCEditModal({
   titleError,
   description,
   setDescription,
-  priority,
-  setPriority,
   existingImages,
   onDeleteImage,
   newFiles,
@@ -148,11 +142,6 @@ function PCEditModal({
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">優先度</label>
-            <PriorityRadioGroup options={PC_PRIORITIES} value={priority} onChange={setPriority} />
-          </div>
-
           {/* Images */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">画像</label>
@@ -194,8 +183,6 @@ function SPEditModal({
   titleError,
   description,
   setDescription,
-  priority,
-  setPriority,
   existingImages,
   onDeleteImage,
   newFiles,
@@ -238,11 +225,6 @@ function SPEditModal({
             className="h-25 resize-none"
             disabled={isSubmitting}
           />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">優先度</label>
-          <PriorityRadioGroup options={SP_PRIORITIES} value={priority} onChange={setPriority} />
         </div>
 
         {/* Images */}
@@ -300,7 +282,6 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
   const [title, setTitle] = useState('')
   const [titleError, setTitleError] = useState('')
   const [description, setDescription] = useState('')
-  const [priority, setPriority] = useState<PriorityLabel>('Normal')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [newFiles, setNewFiles] = useState<File[]>([])
   const [deletedImageIds, setDeletedImageIds] = useState<Set<number>>(new Set())
@@ -311,7 +292,6 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
       setTitle(task.title)
       setTitleError('')
       setDescription(task.description ?? '')
-      setPriority(PRIORITY_REVERSE[task.priority] ?? 'Normal')
       setIsSubmitting(false)
       setNewFiles([])
       setDeletedImageIds(new Set())
@@ -374,7 +354,6 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
           data: {
             title,
             description: description || undefined,
-            priority: PRIORITY_MAP[priority],
           },
         }),
       ])
@@ -393,8 +372,6 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
     titleError,
     description,
     setDescription,
-    priority,
-    setPriority,
     existingImages: visibleExistingImages,
     onDeleteImage,
     newFiles,

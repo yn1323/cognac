@@ -130,7 +130,6 @@ export interface ExplorationTaskifyResult {
   tasks: {
     title: string
     description: string
-    priority: number
     selectedImageIds: number[]
     sourceFindingTitles: string[]
   }[]

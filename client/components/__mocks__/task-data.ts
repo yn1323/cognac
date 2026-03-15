@@ -20,7 +20,6 @@ export function createMockTask(overrides: Partial<Task> = {}): Task {
     title: '認証機能の実装',
     description: 'JWT認証を実装して、ログイン・ログアウトのAPIを追加する',
     status: 'pending',
-    priority: 1,
     discussion_depth: 3,
     queue_order: 1,
     branch_name: null,

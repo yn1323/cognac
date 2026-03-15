@@ -477,7 +477,6 @@ Phase 2-A（ペルソナ選定）から全部やり直す。
 | カラム | 説明 |
 |--------|------|
 | `status` | `pending`, `discussing`, `planned`, `executing`, `testing`, `completed`, `paused`, `stopped` のいずれか |
-| `priority` | 数値が小さいほど高優先 |
 | `queue_order` | UIでのドラッグ&ドロップ順序 |
 | `branch_name` | タスク用Gitブランチ名 |
 | `retry_count` | アプリ層リトライ回数 |
@@ -558,10 +557,10 @@ Phase 2-A（ペルソナ選定）から全部やり直す。
 
 | メソッド | エンドポイント | 説明 |
 |---------|-------------|------|
-| POST | `/api/tasks` | タスク作成（title, description, images, priority） |
+| POST | `/api/tasks` | タスク作成（title, description, images） |
 | GET | `/api/tasks` | タスク一覧（全ステータス） |
 | GET | `/api/tasks/:id` | タスク詳細 |
-| PUT | `/api/tasks/:id` | タスク更新（title, description, priority, queue_order） |
+| PUT | `/api/tasks/:id` | タスク更新（title, description, queue_order） |
 | DELETE | `/api/tasks/:id` | タスク削除（pending/stopped/completedのみ） |
 | POST | `/api/tasks/:id/images` | 画像添付 |
 | DELETE | `/api/tasks/:id/images/:imageId` | 画像削除 |
@@ -624,7 +623,7 @@ Phase 2-A（ペルソナ選定）から全部やり直す。
 タブ構成で以下の情報を表示:
 
 **概要タブ**
-- タスク情報の編集（title, description, priority）
+- タスク情報の編集（title, description）
 - 添付画像の表示・追加・削除
 - ステータスと状態遷移の履歴
 - 再実行ボタン（paused/stopped時）:

@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS tasks (
   description TEXT,
   status TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'discussing', 'executing', 'reviewing', 'completed', 'paused', 'stopped')),
-  priority INTEGER NOT NULL DEFAULT 0,
   discussion_depth INTEGER NOT NULL DEFAULT 3,
   queue_order INTEGER,
   branch_name TEXT,
