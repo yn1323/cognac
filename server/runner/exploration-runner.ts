@@ -25,7 +25,7 @@ import { executeExplorationPhaseExplore } from './phase-exploration-execute.js'
 import { executeExplorationPhasePersona } from './phase-exploration-persona.js'
 import { executeExplorationPhaseReport } from './phase-exploration-report.js'
 import { executeExplorationPhaseTaskify } from './phase-exploration-taskify.js'
-import { ProcessTimeoutError, TaskCancelledError } from './providers/types.js'
+import { CliProviderError, ProcessTimeoutError, TaskCancelledError } from './providers/types.js'
 
 function phaseStart(phase: ExplorationPhase): ExplorationEvent {
   return { type: 'phase_start', phase, timestamp: new Date().toISOString() }
@@ -340,6 +340,39 @@ export class ExplorationRunner implements RunnerStatus {
       })
     } catch (error) {
       if (error instanceof TaskCancelledError) {
+        return
+      }
+
+      // CLIプロバイダーエラー（レートリミット等）
+      if (error instanceof CliProviderError) {
+        const errorType = classifyError(error.stderr, error.exitCode)
+        if (errorType === 'infra') {
+          explorationQueries.markExplorationPaused(this.db, exploration.id, error.message)
+          explorationLogQueries.createExplorationLog(this.db, {
+            exploration_session_id: exploration.id,
+            phase: currentPhase,
+            error_type: 'infra',
+            error_message: error.message,
+            output_raw: error.stderr + (error.partialResult ? `\n---\n${error.partialResult}` : ''),
+          })
+          this.emit(exploration.id, { type: 'paused', reason: error.message, phase: currentPhase })
+          return
+        }
+        // appエラーはstoppedに
+        explorationQueries.markExplorationStopped(this.db, exploration.id, error.message)
+        explorationLogQueries.createExplorationLog(this.db, {
+          exploration_session_id: exploration.id,
+          phase: currentPhase,
+          error_type: 'app',
+          error_message: error.message,
+          output_raw: error.stderr + (error.partialResult ? `\n---\n${error.partialResult}` : ''),
+        })
+        this.emit(exploration.id, {
+          type: 'error',
+          errorType: 'app',
+          message: error.message,
+          phase: currentPhase,
+        })
         return
       }
 

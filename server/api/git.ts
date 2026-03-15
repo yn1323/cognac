@@ -37,7 +37,7 @@ import {
   updateGhPr,
   validateBranchName,
 } from '../runner/git-api-ops.js'
-import { createProvider } from '../runner/providers/index.js'
+import { CliProviderError, createProvider } from '../runner/providers/index.js'
 
 // バリデーションスキーマ
 const checkoutSchema = z.object({
@@ -556,6 +556,7 @@ ${diff.substring(0, 8000)}
     const result = response.result.trim()
     return result || 'コミットの解説を生成できませんでした。'
   } catch (err) {
+    if (err instanceof CliProviderError) throw err
     console.error('[generateCommitExplanation] CLI 失敗:', err)
     return 'コミットの解説を生成できませんでした。'
   }
@@ -593,6 +594,7 @@ ${langRule}
     const result = response.result.trim()
     return result || 'chore: update files'
   } catch (err) {
+    if (err instanceof CliProviderError) throw err
     console.error('[generateCommitMessage] CLI 失敗:', err)
     return 'chore: update files'
   }
@@ -649,6 +651,7 @@ ${diff.substring(0, 30000)}
 
     return { title, body: body || '' }
   } catch (err) {
+    if (err instanceof CliProviderError) throw err
     if (err instanceof Error && err.message.includes('タイムアウト')) throw err
     console.error('[generatePrContent] CLI 失敗:', err)
     throw new Error('PR内容の生成に失敗しました')
