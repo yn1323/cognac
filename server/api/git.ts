@@ -13,6 +13,7 @@ import {
   createGhPr,
   deleteBranch,
   discardAll,
+  extractGitError,
   fetchAll,
   findExistingPr,
   findExistingPrWithState,
@@ -210,8 +211,10 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
     }
 
     // 保護ブランチは削除不可
-    const protectedBranches = ['main', 'master', 'develop']
-    if (protectedBranches.includes(name)) {
+    const config = getConfig()
+    const defaultBranch = config.git?.defaultBranch || 'main'
+    const protectedBranches = new Set(['main', 'master', 'develop', defaultBranch])
+    if (protectedBranches.has(name)) {
       return c.json({ error: '保護ブランチは削除できません' }, 400)
     }
 
@@ -219,7 +222,16 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
       deleteBranch(cwd, name)
       return c.json({ ok: true })
     } catch (err) {
-      return c.json({ error: 'ブランチの削除に失敗しました', detail: String(err) }, 500)
+      const stderr = extractGitError(err)
+      // ワークツリーで使用中（-Dでも消せない唯一のケース）
+      if (stderr.includes('checked out at')) {
+        return c.json({ error: '別のワークツリーで使用中のため削除できません' }, 400)
+      }
+      // ブランチが存在しない（レースコンディション対策）
+      if (stderr.includes('not found')) {
+        return c.json({ error: 'ブランチが見つかりません' }, 404)
+      }
+      return c.json({ error: 'ブランチの削除に失敗しました', detail: stderr }, 500)
     }
   })
 
