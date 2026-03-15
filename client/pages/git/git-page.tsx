@@ -798,8 +798,8 @@ export function GitPage() {
         toast('ブランチを削除しました', 'success')
         setDeletingBranch(null)
       },
-      onError: () => {
-        toast('ブランチの削除に失敗しました', 'error')
+      onError: (err) => {
+        toast(err instanceof Error ? err.message : 'ブランチの削除に失敗しました', 'error')
         setDeletingBranch(null)
       },
     })

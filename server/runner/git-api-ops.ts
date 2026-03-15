@@ -169,7 +169,7 @@ export function createBranch(cwd: string, name: string, base?: string): void {
 // ブランチを削除する（ローカルのみ）
 export function deleteBranch(cwd: string, name: string): void {
   if (!validateBranchName(name)) throw new Error('不正なブランチ名です')
-  git(`branch -d ${name}`, cwd)
+  git(`branch -D ${name}`, cwd)
 }
 
 // 全変更を破棄する
