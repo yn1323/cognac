@@ -150,6 +150,9 @@ export const api = {
       const formData = new FormData()
       formData.append('title', data.title)
       formData.append('request', data.request)
+      if (data.discussion_depth != null) {
+        formData.append('discussion_depth', String(data.discussion_depth))
+      }
       for (const file of files) {
         formData.append('images', file)
       }

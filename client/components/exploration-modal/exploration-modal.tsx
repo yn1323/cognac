@@ -2,9 +2,11 @@
 // PC: オーバーレイ + センターモーダル / SP: フルスクリーンシート
 // タスクモーダル（task-modal.tsx）と同じパターン
 
+import type { DiscussionDepth } from '@cognac/shared'
 import { Camera, Compass, Upload, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { DiscussionDepthRadio } from '@/components/discussion-depth-radio'
 import { MobileModalFooter } from '@/components/mobile-modal-footer'
 import { useToast } from '@/components/toast'
 import { Button } from '@/components/ui/button'
@@ -26,6 +28,8 @@ interface FormProps {
   files: File[]
   onFilesAdd: (newFiles: File[]) => void
   onFileRemove: (index: number) => void
+  discussionDepth: DiscussionDepth
+  setDiscussionDepth: (v: DiscussionDepth) => void
   handleClose: () => void
   handleSubmit: (e: React.FormEvent) => void
   isSubmitting: boolean
@@ -43,6 +47,8 @@ function PCExplorationModal({
   files,
   onFilesAdd,
   onFileRemove,
+  discussionDepth,
+  setDiscussionDepth,
   handleClose,
   handleSubmit,
   isSubmitting,
@@ -100,6 +106,11 @@ function PCExplorationModal({
           </div>
 
           <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">議論ラウンド数</label>
+            <DiscussionDepthRadio value={discussionDepth} onChange={setDiscussionDepth} />
+          </div>
+
+          <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">画像添付（任意）</label>
             <DropZone
               onFilesAdd={onFilesAdd}
@@ -136,6 +147,8 @@ function SPExplorationModal({
   files,
   onFilesAdd,
   onFileRemove,
+  discussionDepth,
+  setDiscussionDepth,
   handleClose,
   handleSubmit,
   isSubmitting,
@@ -176,6 +189,11 @@ function SPExplorationModal({
             disabled={isSubmitting}
           />
           {descriptionError && <p className="text-xs text-destructive">{descriptionError}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">議論ラウンド数</label>
+          <DiscussionDepthRadio value={discussionDepth} onChange={setDiscussionDepth} />
         </div>
 
         <div className="space-y-2">
@@ -228,6 +246,7 @@ export function ExplorationModal() {
   const [description, setDescription] = useState('')
   const [descriptionError, setDescriptionError] = useState('')
   const [files, setFiles] = useState<File[]>([])
+  const [discussionDepth, setDiscussionDepth] = useState<DiscussionDepth>(3)
 
   const handleClose = useCallback(() => {
     navigate('/explorations', { replace: true })
@@ -240,6 +259,7 @@ export function ExplorationModal() {
       setDescription('')
       setDescriptionError('')
       setFiles([])
+      setDiscussionDepth(3)
     }
   }, [isOpen])
 
@@ -278,7 +298,7 @@ export function ExplorationModal() {
       return
     }
     createMutation.mutate(
-      { data: { title, request: description.trim() }, files },
+      { data: { title, request: description.trim(), discussion_depth: discussionDepth }, files },
       {
         onSuccess: () => {
           toast('探索を作成しました', 'success')
@@ -301,6 +321,8 @@ export function ExplorationModal() {
     files,
     onFilesAdd,
     onFileRemove,
+    discussionDepth,
+    setDiscussionDepth,
     handleClose,
     handleSubmit,
     isSubmitting: createMutation.isPending,
