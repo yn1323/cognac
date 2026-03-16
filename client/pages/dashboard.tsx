@@ -161,7 +161,10 @@ function useDashboardFilters(tasks: Task[]) {
 function SPTaskCardItem({ task, onRetry }: { task: Task; onRetry: (id: number) => void }) {
   const elapsedMs = useElapsedTime(task.started_at, task.completed_at)
   const time = formatRelativeTime(task.started_at ?? task.created_at)
-  const elapsed = elapsedMs != null ? ` · ⏱ ${formatDuration(elapsedMs)}` : ''
+  const elapsed =
+    elapsedMs != null && task.status !== 'stopped' && task.status !== 'paused'
+      ? ` · ⏱ ${formatDuration(elapsedMs)}`
+      : ''
   const subtitle =
     task.status === 'stopped' && task.retry_count > 0
       ? `CI失敗 (${task.retry_count}/5) · ${time}${elapsed}`

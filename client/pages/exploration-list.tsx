@@ -202,11 +202,13 @@ function ExplorationCard({
             <span className="text-xs leading-[1.3] text-muted-foreground">
               {formatRelativeTime(exploration.started_at ?? exploration.created_at)}
             </span>
-            {elapsedMs != null && (
-              <span className="text-xs leading-[1.3] text-muted-foreground">
-                · ⏱ {formatDuration(elapsedMs)}
-              </span>
-            )}
+            {elapsedMs != null &&
+              exploration.status !== 'stopped' &&
+              exploration.status !== 'paused' && (
+                <span className="text-xs leading-[1.3] text-muted-foreground">
+                  · ⏱ {formatDuration(elapsedMs)}
+                </span>
+              )}
           </div>
         </div>
         {EXPLORATION_RETRYABLE_STATUSES.has(exploration.status) && (
@@ -353,7 +355,10 @@ function SPExplorationCardItem({
   const config = EXPLORATION_STATUS_CONFIG[exploration.status]
   const elapsedMs = useElapsedTime(exploration.started_at, exploration.completed_at)
   const time = formatRelativeTime(exploration.started_at ?? exploration.created_at)
-  const elapsed = elapsedMs != null ? ` · ⏱ ${formatDuration(elapsedMs)}` : ''
+  const elapsed =
+    elapsedMs != null && exploration.status !== 'stopped' && exploration.status !== 'paused'
+      ? ` · ⏱ ${formatDuration(elapsedMs)}`
+      : ''
   const subtitle = `${time}${elapsed}`
 
   return (

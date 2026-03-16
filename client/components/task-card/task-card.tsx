@@ -64,7 +64,7 @@ export function TaskCard({ task, onRetry }: TaskCardProps) {
             <span className="text-xs leading-[1.3] text-muted-foreground">
               {formatRelativeTime(task.started_at ?? task.created_at)}
             </span>
-            {elapsedMs != null && (
+            {elapsedMs != null && task.status !== 'stopped' && task.status !== 'paused' && (
               <span className="text-xs leading-[1.3] text-muted-foreground">
                 · ⏱ {formatDuration(elapsedMs)}
               </span>
