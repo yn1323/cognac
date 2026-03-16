@@ -121,7 +121,7 @@ export class CodexProvider implements CliProviderInterface {
           )
           if (stderr) console.log(`[CodexProvider] stderr:\n${stderr}`)
 
-          if (code !== 0 || parser.isRateLimited()) {
+          if (code !== 0) {
             reject(
               new CliProviderError({
                 exitCode: code ?? 1,

@@ -133,7 +133,7 @@ export class ClaudeProvider implements CliProviderInterface {
           )
           if (stderr) console.log(`[ClaudeProvider] stderr:\n${stderr}`)
 
-          if (code !== 0 || parser.isRateLimited()) {
+          if (code !== 0) {
             reject(
               new CliProviderError({
                 exitCode: code ?? 1,
