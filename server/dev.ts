@@ -60,7 +60,11 @@ const explorationEventBus = new EventBus<ExplorationEvent>()
 const coordinator = new ExecutionCoordinator()
 const taskRunner = new TaskRunner(db, taskEventBus, config, coordinator)
 const explorationRunner = new ExplorationRunner(db, explorationEventBus, config, coordinator, cwd)
-const consoleManager = new ConsoleManager(db, cwd)
+const consoleConfigAccessors = {
+  getConfig: () => taskRunner.getConfig(),
+  getCwd: () => cwd,
+}
+const consoleManager = new ConsoleManager(db, consoleConfigAccessors)
 runConsoleStartupRecovery(db, cwd)
 void cleanupExpiredConsoleRuns(db)
 const stopConsoleCleanup = startConsoleCleanupScheduler(db)

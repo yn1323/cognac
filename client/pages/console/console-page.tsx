@@ -35,10 +35,10 @@ import { formatTime, STATUS_CONFIG, StatusBadge, StatusDot } from './console-uti
 interface ConsolePageViewProps {
   commands: ConsoleCommandListItem[]
   selectedCommand: ConsoleCommandListItem | null
-  onSelectCommand: (id: number) => void
+  onSelectCommand: (id: string) => void
   logContent: string
-  onRun: (id: number) => void
-  onStop: (id: number) => void
+  onRun: (id: string) => void
+  onStop: (id: string) => void
   onOpenCreate: () => void
   onOpenEdit: (cmd: ConsoleCommandListItem) => void
   onOpenDelete: (cmd: ConsoleCommandListItem) => void
@@ -483,7 +483,7 @@ export function ConsolePage() {
   const stopMutation = useStopConsoleCommand()
 
   // UI state
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editTarget, setEditTarget] = useState<ConsoleCommandListItem | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ConsoleCommandListItem | null>(null)
@@ -537,7 +537,7 @@ export function ConsolePage() {
   // --- ハンドラ ---
 
   const handleRun = useCallback(
-    (id: number) => {
+    (id: string) => {
       runMutation.mutate(id, {
         onSuccess: () => {
           setSelectedId(id)
@@ -550,7 +550,7 @@ export function ConsolePage() {
   )
 
   const handleStop = useCallback(
-    (id: number) => {
+    (id: string) => {
       stopMutation.mutate(id, {
         onError: (err) => toast(`停止に失敗しました: ${err.message}`, 'error'),
       })

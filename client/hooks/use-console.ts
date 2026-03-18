@@ -31,7 +31,7 @@ export function useCreateConsoleCommand() {
 export function useUpdateConsoleCommand() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateConsoleCommandInput }) =>
+    mutationFn: ({ id, data }: { id: string; data: UpdateConsoleCommandInput }) =>
       api.console.updateCommand(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['console-commands'] }),
   })
@@ -40,7 +40,7 @@ export function useUpdateConsoleCommand() {
 export function useDeleteConsoleCommand() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => api.console.deleteCommand(id),
+    mutationFn: (id: string) => api.console.deleteCommand(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['console-commands'] }),
   })
 }
@@ -48,7 +48,7 @@ export function useDeleteConsoleCommand() {
 export function useRunConsoleCommand() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => api.console.runCommand(id),
+    mutationFn: (id: string) => api.console.runCommand(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['console-commands'] }),
   })
 }
@@ -56,7 +56,7 @@ export function useRunConsoleCommand() {
 export function useStopConsoleCommand() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => api.console.stopCommand(id),
+    mutationFn: (id: string) => api.console.stopCommand(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['console-commands'] }),
   })
 }

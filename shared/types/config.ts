@@ -57,6 +57,14 @@ export interface ClaudeConfig {
   processMaxRetries: number
 }
 
+// コンソールコマンド定義
+export interface ConsoleCommandConfig {
+  id: string
+  name: string
+  command: string
+  note?: string
+}
+
 // 全体設定
 export interface CognacConfig {
   port: number
@@ -66,6 +74,7 @@ export interface CognacConfig {
   ci: CiConfig
   discussion: DiscussionConfig
   claude: ClaudeConfig
+  consoleCommands?: ConsoleCommandConfig[]
 }
 
 // デフォルト設定値
@@ -93,6 +102,7 @@ const defaultConfig: CognacConfig = {
     stdoutTimeoutMs: 600000,
     processMaxRetries: 2,
   },
+  consoleCommands: [],
 }
 
 // 設定ファイルのヘルパー関数
@@ -104,5 +114,6 @@ export function defineConfig(config: Partial<CognacConfig>): CognacConfig {
     ci: { ...defaultConfig.ci, ...config.ci },
     discussion: { ...defaultConfig.discussion, ...config.discussion },
     claude: { ...defaultConfig.claude, ...config.claude },
+    consoleCommands: config.consoleCommands ?? defaultConfig.consoleCommands,
   }
 }

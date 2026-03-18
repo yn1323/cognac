@@ -7,6 +7,7 @@ export type {
   CognacConfig,
   CommitMessageLanguage,
   ConfigPatch,
+  ConsoleCommandConfig,
   DiscussionConfig,
   GitConfig,
   SettingsPayload,

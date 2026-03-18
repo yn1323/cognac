@@ -1,6 +1,7 @@
 import { type ChildProcess, spawn } from 'node:child_process'
 import type { WriteStream } from 'node:fs'
 import type {
+  CognacConfig,
   ConsoleCommand,
   ConsoleCommandListItem,
   ConsoleLogResponse,
@@ -10,9 +11,10 @@ import type {
   CreateConsoleCommandInput,
   UpdateConsoleCommandInput,
 } from '@cognac/shared'
-import * as consoleCommandQueries from '../db/queries/console-commands.js'
+import { nanoid } from 'nanoid'
 import * as consoleRunQueries from '../db/queries/console-runs.js'
 import type { CognacDb } from '../db/types.js'
+import { writeConfigFile } from '../runner/config-writer.js'
 import { EventBus } from '../sse/event-bus.js'
 import {
   buildRunLogPath,
@@ -26,8 +28,13 @@ import { requestForceKill, requestGracefulStop, requestTerminate } from './proce
 const GRACEFUL_STOP_TIMEOUT_MS = 5_000
 const FORCE_KILL_TIMEOUT_MS = 10_000
 
+export interface ConsoleConfigAccessors {
+  getConfig(): CognacConfig
+  getCwd(): string
+}
+
 interface ActiveProcess {
-  commandId: number
+  commandId: string
   runId: number
   child: ChildProcess
   logStream: WriteStream
@@ -51,14 +58,20 @@ export class ConsoleManagerError extends Error {
 
 export class ConsoleManager {
   private readonly eventBus = new EventBus<ConsoleStreamEvent>()
-  private readonly activeProcesses = new Map<number, ActiveProcess>()
-  private readonly commandLocks = new Map<number, Promise<void>>()
+  private readonly activeProcesses = new Map<string, ActiveProcess>()
+  private readonly commandLocks = new Map<string, Promise<void>>()
+  private readonly commands: Map<string, ConsoleCommand>
 
   constructor(
     private readonly db: CognacDb,
-    private readonly cwd: string = process.cwd(),
+    private readonly configAccessors: ConsoleConfigAccessors,
   ) {
-    ensureConsoleLogRoot(this.cwd)
+    ensureConsoleLogRoot(this.configAccessors.getCwd())
+    this.commands = new Map(
+      configAccessors
+        .getConfig()
+        .consoleCommands?.map((c) => [c.id, { ...c, note: c.note ?? null }]) ?? [],
+    )
   }
 
   subscribeToRun(runId: number, fn: (event: ConsoleStreamEvent) => void): () => void {
@@ -66,7 +79,7 @@ export class ConsoleManager {
   }
 
   listCommands(): ConsoleCommandListItem[] {
-    return consoleCommandQueries.listCommands(this.db).map((command) => {
+    return [...this.commands.values()].map((command) => {
       const activeRun = consoleRunQueries.getActiveRunByCommandId(this.db, command.id) ?? null
       const latestRun = consoleRunQueries.getLatestRunByCommandId(this.db, command.id) ?? null
       return {
@@ -78,22 +91,45 @@ export class ConsoleManager {
     })
   }
 
-  getCommand(commandId: number): ConsoleCommand | undefined {
-    return consoleCommandQueries.getCommand(this.db, commandId)
+  getCommand(commandId: string): ConsoleCommand | undefined {
+    return this.commands.get(commandId)
   }
 
-  createCommand(input: CreateConsoleCommandInput): ConsoleCommand {
-    return consoleCommandQueries.createCommand(this.db, normalizeCommandInput(input))
+  async createCommand(input: CreateConsoleCommandInput): Promise<ConsoleCommand> {
+    const normalized = normalizeCommandInput(input)
+    const command: ConsoleCommand = {
+      id: nanoid(8),
+      name: normalized.name,
+      command: normalized.command,
+      note: normalized.note ?? null,
+    }
+    this.commands.set(command.id, command)
+    await this.persistConfig()
+    return command
   }
 
-  updateCommand(commandId: number, patch: UpdateConsoleCommandInput): ConsoleCommand | undefined {
-    const normalizedPatch = normalizeCommandPatch(patch)
-    return consoleCommandQueries.updateCommand(this.db, commandId, normalizedPatch)
+  async updateCommand(
+    commandId: string,
+    patch: UpdateConsoleCommandInput,
+  ): Promise<ConsoleCommand | undefined> {
+    const existing = this.commands.get(commandId)
+    if (!existing) return undefined
+
+    const normalized = normalizeCommandPatch(patch)
+    const updated: ConsoleCommand = {
+      ...existing,
+      ...(normalized.name !== undefined ? { name: normalized.name } : {}),
+      ...(normalized.command !== undefined ? { command: normalized.command } : {}),
+      ...(normalized.note !== undefined ? { note: normalized.note || null } : {}),
+    }
+    this.commands.set(commandId, updated)
+    await this.persistConfig()
+    return updated
   }
 
-  async deleteCommand(commandId: number): Promise<boolean> {
+  async deleteCommand(commandId: string): Promise<boolean> {
     return this.withCommandLock(commandId, async () => {
-      const command = consoleCommandQueries.getCommand(this.db, commandId)
+      const command = this.commands.get(commandId)
       if (!command) {
         throw new ConsoleManagerError('コマンドが見つからない', 404)
       }
@@ -110,11 +146,13 @@ export class ConsoleManager {
         }),
       )
 
-      return consoleCommandQueries.deleteCommand(this.db, commandId)
+      this.commands.delete(commandId)
+      await this.persistConfig()
+      return true
     })
   }
 
-  listRuns(commandId: number): ConsoleRun[] {
+  listRuns(commandId: string): ConsoleRun[] {
     return consoleRunQueries.listRunsByCommandId(this.db, commandId)
   }
 
@@ -135,16 +173,17 @@ export class ConsoleManager {
     }
   }
 
-  async startCommand(commandId: number): Promise<{ command: ConsoleCommand; run: ConsoleRun }> {
+  async startCommand(commandId: string): Promise<{ command: ConsoleCommand; run: ConsoleRun }> {
     return this.withCommandLock(commandId, async () => {
-      const command = consoleCommandQueries.getCommand(this.db, commandId)
+      const command = this.commands.get(commandId)
       if (!command) {
         throw new ConsoleManagerError('コマンドが見つからない', 404)
       }
 
       await this.ensureStopped(commandId, 'restart')
 
-      const logFilePath = buildRunLogPath(this.cwd, commandId)
+      const cwd = this.configAccessors.getCwd()
+      const logFilePath = buildRunLogPath(cwd, commandId)
       let run = consoleRunQueries.createRun(this.db, {
         command_id: commandId,
         status: 'starting',
@@ -152,7 +191,7 @@ export class ConsoleManager {
       })
 
       const child = spawn(command.command, {
-        cwd: this.cwd,
+        cwd,
         shell: true,
         detached: process.platform !== 'win32',
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -171,7 +210,6 @@ export class ConsoleManager {
       })
 
       run = consoleRunQueries.setRunStatus(this.db, run.id, 'running') ?? run
-      consoleCommandQueries.touchCommand(this.db, commandId)
       this.publish(run.id, {
         type: 'run_status_changed',
         runId: run.id,
@@ -209,9 +247,9 @@ export class ConsoleManager {
     })
   }
 
-  async stopCommand(commandId: number): Promise<ConsoleRun | null> {
+  async stopCommand(commandId: string): Promise<ConsoleRun | null> {
     return this.withCommandLock(commandId, async () => {
-      const command = consoleCommandQueries.getCommand(this.db, commandId)
+      const command = this.commands.get(commandId)
       if (!command) {
         throw new ConsoleManagerError('コマンドが見つからない', 404)
       }
@@ -228,8 +266,22 @@ export class ConsoleManager {
     )
   }
 
+  private async persistConfig(): Promise<void> {
+    const config = this.configAccessors.getConfig()
+    const updated: CognacConfig = {
+      ...config,
+      consoleCommands: [...this.commands.values()].map((c) => ({
+        id: c.id,
+        name: c.name,
+        command: c.command,
+        ...(c.note ? { note: c.note } : {}),
+      })),
+    }
+    await writeConfigFile(this.configAccessors.getCwd(), updated)
+  }
+
   private registerActiveProcess(
-    commandId: number,
+    commandId: string,
     runId: number,
     child: ChildProcess,
     logStream: WriteStream,
@@ -256,13 +308,13 @@ export class ConsoleManager {
     return active
   }
 
-  private async ensureStopped(commandId: number, reason: string): Promise<void> {
+  private async ensureStopped(commandId: string, reason: string): Promise<void> {
     const active = this.activeProcesses.get(commandId)
     if (!active) return
     await this.requestStopInternal(active, reason, true)
   }
 
-  private async requestStop(commandId: number, reason: string): Promise<ConsoleRun | null> {
+  private async requestStop(commandId: string, reason: string): Promise<ConsoleRun | null> {
     const active = this.activeProcesses.get(commandId)
     if (!active) {
       return consoleRunQueries.getActiveRunByCommandId(this.db, commandId) ?? null
@@ -309,7 +361,7 @@ export class ConsoleManager {
 
   private handleOutput(
     active: ActiveProcess,
-    commandId: number,
+    commandId: string,
     runId: number,
     stream: 'stdout' | 'stderr',
     chunk: Buffer | string,
@@ -371,7 +423,7 @@ export class ConsoleManager {
     this.eventBus.publish(runId, event)
   }
 
-  private async withCommandLock<T>(commandId: number, fn: () => Promise<T>): Promise<T> {
+  private async withCommandLock<T>(commandId: string, fn: () => Promise<T>): Promise<T> {
     const previous = this.commandLocks.get(commandId) ?? Promise.resolve()
     let release!: () => void
     const next = new Promise<void>((resolve) => {

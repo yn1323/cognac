@@ -43,19 +43,19 @@ export function consoleRouter(consoleManager: ConsoleManager) {
       return c.json({ error: 'バリデーションエラー', details: parsed.error.issues }, 400)
     }
 
-    const command = consoleManager.createCommand(parsed.data)
+    const command = await consoleManager.createCommand(parsed.data)
     return c.json(command, 201)
   })
 
   app.put('/commands/:id', async (c) => {
-    const commandId = Number(c.req.param('id'))
+    const commandId = c.req.param('id')
     const body = await c.req.json()
     const parsed = updateCommandSchema.safeParse(body)
     if (!parsed.success) {
       return c.json({ error: 'バリデーションエラー', details: parsed.error.issues }, 400)
     }
 
-    const command = consoleManager.updateCommand(commandId, parsed.data)
+    const command = await consoleManager.updateCommand(commandId, parsed.data)
     if (!command) {
       return c.json({ error: 'コマンドが見つからない' }, 404)
     }
@@ -63,7 +63,7 @@ export function consoleRouter(consoleManager: ConsoleManager) {
   })
 
   app.delete('/commands/:id', async (c) => {
-    const commandId = Number(c.req.param('id'))
+    const commandId = c.req.param('id')
 
     try {
       const ok = await consoleManager.deleteCommand(commandId)
@@ -74,7 +74,7 @@ export function consoleRouter(consoleManager: ConsoleManager) {
   })
 
   app.post('/commands/:id/run', async (c) => {
-    const commandId = Number(c.req.param('id'))
+    const commandId = c.req.param('id')
 
     try {
       const result = await consoleManager.startCommand(commandId)
@@ -85,7 +85,7 @@ export function consoleRouter(consoleManager: ConsoleManager) {
   })
 
   app.post('/commands/:id/stop', async (c) => {
-    const commandId = Number(c.req.param('id'))
+    const commandId = c.req.param('id')
 
     try {
       const run = await consoleManager.stopCommand(commandId)
@@ -96,7 +96,7 @@ export function consoleRouter(consoleManager: ConsoleManager) {
   })
 
   app.get('/commands/:id/runs', (c) => {
-    const commandId = Number(c.req.param('id'))
+    const commandId = c.req.param('id')
     const command = consoleManager.getCommand(commandId)
     if (!command) {
       return c.json({ error: 'コマンドが見つからない' }, 404)
