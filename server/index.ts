@@ -94,6 +94,7 @@ export {
   runConsoleStartupRecovery,
   startConsoleCleanupScheduler,
 } from './console/cleanup.js'
+export type { ConsoleConfigAccessors } from './console/console-manager.js'
 export { ConsoleManager } from './console/console-manager.js'
 export { openDb } from './db/connection.js'
 export { ExecutionCoordinator } from './runner/execution-coordinator.js'

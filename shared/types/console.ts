@@ -7,17 +7,15 @@ export type ConsoleRunStatus =
   | 'killed'
 
 export interface ConsoleCommand {
-  id: number
+  id: string
   name: string
   command: string
   note: string | null
-  created_at: string
-  updated_at: string
 }
 
 export interface ConsoleRun {
   id: number
-  command_id: number
+  command_id: string
   status: ConsoleRunStatus
   pid: number | null
   started_at: string
@@ -54,18 +52,18 @@ export interface UpdateConsoleCommandInput {
 }
 
 export type ConsoleStreamEvent =
-  | { type: 'run_started'; runId: number; commandId: number; pid: number | null; timestamp: string }
+  | { type: 'run_started'; runId: number; commandId: string; pid: number | null; timestamp: string }
   | {
       type: 'run_status_changed'
       runId: number
-      commandId: number
+      commandId: string
       status: ConsoleRunStatus
       timestamp: string
     }
   | {
       type: 'run_output'
       runId: number
-      commandId: number
+      commandId: string
       stream: 'stdout' | 'stderr'
       chunk: string
       timestamp: string
@@ -73,7 +71,7 @@ export type ConsoleStreamEvent =
   | {
       type: 'run_exit'
       runId: number
-      commandId: number
+      commandId: string
       status: 'completed' | 'failed' | 'killed'
       exitCode: number | null
       timestamp: string
@@ -81,7 +79,7 @@ export type ConsoleStreamEvent =
   | {
       type: 'run_log_truncated'
       runId: number
-      commandId: number
+      commandId: string
       message: string
       timestamp: string
     }

@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS tasks (
   description TEXT,
   status TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'discussing', 'executing', 'reviewing', 'completed', 'paused', 'stopped')),
-  priority INTEGER NOT NULL DEFAULT 0,
   discussion_depth INTEGER NOT NULL DEFAULT 3,
   queue_order INTEGER,
   branch_name TEXT,
@@ -239,22 +238,11 @@ CREATE TABLE IF NOT EXISTS exploration_events (
   FOREIGN KEY (exploration_session_id) REFERENCES exploration_sessions(id) ON DELETE CASCADE
 )`
 
-// コンソールコマンド定義
-const CREATE_CONSOLE_COMMANDS = `
-CREATE TABLE IF NOT EXISTS console_commands (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  command TEXT NOT NULL,
-  note TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-)`
-
 // コンソール実行履歴
 const CREATE_CONSOLE_RUNS = `
 CREATE TABLE IF NOT EXISTS console_runs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  command_id INTEGER NOT NULL,
+  command_id TEXT NOT NULL,
   status TEXT NOT NULL
     CHECK (status IN ('starting', 'running', 'stopping', 'completed', 'failed', 'killed')),
   pid INTEGER,
@@ -263,8 +251,7 @@ CREATE TABLE IF NOT EXISTS console_runs (
   exit_code INTEGER,
   termination_reason TEXT,
   log_file_path TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY (command_id) REFERENCES console_commands(id) ON DELETE CASCADE
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
 )`
 
 // インデックスたち
@@ -282,7 +269,6 @@ const CREATE_INDEXES = [
   `CREATE INDEX IF NOT EXISTS idx_exploration_taskify_jobs_session_status_requested ON exploration_taskify_jobs(exploration_session_id, status, requested_at)`,
   `CREATE INDEX IF NOT EXISTS idx_task_events_task_id ON task_events(task_id)`,
   `CREATE INDEX IF NOT EXISTS idx_exploration_events_session_id ON exploration_events(exploration_session_id)`,
-  `CREATE INDEX IF NOT EXISTS idx_console_commands_updated_at ON console_commands(updated_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_console_runs_command_id ON console_runs(command_id)`,
   `CREATE INDEX IF NOT EXISTS idx_console_runs_status ON console_runs(status)`,
   `CREATE INDEX IF NOT EXISTS idx_console_runs_started_at ON console_runs(started_at DESC)`,
@@ -306,7 +292,6 @@ const TABLE_STATEMENTS = [
   CREATE_EXPLORATION_TASKIFY_JOBS,
   CREATE_TASK_EVENTS,
   CREATE_EXPLORATION_EVENTS,
-  CREATE_CONSOLE_COMMANDS,
   CREATE_CONSOLE_RUNS,
 ]
 

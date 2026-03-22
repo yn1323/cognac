@@ -6,7 +6,7 @@ const ACTIVE_STATUSES = ['starting', 'running', 'stopping'] as const
 export function createRun(
   db: CognacDb,
   input: {
-    command_id: number
+    command_id: string
     status: ConsoleRunStatus
     pid?: number | null
     log_file_path: string
@@ -30,7 +30,7 @@ export function getRun(db: CognacDb, id: number): ConsoleRun | undefined {
   return stmt.get(id) as unknown as ConsoleRun | undefined
 }
 
-export function listRunsByCommandId(db: CognacDb, commandId: number): ConsoleRun[] {
+export function listRunsByCommandId(db: CognacDb, commandId: string): ConsoleRun[] {
   const stmt = db.prepare(`
     SELECT * FROM console_runs
     WHERE command_id = ?
@@ -39,7 +39,7 @@ export function listRunsByCommandId(db: CognacDb, commandId: number): ConsoleRun
   return stmt.all(commandId) as unknown as ConsoleRun[]
 }
 
-export function getLatestRunByCommandId(db: CognacDb, commandId: number): ConsoleRun | undefined {
+export function getLatestRunByCommandId(db: CognacDb, commandId: string): ConsoleRun | undefined {
   const stmt = db.prepare(`
     SELECT * FROM console_runs
     WHERE command_id = ?
@@ -49,7 +49,7 @@ export function getLatestRunByCommandId(db: CognacDb, commandId: number): Consol
   return stmt.get(commandId) as unknown as ConsoleRun | undefined
 }
 
-export function getActiveRunByCommandId(db: CognacDb, commandId: number): ConsoleRun | undefined {
+export function getActiveRunByCommandId(db: CognacDb, commandId: string): ConsoleRun | undefined {
   const placeholders = ACTIVE_STATUSES.map(() => '?').join(', ')
   const stmt = db.prepare(`
     SELECT * FROM console_runs

@@ -114,22 +114,22 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(data),
       }),
-    updateCommand: (id: number, data: UpdateConsoleCommandInput) =>
+    updateCommand: (id: string, data: UpdateConsoleCommandInput) =>
       fetchJson<ConsoleCommand>(`/console/commands/${id}`, {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
-    deleteCommand: (id: number) =>
+    deleteCommand: (id: string) =>
       fetchJson<{ ok: boolean }>(`/console/commands/${id}`, { method: 'DELETE' }),
-    runCommand: (id: number) =>
+    runCommand: (id: string) =>
       fetchJson<{ command: ConsoleCommand; run: ConsoleRun }>(`/console/commands/${id}/run`, {
         method: 'POST',
       }),
-    stopCommand: (id: number) =>
+    stopCommand: (id: string) =>
       fetchJson<{ ok: boolean; run: ConsoleRun | null }>(`/console/commands/${id}/stop`, {
         method: 'POST',
       }),
-    listRuns: (commandId: number) => fetchJson<ConsoleRun[]>(`/console/commands/${commandId}/runs`),
+    listRuns: (commandId: string) => fetchJson<ConsoleRun[]>(`/console/commands/${commandId}/runs`),
     getRunLog: (runId: number) => fetchJson<ConsoleLogResponse>(`/console/runs/${runId}/log`),
   },
   explorations: {

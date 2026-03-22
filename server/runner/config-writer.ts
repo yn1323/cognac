@@ -14,6 +14,18 @@ function formatSteps(steps: CognacConfig['ci']['steps']): string {
   return `\n    steps: [\n${entries},\n    ],`
 }
 
+// コンソールコマンド配列をインデント付きのTS配列リテラルに変換
+function formatConsoleCommands(commands: CognacConfig['consoleCommands']): string {
+  if (!commands || commands.length === 0) return ''
+  const entries = commands
+    .map((c) => {
+      const note = c.note ? `, note: ${JSON.stringify(c.note)}` : ''
+      return `    { id: ${JSON.stringify(c.id)}, name: ${JSON.stringify(c.name)}, command: ${JSON.stringify(c.command)}${note} }`
+    })
+    .join(',\n')
+  return `\n  consoleCommands: [\n${entries},\n  ],`
+}
+
 // メモリ上の設定を cognac.config.ts に書き出す
 export async function writeConfigFile(cwd: string, config: CognacConfig): Promise<void> {
   const content = `import { defineConfig } from '@yn1323/cognac'
@@ -39,7 +51,7 @@ export default defineConfig({
     maxTurnsDiscussion: ${config.claude.maxTurnsDiscussion},
     stdoutTimeoutMs: ${config.claude.stdoutTimeoutMs},
     processMaxRetries: ${config.claude.processMaxRetries},
-  },
+  },${formatConsoleCommands(config.consoleCommands)}
 })
 `
   await writeFile(join(cwd, 'cognac.config.ts'), content, 'utf8')

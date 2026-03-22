@@ -92,7 +92,7 @@ export function PCOverviewTab({ task }: { task: Task }) {
             </span>
             <span className="text-[13px] text-foreground">{formatDateTime(task.created_at)}</span>
           </div>
-          {elapsedMs != null && (
+          {elapsedMs != null && task.status !== 'stopped' && task.status !== 'paused' && (
             <div className="flex items-center gap-2">
               <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
                 所要時間
@@ -132,7 +132,7 @@ export function SPOverviewTab({ task }: { task: Task }) {
             </span>
             <Badge variant={task.status}>{STATUS_CONFIG[task.status].label}</Badge>
           </div>
-          {elapsedMs != null && (
+          {elapsedMs != null && task.status !== 'stopped' && task.status !== 'paused' && (
             <div className="flex items-center gap-2">
               <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
                 所要時間

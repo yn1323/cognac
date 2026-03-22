@@ -10,7 +10,7 @@ export function ensureConsoleLogRoot(cwd: string): string {
   return root
 }
 
-export function buildRunLogPath(cwd: string, commandId: number): string {
+export function buildRunLogPath(cwd: string, commandId: string): string {
   const dir = join(ensureConsoleLogRoot(cwd), String(commandId))
   mkdirSync(dir, { recursive: true })
   return join(dir, `${Date.now()}-${randomUUID()}.log`)

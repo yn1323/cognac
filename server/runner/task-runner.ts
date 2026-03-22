@@ -281,7 +281,7 @@ export class TaskRunner implements RunnerStatus {
 
       // CLIプロバイダーエラー（レートリミット等）
       if (err instanceof CliProviderError) {
-        const errorType = classifyError(err.stderr, err.exitCode)
+        const errorType = err.isRateLimit ? 'infra' : classifyError(err.stderr, err.exitCode)
         if (errorType === 'infra') {
           // インフラエラー（レートリミット等）→ paused
           taskQueries.updateTask(this.db, id, {
@@ -471,7 +471,7 @@ export class TaskRunner implements RunnerStatus {
         }
 
         if (err instanceof CliProviderError) {
-          const errorType = classifyError(err.stderr, err.exitCode)
+          const errorType = err.isRateLimit ? 'infra' : classifyError(err.stderr, err.exitCode)
           if (errorType === 'infra') {
             taskQueries.updateTask(this.db, id, {
               status: 'paused',

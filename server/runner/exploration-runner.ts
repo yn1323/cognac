@@ -345,7 +345,7 @@ export class ExplorationRunner implements RunnerStatus {
 
       // CLIプロバイダーエラー（レートリミット等）
       if (error instanceof CliProviderError) {
-        const errorType = classifyError(error.stderr, error.exitCode)
+        const errorType = error.isRateLimit ? 'infra' : classifyError(error.stderr, error.exitCode)
         if (errorType === 'infra') {
           explorationQueries.markExplorationPaused(this.db, exploration.id, error.message)
           explorationLogQueries.createExplorationLog(this.db, {
