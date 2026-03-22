@@ -17,6 +17,7 @@ interface MergeModalProps {
 
 export function MergeModal({ open, onClose, branches, currentBranch, onMerge }: MergeModalProps) {
   const localBranches = useMemo(() => branches.filter((b) => !b.remote), [branches])
+  const remoteBranches = useMemo(() => branches.filter((b) => b.remote), [branches])
   const [fromBranch, setFromBranch] = useState('')
   const [toBranch, setToBranch] = useState('')
 
@@ -25,12 +26,15 @@ export function MergeModal({ open, onClose, branches, currentBranch, onMerge }: 
 
   // モーダルが開かれたときにデフォルト値をセット
   useEffect(() => {
-    if (!open || localBranches.length === 0) return
+    if (!open || branches.length === 0) return
     const defaultFrom =
-      localBranches.find((b) => b.name !== currentBranch)?.name ?? localBranches[0].name
+      localBranches.find((b) => b.name !== currentBranch)?.name ??
+      localBranches[0]?.name ??
+      remoteBranches[0]?.name ??
+      ''
     setFromBranch(defaultFrom)
-    setToBranch(currentBranch || localBranches[0].name)
-  }, [open, localBranches, currentBranch])
+    setToBranch((currentBranch || localBranches[0]?.name) ?? '')
+  }, [open, branches, localBranches, remoteBranches, currentBranch])
 
   if (!open) return null
 
@@ -55,7 +59,7 @@ export function MergeModal({ open, onClose, branches, currentBranch, onMerge }: 
             <h2 className="text-lg font-semibold text-foreground">ブランチをマージ</h2>
           </div>
           <p className="text-sm leading-[1.43] text-muted-foreground">
-            マージ元ブランチの変更をマージ先ブランチに統合します。マージコミットが作成されます（--no-ff）。
+            マージ元ブランチの変更をマージ先ブランチに統合します。リモートブランチを選択した場合は自動でfetchしてからマージします。
           </p>
         </div>
 
@@ -70,11 +74,24 @@ export function MergeModal({ open, onClose, branches, currentBranch, onMerge }: 
                 onChange={(e) => setFromBranch(e.target.value)}
                 className="w-full appearance-none rounded-md border border-[#e5e5e5] bg-white px-3 py-2 pr-8 text-sm text-foreground"
               >
-                {localBranches.map((b) => (
-                  <option key={b.name} value={b.name}>
-                    {b.name}
-                  </option>
-                ))}
+                {localBranches.length > 0 && (
+                  <optgroup label="ローカル">
+                    {localBranches.map((b) => (
+                      <option key={b.name} value={b.name}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {remoteBranches.length > 0 && (
+                  <optgroup label="リモート">
+                    {remoteBranches.map((b) => (
+                      <option key={b.name} value={b.name}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
               <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             </div>

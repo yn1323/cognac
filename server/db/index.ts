@@ -2,7 +2,6 @@
 
 export { openDb } from './connection.js'
 export * as ciCacheQueries from './queries/ci-cache.js'
-export * as consoleCommandQueries from './queries/console-commands.js'
 export * as consoleRunQueries from './queries/console-runs.js'
 export * as discussionQueries from './queries/discussions.js'
 export * as logQueries from './queries/execution-logs.js'

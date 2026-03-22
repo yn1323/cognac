@@ -5,9 +5,18 @@
 
 import type { ExplorationEvent, ExplorationSession } from '@cognac/shared'
 import { useQueryClient } from '@tanstack/react-query'
-import { AlertCircle, EllipsisVertical, Loader, RefreshCw, Trash2, XCircle } from 'lucide-react'
+import {
+  AlertCircle,
+  EllipsisVertical,
+  Loader,
+  Pencil,
+  RefreshCw,
+  Trash2,
+  XCircle,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { EditExplorationModal } from '@/components/edit-exploration-modal'
 import { type ExplorationTab, ExplorationTabs } from '@/components/exploration-tabs'
 import { Sidebar } from '@/components/sidebar'
 import { SPDetailHeader } from '@/components/sp-detail-header'
@@ -28,6 +37,7 @@ import {
   EXPLORATION_ACTIVE_STATUSES,
   EXPLORATION_CANCELABLE_STATUSES,
   EXPLORATION_DELETABLE_STATUSES,
+  EXPLORATION_EDITABLE_STATUSES,
   EXPLORATION_RETRYABLE_STATUSES,
   EXPLORATION_STATUS_CONFIG,
 } from '@/lib/exploration-status-config'
@@ -94,9 +104,11 @@ function PCExplorationDetail({
   onDelete,
   onRetry,
   onCancel,
+  onEditOpen,
   canDelete,
   canRetry,
   canCancel,
+  canEdit,
   isDeleting,
   isRetrying,
   isCancelling,
@@ -110,9 +122,11 @@ function PCExplorationDetail({
   onDelete: () => void
   onRetry: () => void
   onCancel: () => void
+  onEditOpen: () => void
   canDelete: boolean
   canRetry: boolean
   canCancel: boolean
+  canEdit: boolean
   isDeleting: boolean
   isRetrying: boolean
   isCancelling: boolean
@@ -159,15 +173,32 @@ function PCExplorationDetail({
 
             <div className="flex items-center gap-2">
               {canCancel ? (
-                <Button variant="destructive" size="sm" onClick={onCancel} disabled={isCancelling}>
-                  キャンセル
-                </Button>
+                <>
+                  {canEdit && (
+                    <Button variant="outline" size="sm" onClick={onEditOpen}>
+                      編集
+                    </Button>
+                  )}
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={onCancel}
+                    disabled={isCancelling}
+                  >
+                    キャンセル
+                  </Button>
+                </>
               ) : (
                 <>
                   {canRetry && (
                     <Button variant="outline" size="sm" onClick={onRetry} disabled={isRetrying}>
                       <RefreshCw className="mr-2 h-4 w-4" />
                       リトライ
+                    </Button>
+                  )}
+                  {canEdit && (
+                    <Button variant="outline" size="sm" onClick={onEditOpen}>
+                      編集
                     </Button>
                   )}
                   {canDelete && (
@@ -211,9 +242,11 @@ function SPExplorationDetail({
   onDelete,
   onRetry,
   onCancel,
+  onEditOpen,
   canDelete,
   canRetry,
   canCancel,
+  canEdit,
   isDeleting,
   isRetrying,
   isCancelling,
@@ -227,9 +260,11 @@ function SPExplorationDetail({
   onDelete: () => void
   onRetry: () => void
   onCancel: () => void
+  onEditOpen: () => void
   canDelete: boolean
   canRetry: boolean
   canCancel: boolean
+  canEdit: boolean
   isDeleting: boolean
   isRetrying: boolean
   isCancelling: boolean
@@ -246,7 +281,7 @@ function SPExplorationDetail({
         subtitle={`探索 #${exploration.id} · ${config.label}`}
         onBack={() => onNavigate('/explorations')}
         actions={
-          canDelete || canRetry || canCancel ? (
+          canDelete || canRetry || canCancel || canEdit ? (
             <DropdownMenu
               trigger={
                 <button type="button" className="rounded-lg p-1.5 text-muted-foreground">
@@ -280,6 +315,17 @@ function SPExplorationDetail({
                   disabled={isRetrying}
                 >
                   リトライ
+                </DropdownMenuItem>
+              )}
+              {canEdit && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    setMenuOpen(false)
+                    onEditOpen()
+                  }}
+                  icon={Pencil}
+                >
+                  編集
                 </DropdownMenuItem>
               )}
               {canDelete && (
@@ -327,6 +373,7 @@ export function ExplorationDetailPage() {
   const [activeTab, setActiveTab] = useState<ExplorationTab>('概要')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
 
   const { data: exploration, isLoading, isError } = useExploration(explorationId)
   const deleteMutation = useDeleteExploration()
@@ -399,6 +446,7 @@ export function ExplorationDetailPage() {
   const canDelete = EXPLORATION_DELETABLE_STATUSES.has(exploration.status) && !hasActiveTaskify
   const canRetry = EXPLORATION_RETRYABLE_STATUSES.has(exploration.status)
   const canCancel = EXPLORATION_CANCELABLE_STATUSES.has(exploration.status)
+  const canEdit = EXPLORATION_EDITABLE_STATUSES.has(exploration.status)
 
   const handleDelete = () => setDeleteDialogOpen(true)
   const handleConfirmDelete = () => {
@@ -442,9 +490,11 @@ export function ExplorationDetailPage() {
           onDelete={handleDelete}
           onRetry={handleRetry}
           onCancel={handleCancel}
+          onEditOpen={() => setEditOpen(true)}
           canDelete={canDelete}
           canRetry={canRetry}
           canCancel={canCancel}
+          canEdit={canEdit}
           isDeleting={deleteMutation.isPending}
           isRetrying={retryMutation.isPending}
           isCancelling={cancelMutation.isPending}
@@ -461,9 +511,11 @@ export function ExplorationDetailPage() {
           onDelete={handleDelete}
           onRetry={handleRetry}
           onCancel={handleCancel}
+          onEditOpen={() => setEditOpen(true)}
           canDelete={canDelete}
           canRetry={canRetry}
           canCancel={canCancel}
+          canEdit={canEdit}
           isDeleting={deleteMutation.isPending}
           isRetrying={retryMutation.isPending}
           isCancelling={cancelMutation.isPending}
@@ -471,6 +523,12 @@ export function ExplorationDetailPage() {
           connected={connected}
         />
       </div>
+
+      <EditExplorationModal
+        exploration={exploration}
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+      />
 
       <ConfirmDialog
         open={deleteDialogOpen}

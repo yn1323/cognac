@@ -72,3 +72,29 @@ export class TaskCancelledError extends Error {
     this.name = 'TaskCancelledError'
   }
 }
+
+/**
+ * CLIプロバイダー実行失敗エラー
+ * exit code非ゼロ、またはストリーム中にレートリミット等を検知した場合にthrowする。
+ */
+export class CliProviderError extends Error {
+  readonly exitCode: number
+  readonly stderr: string
+  readonly partialResult?: string
+  readonly isRateLimit: boolean
+
+  constructor(opts: {
+    exitCode: number
+    stderr: string
+    partialResult?: string
+    isRateLimit?: boolean
+  }) {
+    super(`CLIプロセスが exit code ${opts.exitCode} で失敗: ${opts.stderr.slice(0, 200)}`)
+    this.name = 'CliProviderError'
+    this.exitCode = opts.exitCode
+    this.stderr = opts.stderr
+    this.partialResult = opts.partialResult
+    // 明示的に渡されなければstderrから自動判定
+    this.isRateLimit = opts.isRateLimit ?? /rate.limit|429|too many requests/i.test(opts.stderr)
+  }
+}

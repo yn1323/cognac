@@ -7,6 +7,7 @@ export type {
   CognacConfig,
   CommitMessageLanguage,
   ConfigPatch,
+  ConsoleCommandConfig,
   DiscussionConfig,
   GitConfig,
   SettingsPayload,
@@ -23,7 +24,8 @@ export type {
   CreateConsoleCommandInput,
   UpdateConsoleCommandInput,
 } from './types/console.js'
-export type { Discussion, DiscussionRound } from './types/discussion.js'
+export type { Discussion, DiscussionDepth, DiscussionRound } from './types/discussion.js'
+export { DISCUSSION_DEPTH_LABELS, DISCUSSION_DEPTH_OPTIONS } from './types/discussion.js'
 export type {
   AgentStreamEvent,
   CiCache,
@@ -71,6 +73,7 @@ export type {
   GitLogResponse,
   GitMergeRequest,
   GitMergeResponse,
+  GitParentBranchResponse,
   GitPrInfo,
   GitPrInfoResponse,
   GitPullRequestRequest,
@@ -90,13 +93,11 @@ export type { Persona, PersonaSelection } from './types/persona.js'
 export type { Plan, PlanResult } from './types/plan.js'
 export type {
   CreateTaskInput,
-  PriorityLabel,
   Task,
   TaskImage,
   TaskStatus,
   UpdateTaskInput,
 } from './types/task.js'
-export { PRIORITY_MAP } from './types/task.js' // サーバー側で使う用（クライアントはローカル定義）
 export { slugify } from './utils/slugify.js'
 // hashFiles は Node 専用のため index からはエクスポートしない
 // サーバーからは '@cognac/shared/utils/hash' で直接インポートする

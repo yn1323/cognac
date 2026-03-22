@@ -24,6 +24,7 @@ import {
   getFileDiff,
   getLog,
   getLogAgainstBase,
+  getParentBranch,
   getRecentLogOneline,
   getRemoteStatus,
   getStagedDiff,
@@ -36,7 +37,7 @@ import {
   updateGhPr,
   validateBranchName,
 } from '../runner/git-api-ops.js'
-import { createProvider } from '../runner/providers/index.js'
+import { CliProviderError, createProvider } from '../runner/providers/index.js'
 
 // バリデーションスキーマ
 const checkoutSchema = z.object({
@@ -190,14 +191,22 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
     }
   })
 
-  // DELETE /branch/:name — ブランチ削除（ローカルのみ）
-  app.delete('/branch/:name{.+}', (c) => {
-    const name = decodeURIComponent(c.req.param('name'))
+  // DELETE /branch?name=xxx — ブランチ削除（ローカルのみ）
+  app.delete('/branch', (c) => {
+    const name = c.req.query('name')
+    if (!name) {
+      return c.json({ error: 'ブランチ名が指定されていません' }, 400)
+    }
 
     // 現在のブランチは削除不可
     const current = getCurrentBranch(cwd)
     if (name === current) {
       return c.json({ error: '現在のブランチは削除できません' }, 400)
+    }
+
+    // リモートブランチは削除不可
+    if (name.startsWith('origin/')) {
+      return c.json({ error: 'リモートブランチは削除できません' }, 400)
     }
 
     // 保護ブランチは削除不可
@@ -312,6 +321,19 @@ export function gitRouter(cwd: string, getConfig: () => CognacConfig) {
         return c.json({ error: errMsg }, 409)
       }
       return c.json({ error: 'リバートに失敗しました', detail: String(err) }, 500)
+    }
+  })
+
+  // GET /parent-branch — 親ブランチを推定
+  app.get('/parent-branch', (c) => {
+    const config = getConfig()
+    const defaultBranch = config.git?.defaultBranch || 'main'
+    try {
+      const result = getParentBranch(cwd, defaultBranch)
+      return c.json(result)
+    } catch {
+      // 推定失敗時はdefaultBranchにフォールバック
+      return c.json({ branch: defaultBranch, estimated: false })
     }
   })
 
@@ -534,6 +556,7 @@ ${diff.substring(0, 8000)}
     const result = response.result.trim()
     return result || 'コミットの解説を生成できませんでした。'
   } catch (err) {
+    if (err instanceof CliProviderError) throw err
     console.error('[generateCommitExplanation] CLI 失敗:', err)
     return 'コミットの解説を生成できませんでした。'
   }
@@ -571,6 +594,7 @@ ${langRule}
     const result = response.result.trim()
     return result || 'chore: update files'
   } catch (err) {
+    if (err instanceof CliProviderError) throw err
     console.error('[generateCommitMessage] CLI 失敗:', err)
     return 'chore: update files'
   }
@@ -627,6 +651,7 @@ ${diff.substring(0, 30000)}
 
     return { title, body: body || '' }
   } catch (err) {
+    if (err instanceof CliProviderError) throw err
     if (err instanceof Error && err.message.includes('タイムアウト')) throw err
     console.error('[generatePrContent] CLI 失敗:', err)
     throw new Error('PR内容の生成に失敗しました')

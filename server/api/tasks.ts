@@ -19,7 +19,7 @@ const createTaskSchema = z.object({
     .min(2, 'タイトルは2文字以上で入力してね')
     .max(200, 'タイトルは200文字以内にしてね'),
   description: z.string().optional(),
-  priority: z.number().int().min(0).max(3).optional(),
+  discussion_depth: z.union([z.literal(3), z.literal(5), z.literal(7)]).optional(),
 })
 
 const updateTaskSchema = z.object({
@@ -29,7 +29,7 @@ const updateTaskSchema = z.object({
     .max(200, 'タイトルは200文字以内にしてね')
     .optional(),
   description: z.string().optional(),
-  priority: z.number().int().optional(),
+  discussion_depth: z.union([z.literal(3), z.literal(5), z.literal(7)]).optional(),
   queue_order: z.number().int().optional(),
 })
 
@@ -236,11 +236,13 @@ export function tasksRouter(db: CognacDb, canceller?: TaskCanceller) {
     if (!task) {
       return c.json({ error: 'タスクが見つからない' }, 404)
     }
-    if (!['discussing', 'executing', 'reviewing'].includes(task.status)) {
+    if (!['pending', 'discussing', 'executing', 'reviewing'].includes(task.status)) {
       return c.json({ error: 'キャンセルできないステータス' }, 400)
     }
-    // 実行中プロセスを停止
-    canceller?.cancelCurrentTask(id)
+    // pendingはプロセス未起動なのでキル不要
+    if (task.status !== 'pending') {
+      canceller?.cancelCurrentTask(id)
+    }
     const updated = taskQueries.updateTask(db, id, {
       status: 'stopped',
       paused_reason: 'ユーザーによるキャンセル',

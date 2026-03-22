@@ -27,6 +27,7 @@ export interface ExplorationSession {
   status: ExplorationStatus
   final_report_markdown: string | null
   issue_count: number
+  discussion_depth: number
   paused_reason: string | null
   created_at: string
   updated_at: string
@@ -42,6 +43,7 @@ export interface ExplorationListItem extends ExplorationSession {
 export interface CreateExplorationInput {
   title: string
   request: string
+  discussion_depth?: number
 }
 
 export interface ExplorationImage {
@@ -128,7 +130,6 @@ export interface ExplorationTaskifyResult {
   tasks: {
     title: string
     description: string
-    priority: number
     selectedImageIds: number[]
     sourceFindingTitles: string[]
   }[]

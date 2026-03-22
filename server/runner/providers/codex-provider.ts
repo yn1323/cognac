@@ -22,7 +22,7 @@ import type {
   PrintExecOptions,
   StreamExecOptions,
 } from './types.js'
-import { TaskCancelledError } from './types.js'
+import { CliProviderError, TaskCancelledError } from './types.js'
 
 /**
  * Codex はシステムプロンプト用の専用フラグがないため、
@@ -121,9 +121,14 @@ export class CodexProvider implements CliProviderInterface {
           )
           if (stderr) console.log(`[CodexProvider] stderr:\n${stderr}`)
 
-          if (code !== 0 && !result) {
+          if (code !== 0) {
             reject(
-              new Error(`Codex プロセスが exit code ${code} で終了した: ${stderr.slice(0, 500)}`),
+              new CliProviderError({
+                exitCode: code ?? 1,
+                stderr,
+                partialResult: result || undefined,
+                isRateLimit: parser.isRateLimited() || undefined,
+              }),
             )
             return
           }
@@ -197,9 +202,13 @@ export class CodexProvider implements CliProviderInterface {
           )
           if (stderr) console.log(`[CodexProvider] stderr:\n${stderr}`)
 
-          if (code !== 0 && !stdout.trim()) {
+          if (code !== 0) {
             reject(
-              new Error(`Codex プロセスが exit code ${code} で終了した: ${stderr.slice(0, 500)}`),
+              new CliProviderError({
+                exitCode: code ?? 1,
+                stderr,
+                partialResult: stdout.trim() || undefined,
+              }),
             )
             return
           }

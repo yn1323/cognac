@@ -14,7 +14,7 @@ export interface Task {
   title: string
   description: string | null
   status: TaskStatus
-  priority: number
+  discussion_depth: number
   queue_order: number | null
   branch_name: string | null
   retry_count: number
@@ -26,22 +26,18 @@ export interface Task {
   completed_at: string | null
 }
 
-// Priority ラベル ↔ 数値のマッピング
-export const PRIORITY_MAP = { Low: 0, Normal: 1, High: 2, Urgent: 3 } as const
-export type PriorityLabel = keyof typeof PRIORITY_MAP
-
 // タスク作成の入力
 export interface CreateTaskInput {
   title: string
   description?: string
-  priority?: number // 0=Low, 1=Normal, 2=High, 3=Urgent
+  discussion_depth?: number
 }
 
 // タスク更新の入力
 export interface UpdateTaskInput {
   title?: string
   description?: string
-  priority?: number
+  discussion_depth?: number
   queue_order?: number
 }
 

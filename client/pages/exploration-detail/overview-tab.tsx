@@ -111,14 +111,16 @@ export function PCOverviewTab({ exploration }: { exploration: ExplorationSession
               {formatDateTime(exploration.created_at)}
             </span>
           </div>
-          {elapsedMs != null && (
-            <div className="flex items-center gap-2">
-              <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
-                所要時間
-              </span>
-              <span className="text-[13px] text-foreground">{formatElapsedTime(elapsedMs)}</span>
-            </div>
-          )}
+          {elapsedMs != null &&
+            exploration.status !== 'stopped' &&
+            exploration.status !== 'paused' && (
+              <div className="flex items-center gap-2">
+                <span className="w-30 shrink-0 text-[13px] font-medium text-muted-foreground">
+                  所要時間
+                </span>
+                <span className="text-[13px] text-foreground">{formatElapsedTime(elapsedMs)}</span>
+              </div>
+            )}
           <div className="flex flex-col gap-2">
             <span className="text-[13px] font-medium text-muted-foreground">説明</span>
             <p className="whitespace-pre-wrap text-[13px] leading-[1.6] text-foreground">
@@ -161,14 +163,16 @@ export function SPOverviewTab({ exploration }: { exploration: ExplorationSession
               </span>
             </div>
           )}
-          {elapsedMs != null && (
-            <div className="flex items-center gap-2">
-              <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
-                所要時間
-              </span>
-              <span className="text-xs text-foreground">{formatElapsedTime(elapsedMs)}</span>
-            </div>
-          )}
+          {elapsedMs != null &&
+            exploration.status !== 'stopped' &&
+            exploration.status !== 'paused' && (
+              <div className="flex items-center gap-2">
+                <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
+                  所要時間
+                </span>
+                <span className="text-xs text-foreground">{formatElapsedTime(elapsedMs)}</span>
+              </div>
+            )}
           <div className="flex flex-col gap-1">
             <span className="text-xs font-medium text-muted-foreground">説明</span>
             <p className="whitespace-pre-wrap text-xs leading-[1.5] text-foreground">

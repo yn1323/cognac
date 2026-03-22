@@ -54,6 +54,15 @@ export function useGitPullRequest() {
   })
 }
 
+export function useParentBranch(enabled = true) {
+  return useQuery({
+    queryKey: ['git', 'parent-branch'],
+    queryFn: api.git.parentBranch,
+    enabled,
+    staleTime: 30_000,
+  })
+}
+
 // --- Mutation hooks（操作） ---
 
 export function useDiscardAll() {

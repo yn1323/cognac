@@ -26,4 +26,4 @@ export type {
   PrintExecOptions,
   StreamExecOptions,
 } from './types.js'
-export { ProcessTimeoutError, TaskCancelledError } from './types.js'
+export { CliProviderError, ProcessTimeoutError, TaskCancelledError } from './types.js'

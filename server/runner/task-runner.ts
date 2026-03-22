@@ -6,7 +6,6 @@ import * as taskQueries from '../db/queries/tasks.js'
 import type { CognacDb } from '../db/types.js'
 import type { EventBus } from '../sse/event-bus.js'
 import { getCiSteps, runCi } from './ci-runner.js'
-import { ProcessTimeoutError, TaskCancelledError } from './claude-caller.js'
 import { invalidateContextCache } from './context-cache.js'
 import { classifyError } from './error-classifier.js'
 import type { ExecutionCoordinator } from './execution-coordinator.js'
@@ -15,6 +14,7 @@ import { executePhaseDiscussion } from './phase-discussion.js'
 import { executePhase3 } from './phase-execute.js'
 import { executePhasePersona } from './phase-persona.js'
 import { executePhasePlan } from './phase-plan.js'
+import { CliProviderError, ProcessTimeoutError, TaskCancelledError } from './providers/types.js'
 import { buildRetryPrompt } from './retry-prompt.js'
 
 export class TaskRunner implements RunnerStatus {
@@ -279,6 +279,33 @@ export class TaskRunner implements RunnerStatus {
         return
       }
 
+      // CLIプロバイダーエラー（レートリミット等）
+      if (err instanceof CliProviderError) {
+        const errorType = err.isRateLimit ? 'infra' : classifyError(err.stderr, err.exitCode)
+        if (errorType === 'infra') {
+          // インフラエラー（レートリミット等）→ paused
+          taskQueries.updateTask(this.db, id, {
+            status: 'paused',
+            paused_reason: err.message,
+            paused_phase: currentPhase,
+          })
+          logQueries.createLog(this.db, {
+            task_id: id,
+            phase: currentPhase,
+            error_type: 'infra',
+            error_message: err.message,
+            output_raw: err.stderr + (err.partialResult ? `\n---\n${err.partialResult}` : ''),
+          })
+          this.emit(id, {
+            type: 'paused',
+            reason: err.message,
+            phase: currentPhase,
+          })
+          return
+        }
+        // appエラーはフォールスルーしてstopped処理へ
+      }
+
       const errorMessage = err instanceof Error ? err.message : String(err)
       console.error(`タスク ${id} で致命的エラー:`, err)
 
@@ -441,6 +468,32 @@ export class TaskRunner implements RunnerStatus {
         // abort済み（全停止など）ならDB上書きせず即終了
         if (signal?.aborted) {
           throw new TaskCancelledError()
+        }
+
+        if (err instanceof CliProviderError) {
+          const errorType = err.isRateLimit ? 'infra' : classifyError(err.stderr, err.exitCode)
+          if (errorType === 'infra') {
+            taskQueries.updateTask(this.db, id, {
+              status: 'paused',
+              paused_reason: err.message,
+              paused_phase: 'executing',
+            })
+            logQueries.createLog(this.db, {
+              task_id: id,
+              phase: 'execute',
+              error_type: 'infra',
+              error_message: err.message,
+              output_raw: err.stderr + (err.partialResult ? `\n---\n${err.partialResult}` : ''),
+            })
+            this.emit(id, {
+              type: 'paused',
+              reason: err.message,
+              phase: 'execute',
+            })
+            return // ループを抜ける（リトライしない）
+          }
+          // appエラーの場合はthrowして外側catchでstopped処理
+          throw err
         }
 
         if (err instanceof ProcessTimeoutError) {

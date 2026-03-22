@@ -67,7 +67,11 @@ export async function runStart(): Promise<void> {
   // TaskRunner作成
   const runner = new TaskRunner(db, taskEventBus, config, coordinator)
   const explorationRunner = new ExplorationRunner(db, explorationEventBus, config, coordinator, cwd)
-  const consoleManager = new ConsoleManager(db, cwd)
+  const consoleConfigAccessors = {
+    getConfig: () => runner.getConfig(),
+    getCwd: () => cwd,
+  }
+  const consoleManager = new ConsoleManager(db, consoleConfigAccessors)
   runConsoleStartupRecovery(db, cwd)
   await cleanupExpiredConsoleRuns(db)
   const stopConsoleCleanup = startConsoleCleanupScheduler(db)

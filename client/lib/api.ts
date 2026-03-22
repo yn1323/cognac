@@ -26,6 +26,7 @@ import type {
   GitFileDiffResponse,
   GitLogResponse,
   GitMergeResponse,
+  GitParentBranchResponse,
   GitPrInfoResponse,
   GitPullRequestResponse,
   GitPushResponse,
@@ -113,22 +114,22 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(data),
       }),
-    updateCommand: (id: number, data: UpdateConsoleCommandInput) =>
+    updateCommand: (id: string, data: UpdateConsoleCommandInput) =>
       fetchJson<ConsoleCommand>(`/console/commands/${id}`, {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
-    deleteCommand: (id: number) =>
+    deleteCommand: (id: string) =>
       fetchJson<{ ok: boolean }>(`/console/commands/${id}`, { method: 'DELETE' }),
-    runCommand: (id: number) =>
+    runCommand: (id: string) =>
       fetchJson<{ command: ConsoleCommand; run: ConsoleRun }>(`/console/commands/${id}/run`, {
         method: 'POST',
       }),
-    stopCommand: (id: number) =>
+    stopCommand: (id: string) =>
       fetchJson<{ ok: boolean; run: ConsoleRun | null }>(`/console/commands/${id}/stop`, {
         method: 'POST',
       }),
-    listRuns: (commandId: number) => fetchJson<ConsoleRun[]>(`/console/commands/${commandId}/runs`),
+    listRuns: (commandId: string) => fetchJson<ConsoleRun[]>(`/console/commands/${commandId}/runs`),
     getRunLog: (runId: number) => fetchJson<ConsoleLogResponse>(`/console/runs/${runId}/log`),
   },
   explorations: {
@@ -149,6 +150,9 @@ export const api = {
       const formData = new FormData()
       formData.append('title', data.title)
       formData.append('request', data.request)
+      if (data.discussion_depth != null) {
+        formData.append('discussion_depth', String(data.discussion_depth))
+      }
       for (const file of files) {
         formData.append('images', file)
       }
@@ -189,6 +193,18 @@ export const api = {
     delete: (id: number) => fetchJson<{ ok: boolean }>(`/explorations/${id}`, { method: 'DELETE' }),
     deleteImage: (id: number, imageId: number) =>
       fetchJson<{ ok: boolean }>(`/explorations/${id}/images/${imageId}`, { method: 'DELETE' }),
+    uploadImages: async (id: number, files: File[]): Promise<ExplorationImage[]> => {
+      const formData = new FormData()
+      for (const file of files) {
+        formData.append('images', file)
+      }
+      const res = await fetch(`${BASE}/explorations/${id}/images`, {
+        method: 'POST',
+        body: formData,
+      })
+      await throwIfNotOk(res)
+      return res.json() as Promise<ExplorationImage[]>
+    },
   },
   git: {
     status: () => fetchJson<GitStatusResponse>('/git/status'),
@@ -208,7 +224,9 @@ export const api = {
         body: JSON.stringify({ name, base }),
       }),
     deleteBranch: (name: string) =>
-      fetchJson<{ ok: boolean }>(`/git/branch/${encodeURIComponent(name)}`, { method: 'DELETE' }),
+      fetchJson<{ ok: boolean }>(`/git/branch?name=${encodeURIComponent(name)}`, {
+        method: 'DELETE',
+      }),
     push: () => fetchJson<GitPushResponse>('/git/push', { method: 'POST' }),
     fetch: () => fetchJson<{ ok: boolean }>('/git/fetch', { method: 'POST' }),
     merge: (from: string, into: string) =>
@@ -229,6 +247,7 @@ export const api = {
     explainWorking: () => fetchJson<GitExplainResponse>('/git/explain-working', { method: 'POST' }),
     fileDiff: (path: string) =>
       fetchJson<GitFileDiffResponse>(`/git/file-diff?path=${encodeURIComponent(path)}`),
+    parentBranch: () => fetchJson<GitParentBranchResponse>('/git/parent-branch'),
     pullRequestInfo: () => fetchJson<GitPrInfoResponse>('/git/pull-request'),
     pullRequest: (baseBranch: string) =>
       fetchJson<GitPullRequestResponse>('/git/pull-request', {

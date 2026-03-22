@@ -35,7 +35,6 @@ JSONだけを返して。
     {
       "title": "タスクタイトル",
       "description": "タスク説明（探索で見つかった課題・対応方針を全て含める）",
-      "priority": 1,
       "selectedImageIds": [1],
       "sourceFindingTitles": ["課題タイトル"]
     }
@@ -64,7 +63,7 @@ ${findings.map((artifact) => `- ${artifact.title}: ${artifact.content_text ?? ''
 ## 利用可能な画像
 ${images.map((image) => `- id=${image.id} path=${image.file_path}`).join('\n') || 'なし'}
 
-基本は1タスクにまとめて。技術領域がまったく異なる場合のみ分割して。priority は 0〜3 で返して。`
+基本は1タスクにまとめて。技術領域がまったく異なる場合のみ分割して。`
 
   if (userInstruction) {
     prompt += `\n\n## ユーザーからの補足指示\n${userInstruction}`
@@ -79,7 +78,6 @@ function getFallbackTaskifyResult(exploration: ExplorationSession): ExplorationT
       {
         title: exploration.title,
         description: exploration.final_report_markdown ?? exploration.request,
-        priority: 1,
         selectedImageIds: [],
         sourceFindingTitles: [],
       },
@@ -124,7 +122,6 @@ export async function executeExplorationPhaseTaskify(
     const task = taskQueries.createTask(db, {
       title: taskInput.title,
       description: taskInput.description,
-      priority: Math.max(0, Math.min(3, taskInput.priority)),
     })
     taskIds.push(task.id)
 

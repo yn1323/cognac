@@ -130,7 +130,7 @@ export async function executePhaseDiscussion(
   totalTokenOutput: number
   totalDurationMs: number
 }> {
-  const maxRounds = config.discussion.maxRounds
+  const maxRounds = task.discussion_depth ?? config.discussion.maxRounds
   const repoStructure = getRepoStructure()
   const systemPrompt = buildSystemPrompt(personas)
 

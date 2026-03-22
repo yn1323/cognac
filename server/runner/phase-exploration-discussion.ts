@@ -133,7 +133,7 @@ export async function executeExplorationPhaseDiscussion(
   totalTokenOutput: number
   totalDurationMs: number
 }> {
-  const maxRounds = config.discussion.maxRounds
+  const maxRounds = exploration.discussion_depth ?? config.discussion.maxRounds
   const provider = createProvider(config.provider)
   const repoStructure = getRepoStructure()
   const systemPrompt = buildSystemPrompt(personas)

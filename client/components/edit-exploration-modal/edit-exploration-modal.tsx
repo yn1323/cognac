@@ -1,8 +1,8 @@
-// タスク編集モーダル
+// 探索編集モーダル
 // PC: オーバーレイ + センターモーダル / SP: フルスクリーンシート
-// task-modalのパターンを流用
+// edit-task-modalのパターンを流用
 
-import type { Task, TaskImage } from '@cognac/shared'
+import type { ExplorationImage, ExplorationSession } from '@cognac/shared'
 import { Camera, Loader2, Upload, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { MobileModalFooter } from '@/components/mobile-modal-footer'
@@ -12,19 +12,19 @@ import { DropZone } from '@/components/ui/drop-zone'
 import { ImagePreviewList } from '@/components/ui/image-preview-list'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { useEscapeClose, useScrollLock } from '@/hooks/use-scroll-lock'
 import {
-  useDeleteTaskImage,
-  useTaskImages,
-  useUpdateTask,
-  useUploadTaskImages,
-} from '@/hooks/use-tasks'
+  useDeleteExplorationImage,
+  useExplorationImages,
+  useUpdateExploration,
+  useUploadExplorationImages,
+} from '@/hooks/use-explorations'
+import { useEscapeClose, useScrollLock } from '@/hooks/use-scroll-lock'
 import { validateTitle } from '@/lib/validation'
 
 // --- 型定義 ---
 
-interface EditTaskModalProps {
-  task: Task
+interface EditExplorationModalProps {
+  exploration: ExplorationSession
   open: boolean
   onClose: () => void
 }
@@ -33,9 +33,10 @@ interface FormProps {
   title: string
   setTitle: (v: string) => void
   titleError: string
-  description: string
-  setDescription: (v: string) => void
-  existingImages: TaskImage[]
+  request: string
+  setRequest: (v: string) => void
+  requestError: string
+  existingImages: ExplorationImage[]
   onDeleteImage: (imageId: number) => void
   newFiles: File[]
   onFilesAdd: (files: File[]) => void
@@ -51,7 +52,7 @@ function ExistingImageList({
   images,
   onDelete,
 }: {
-  images: TaskImage[]
+  images: ExplorationImage[]
   onDelete: (imageId: number) => void
 }) {
   if (images.length === 0) return null
@@ -62,7 +63,7 @@ function ExistingImageList({
         <div key={img.id} className="relative group">
           <img
             src={`/${img.file_path}`}
-            alt={img.original_name}
+            alt={img.original_name ?? ''}
             className="h-16 w-16 rounded-md object-cover border border-border"
           />
           <button
@@ -84,8 +85,9 @@ function PCEditModal({
   title,
   setTitle,
   titleError,
-  description,
-  setDescription,
+  request,
+  setRequest,
+  requestError,
   existingImages,
   onDeleteImage,
   newFiles,
@@ -113,8 +115,8 @@ function PCEditModal({
           >
             <X className="h-5 w-5" />
           </button>
-          <h2 className="text-xl font-semibold text-foreground">タスク編集</h2>
-          <p className="mt-1 text-sm text-muted-foreground">タスクの内容を編集します</p>
+          <h2 className="text-xl font-semibold text-foreground">探索編集</h2>
+          <p className="mt-1 text-sm text-muted-foreground">探索の内容を編集します</p>
         </div>
 
         {/* フォーム */}
@@ -124,7 +126,7 @@ function PCEditModal({
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="例: ユーザー認証を実装する"
+              placeholder="例: ログイン画面のUI検証"
               maxLength={200}
               disabled={isSubmitting}
             />
@@ -134,12 +136,13 @@ function PCEditModal({
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">説明</label>
             <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="タスクの詳細を入力（任意）"
+              value={request}
+              onChange={(e) => setRequest(e.target.value)}
+              placeholder="探索の詳細を入力"
               className="h-25 resize-none"
               disabled={isSubmitting}
             />
+            {requestError && <p className="text-xs text-destructive">{requestError}</p>}
           </div>
 
           {/* Images */}
@@ -181,8 +184,9 @@ function SPEditModal({
   title,
   setTitle,
   titleError,
-  description,
-  setDescription,
+  request,
+  setRequest,
+  requestError,
   existingImages,
   onDeleteImage,
   newFiles,
@@ -195,21 +199,21 @@ function SPEditModal({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <h2 className="text-lg font-semibold text-foreground">タスク編集</h2>
+        <h2 className="text-lg font-semibold text-foreground">探索編集</h2>
         <button type="button" onClick={onClose} className="rounded-lg p-1 text-foreground">
           <X className="h-5 w-5" />
         </button>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-5 overflow-y-auto p-4">
-        <p className="text-[13px] text-muted-foreground">タスクの内容を編集します</p>
+        <p className="text-[13px] text-muted-foreground">探索の内容を編集します</p>
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">タイトル</label>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="例: ユーザー認証を実装する"
+            placeholder="例: ログイン画面のUI検証"
             maxLength={200}
             disabled={isSubmitting}
           />
@@ -219,12 +223,13 @@ function SPEditModal({
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">説明</label>
           <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="タスクの詳細を入力（任意）"
+            value={request}
+            onChange={(e) => setRequest(e.target.value)}
+            placeholder="探索の詳細を入力"
             className="h-25 resize-none"
             disabled={isSubmitting}
           />
+          {requestError && <p className="text-xs text-destructive">{requestError}</p>}
         </div>
 
         {/* Images */}
@@ -272,31 +277,33 @@ function SPEditModal({
 
 // --- エクスポート ---
 
-export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
+export function EditExplorationModal({ exploration, open, onClose }: EditExplorationModalProps) {
   const { toast } = useToast()
-  const updateTask = useUpdateTask()
-  const { data: existingImages = [] } = useTaskImages(open ? task.id : NaN)
-  const uploadImages = useUploadTaskImages()
-  const deleteImage = useDeleteTaskImage()
+  const updateExploration = useUpdateExploration()
+  const { data: existingImages = [] } = useExplorationImages(open ? exploration.id : NaN)
+  const uploadImages = useUploadExplorationImages()
+  const deleteImage = useDeleteExplorationImage()
 
   const [title, setTitle] = useState('')
   const [titleError, setTitleError] = useState('')
-  const [description, setDescription] = useState('')
+  const [request, setRequest] = useState('')
+  const [requestError, setRequestError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [newFiles, setNewFiles] = useState<File[]>([])
   const [deletedImageIds, setDeletedImageIds] = useState<Set<number>>(new Set())
 
-  // モーダルが開くたびにtaskの値でリセット
+  // モーダルが開くたびにexplorationの値でリセット
   useEffect(() => {
     if (open) {
-      setTitle(task.title)
+      setTitle(exploration.title)
       setTitleError('')
-      setDescription(task.description ?? '')
+      setRequest(exploration.request)
+      setRequestError('')
       setIsSubmitting(false)
       setNewFiles([])
       setDeletedImageIds(new Set())
     }
-  }, [open, task])
+  }, [open, exploration])
 
   useScrollLock(open)
   useEscapeClose(open, onClose)
@@ -311,6 +318,11 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
   const handleTitleChange = (v: string) => {
     setTitle(v)
     if (titleError) setTitleError('')
+  }
+
+  const handleRequestChange = (v: string) => {
+    setRequest(v)
+    if (requestError) setRequestError('')
   }
 
   // 画像をローカルstateに溜める（Saveまでアップロードしない）
@@ -329,39 +341,43 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const err = validateTitle(title)
-    if (err) {
-      setTitleError(err)
+
+    const titleErr = validateTitle(title)
+    if (titleErr) {
+      setTitleError(titleErr)
       return
     }
+
+    if (request.trim().length < 2) {
+      setRequestError('説明は2文字以上で入力してね')
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
       // 画像アップロード・削除・テキスト更新を並列実行
       await Promise.all([
         newFiles.length > 0
-          ? uploadImages.mutateAsync({ taskId: task.id, files: newFiles })
+          ? uploadImages.mutateAsync({ explorationId: exploration.id, files: newFiles })
           : undefined,
         deletedImageIds.size > 0
           ? Promise.all(
               Array.from(deletedImageIds).map((imageId) =>
-                deleteImage.mutateAsync({ taskId: task.id, imageId }),
+                deleteImage.mutateAsync({ explorationId: exploration.id, imageId }),
               ),
             )
           : undefined,
-        updateTask.mutateAsync({
-          id: task.id,
-          data: {
-            title,
-            description: description || undefined,
-          },
+        updateExploration.mutateAsync({
+          id: exploration.id,
+          data: { title, request },
         }),
       ])
       onClose()
-      toast('タスクを更新しました', 'success')
+      toast('探索を更新しました', 'success')
     } catch (err) {
-      console.error('タスク更新に失敗:', err)
-      toast('タスクの更新に失敗しました', 'error')
+      console.error('探索更新に失敗:', err)
+      toast('探索の更新に失敗しました', 'error')
       setIsSubmitting(false)
     }
   }
@@ -370,8 +386,9 @@ export function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
     title,
     setTitle: handleTitleChange,
     titleError,
-    description,
-    setDescription,
+    request,
+    setRequest: handleRequestChange,
+    requestError,
     existingImages: visibleExistingImages,
     onDeleteImage,
     newFiles,
