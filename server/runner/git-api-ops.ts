@@ -103,7 +103,6 @@ export function getBranches(cwd: string): GitBranch[] {
   if (!output) return []
 
   const branches: GitBranch[] = []
-  const seen = new Set<string>()
 
   for (const line of output.split('\n')) {
     const cleaned = line.replace(/^"|"$/g, '')
@@ -114,16 +113,8 @@ export function getBranches(cwd: string): GitBranch[] {
     const name = rawName
     const current = head?.trim() === '*'
 
-    // HEAD参照はスキップ
-    if (name === 'origin/HEAD') continue
-
-    // リモートブランチでローカルに同名がある場合はスキップ
-    if (isRemote) {
-      const localName = name.replace('origin/', '')
-      if (seen.has(localName)) continue
-    }
-
-    seen.add(isRemote ? name.replace('origin/', '') : name)
+    // HEAD参照はスキップ（%(refname:short)で "origin" に短縮される場合も含む）
+    if (name === 'origin/HEAD' || name === 'origin') continue
     branches.push({ name, current, remote: isRemote })
   }
 
